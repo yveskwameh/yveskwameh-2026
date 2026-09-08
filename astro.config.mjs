@@ -3,8 +3,14 @@ import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-  // Set to the live domain so canonical URLs and sitemaps are correct
-  site: 'https://yveskwameh.com',
+  /* Where this site actually is. Nothing reads it yet, since the layout emits no canonical
+     or og: tags and no sitemap integration is installed, but it is the value all three
+     would use, so it is worth being true rather than aspirational.
+
+     Deliberately NOT yveskwameh.com: that domain is live on Netlify serving the previous
+     site, so anything built from it would point at pages showing something else. Change
+     this the day the domain moves. */
+  site: 'https://yveskwameh.2026-portfolio.workers.dev',
   // Fully static build. No adapter needed for Cloudflare Workers static assets.
   output: 'static',
   build: {

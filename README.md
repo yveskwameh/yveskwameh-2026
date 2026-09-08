@@ -1,6 +1,17 @@
-# 2026 Portfolio · yveskwameh.com
+# YvesOS
 
-Retro operating system portfolio. Astro (fully static) deployed to Cloudflare Workers static assets.
+Yves Kwameh's portfolio, built as a retro operating system. A lock screen, a desktop you
+can drag icons around, windows that open, a dock, right-click menus, and everyone on the
+site at once can see everyone else's cursor.
+
+Astro, fully static, no framework, under 10KB of JavaScript on arrival. Deployed to
+Cloudflare Workers static assets, with one small Worker for the live cursors.
+
+**Live: https://yveskwameh.2026-portfolio.workers.dev**
+
+Headed for yveskwameh.com, which is still serving the previous site on Netlify. Nothing
+in here points at that domain until it moves.
+
 Goal: zero server cost, zero framework JavaScript on the page, fast everywhere.
 
 ## Stack

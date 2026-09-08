@@ -5,7 +5,7 @@ year: 2026
 summary: "This site. A portfolio that behaves like an operating system, and still loads under 10KB of JavaScript."
 role: "Design and build"
 stack: ["Astro", "TypeScript", "Cloudflare"]
-url: "https://yveskwameh.com"
+url: "https://yveskwameh.2026-portfolio.workers.dev"
 cover: "/images/projects/yves-os.png"
 filename: "yves-os.astro"
 featured: false
