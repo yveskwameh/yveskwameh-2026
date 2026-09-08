@@ -52,7 +52,7 @@ Secrets) so the build there has it too.
 git add -A && git commit -m "what changed" && git push
 ```
 
-Live at **https://yveskwameh-portfolio.2026-portfolio.workers.dev** until the custom
+Live at **https://yveskwameh-2026.2026-portfolio.workers.dev** until the custom
 domain is attached. A deploy uploads the static files AND the Worker in `worker/`, so the
 live cursors go up with the site.
 

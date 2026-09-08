@@ -7,7 +7,10 @@
   // No Astro adapter, no SSR, nothing about the pages changed.
   //
   // Docs: https://developers.cloudflare.com/workers/static-assets/routing/worker-script/
-  "name": "yveskwameh-portfolio",
+  // Must match the Worker name in the Cloudflare dashboard exactly. Workers Builds
+  // hard-fails the build on a mismatch rather than warning, so never change one
+  // without the other in the same commit.
+  "name": "yveskwameh-2026",
   "compatibility_date": "2026-09-06",
   "main": "./worker/index.ts",
   "assets": {
