@@ -1,6 +1,6 @@
 # 2026 Portfolio · yveskwameh.com
 
-Live at https://yveskwameh-2026.2026-portfolio.workers.dev until the custom domain is
+Live at https://yveskwameh.2026-portfolio.workers.dev until the custom domain is
 attached. Source at https://github.com/yveskwameh/yveskwameh-2026 (private).
 
 Yves Kwameh's personal portfolio rebuilt as a retro operating system.
