@@ -1,0 +1,203 @@
+---
+/**
+ * The desktop: freely draggable icons + the windows they open.
+ * No window is open on load. Windows are real HTML at build time, shown on click.
+ */
+import DesktopIcon from './DesktopIcon.astro';
+import Window from '../windows/Window.astro';
+import AboutApp from '../apps/AboutApp.astro';
+import ProjectsApp from '../apps/ProjectsApp.astro';
+import MusicApp from '../apps/MusicApp.astro';
+import GameApp from '../apps/GameApp.astro';
+import ColophonApp from '../apps/ColophonApp.astro';
+import MailApp from '../apps/MailApp.astro';
+import { desktopItems } from '../../data/desktop';
+---
+<main class="desktop" id="desktop">
+  {desktopItems.map((item) => <DesktopIcon {...item} />)}
+
+  <Window id="about" title="About Yves" filename="about-yves.txt"><AboutApp /></Window>
+  {/* Explicitly sized, unlike the other windows. The browser inside it is a two column
+      layout whose panes fill their side and scroll themselves, and `height: 100%` against
+      a window that sizes to its content collapses to the height of the sidebar. */}
+  <Window id="projects" title="Work" filename="work.folder" width={720} height={530}><ProjectsApp /></Window>
+  <Window id="music" title="Music" filename="playlist.spotify" width={420}><MusicApp /></Window>
+  <Window id="game" title="Tic Tac Toe" filename="tictactoe.app" width={300}><GameApp /></Window>
+  <Window id="colophon" title="About this site" filename="readme.txt" width={520}><ColophonApp /></Window>
+  {/* Anchored bottom right and slides up, like Gmail compose. See the compose variant in
+      Window.astro. Sized to the shorter, wider shape a compose panel wants. */}
+  <Window id="contact" title="Send Yves a message" filename="new-message.eml" width={460} height={430} variant="compose"><MailApp /></Window>
+  <!-- Add: services, testimonials, trash -->
+
+  {/* Pushes the desktop back behind whatever is open. Deliberately pointer-events: none,
+      so it dims and blurs without becoming a modal: the icons underneath stay clickable
+      and every window stays draggable. */}
+  <div class="scrim" aria-hidden="true"></div>
+</main>
+
+{/* Live cursors. Everyone with the site open sees everyone else move, and hovering
+    somebody's name chip offers them a reaction. All build-time markup, per rule 3: the
+    only thing scripts/presence.ts does is position clones of the template and set text.
+
+    Fixed rather than inside .desktop so a cursor can travel over the menu bar and the
+    dock too, which is where people actually point at things. */}
+<div class="peers" id="peers" aria-hidden="true"></div>
+<div class="me" id="me" hidden aria-hidden="true"><button class="chip" id="me-chip" type="button">you</button></div>
+<input class="chip chip--edit" id="me-edit" hidden maxlength="24" aria-label="Your name" />
+<div class="react" id="react" hidden role="menu" aria-label="Send a reaction">
+  {['👋', '💗', '😂', '⭐', '👀', '🎉', '🥂'].map((e) => (
+    <button type="button" role="menuitem" data-e={e} aria-label={`React ${e}`}>{e}</button>
+  ))}
+</div>
+<template id="peer-tpl"><div class="peer"><i class="peer__arrow"></i><span class="chip peer__chip"></span></div></template>
+
+{/* Right-click menus. Real HTML at build time like the windows, so their wording rides in
+    the gzipped page rather than in the JS budget. scripts/context.ts shows whichever one
+    matches what was clicked. Items carrying data-open or data-action need nothing from it,
+    because the listeners for those already exist. */}
+<div class="ctx" id="ctx-desktop" role="menu" hidden>
+  <button role="menuitem" type="button" data-ctx="refresh">Refresh</button>
+  <button role="menuitem" type="button" data-action="tidy">Clean up desktop</button>
+  <hr />
+  <button role="menuitem" type="button" data-open="contact">New message</button>
+  <button role="menuitem" type="button" data-open="colophon">About this site</button>
+</div>
+<div class="ctx" id="ctx-menubar" role="menu" hidden>
+  <button role="menuitem" type="button" data-action="lock">Lock desktop</button>
+  <button role="menuitem" type="button" data-action="tidy">Clean up desktop</button>
+  <hr />
+  <button role="menuitem" type="button" data-open="contact">New message</button>
+  <button role="menuitem" type="button" data-open="colophon">About this site</button>
+</div>
+<div class="ctx" id="ctx-icon" role="menu" hidden>
+  <button role="menuitem" type="button" data-ctx="open">Open</button>
+  <button role="menuitem" type="button" data-ctx="rename">Rename</button>
+  <hr />
+  <button role="menuitem" type="button" data-ctx="reset">Reset name</button>
+</div>
+
+<style>
+  .desktop { position: fixed; inset: var(--menubar-h) 0 0 0; }
+  /* Refresh blinks the icons out and back. It is the only visible sign that the desktop
+     redrew, since nothing else about it changes. */
+  .desktop.is-refreshing :global(.icon) { opacity: 0; }
+
+  /* z-index 5: above the icons, which have none, and below the windows, which start at 10
+     from focusWindow. It sits inside .desktop so the dock and the menu bar stay crisp,
+     which is right for system chrome. */
+  .scrim {
+    position: absolute; inset: 0; z-index: 5; pointer-events: none;
+    background: rgba(10, 14, 20, .22);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    opacity: 0; transition: opacity var(--t-base) var(--ease);
+  }
+  /* window-manager.ts puts has-window on the body whenever anything is open. */
+  :global(body.has-window) .scrim { opacity: 1; }
+
+  .ctx {
+    position: fixed; z-index: 950; min-width: 190px; padding: 6px;
+    background: var(--os-menu);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(0,0,0,.12); border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
+  }
+  .ctx[hidden] { display: none; }
+  .ctx button {
+    all: unset; display: block; width: 100%; box-sizing: border-box;
+    padding: 6px 10px; border-radius: var(--r-inner); cursor: var(--cur-hand);
+    font: 12px var(--font-chrome); color: var(--os-ink);
+  }
+  .ctx button:hover { background: var(--os-accent); color: #fff; }
+
+  /* ------------------------------------------------------------------
+     Live cursors.
+
+     Above the dock so somebody pointing at it can be seen, below the menu bar so a cursor
+     never covers the clock. The layer itself never takes a click; only the name chips do,
+     because hovering one is what offers a reaction, and a stranger's cursor drifting over
+     a button should not stop you pressing it.
+     ------------------------------------------------------------------ */
+  .peers { position: fixed; inset: 0; z-index: 850; pointer-events: none; }
+  .peer, .me {
+    position: fixed; top: 0; left: 0; z-index: 850; pointer-events: none;
+    display: flex; align-items: flex-start; gap: 2px;
+    /* translate3d keeps each cursor on its own layer, so a room full of them moves without
+       relaying out the page. */
+    will-change: transform;
+  }
+  .me { z-index: 851; }
+  /* Drawn rather than the cursor PNG, because each visitor needs their own colour and a
+     bitmap cannot be tinted. */
+  .peer__arrow {
+    width: 13px; height: 17px; flex: none; background: currentColor;
+    clip-path: polygon(0 0, 0 82%, 23% 63%, 39% 97%, 55% 89%, 40% 57%, 72% 53%);
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,.35));
+  }
+  .chip {
+    all: unset; display: block; margin-top: 12px;
+    padding: 3px 9px; border-radius: var(--r-pill);
+    background: var(--peer, var(--os-accent)); color: #fff;
+    font: 10px var(--font-chrome); letter-spacing: .02em; white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  }
+  /* The chips are the one part that answers the pointer. */
+  .peer__chip, #me-chip { pointer-events: auto; cursor: var(--cur-hand); }
+  #me-chip { opacity: .75; }
+  #me-chip:hover { opacity: 1; }
+  .chip--edit {
+    position: fixed; z-index: 860; width: 130px; border: 0; text-align: center;
+    background: var(--os-accent); color: #fff; font: 10px var(--font-chrome);
+    padding: 4px 9px; border-radius: var(--r-pill);
+  }
+  .chip--edit:focus { outline: 2px solid #fff; outline-offset: 1px; }
+
+  .react {
+    position: fixed; z-index: 860; display: flex; gap: 2px; padding: 4px;
+    background: var(--os-menu); border: 1px solid rgba(0,0,0,.12);
+    border-radius: var(--r-pill); box-shadow: var(--os-shadow-sm);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  }
+  .react[hidden] { display: none; }
+  .react button {
+    all: unset; width: 26px; height: 26px; display: grid; place-items: center;
+    border-radius: 50%; cursor: var(--cur-hand); font-size: 15px; line-height: 1;
+    transition: transform var(--t-fast), background var(--t-fast);
+  }
+  .react button:hover { background: rgba(22,22,26,.08); transform: scale(1.25); }
+
+  /* A reaction, on its way up and out. Removed by the script when the animation ends. */
+  .pop {
+    position: fixed; z-index: 861; pointer-events: none; font-size: 22px;
+    animation: pop-up 1.1s var(--ease) forwards;
+  }
+  @keyframes pop-up {
+    from { opacity: 1; transform: translate(-50%, 0) scale(.6); }
+    35%  { opacity: 1; transform: translate(-50%, -26px) scale(1.15); }
+    to   { opacity: 0; transform: translate(-50%, -64px) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .peer, .me { will-change: auto; }
+    .pop { animation-duration: 1ms; }
+  }
+  .ctx hr { margin: 4px 6px; border: 0; border-top: 1px solid rgba(22,22,26,.12); }
+  @media (max-width: 640px) {
+    /* phone home screen: icons flow in a grid, positions from data are ignored */
+    .desktop { display: grid; grid-template-columns: repeat(4, 1fr); align-content: start; gap: var(--space-4) var(--space-2); padding: var(--space-4) var(--space-2) 120px; }
+    .desktop :global(.icon) { position: static !important; }
+  }
+</style>
+
+<script>
+  import { initWindowManager, openWindow } from '../../scripts/window-manager';
+  import { initActions } from '../../scripts/actions';
+  import { initWarm } from '../../scripts/lazy';
+  import { unlock } from '../../scripts/lock';
+  initWindowManager();
+  initActions();
+  initWarm();
+
+  /* A link like /#work-compass opens the Work window on that case study, which is the one
+     thing a desktop of hidden windows cannot do for itself. It skips the lock screen too,
+     because someone arriving at a named case study came for the work, not the game. */
+  if (location.hash.startsWith('#work-')) { unlock(); openWindow('projects'); }
+</script>

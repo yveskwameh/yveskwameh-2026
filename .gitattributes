@@ -1,0 +1,22 @@
+# Line endings normalised in the repo, native on checkout. One machine today, but
+# this is what stops a Windows clone rewriting every line in the project.
+* text=auto eol=lf
+
+# Binaries. Without these, text=auto can guess wrong and corrupt a file.
+*.jpeg binary
+*.jpg  binary
+*.png  binary
+*.avif binary
+*.webp binary
+*.mp3  binary
+*.ico  binary
+*.woff2 binary
+
+# Generated. Collapsed in diffs, so a dependency bump does not bury its one real
+# line under 186KB of lockfile.
+package-lock.json linguist-generated=true -diff
+
+# Assets, not the language this project is written in. Without this GitHub reads
+# 200KB of drawn SVG against 1MB of source and calls the whole repo SVG.
+src/icons/** linguist-vendored=true
+public/icons/** linguist-vendored=true

@@ -1,0 +1,108 @@
+@import './tokens.css';
+
+/* Space Mono, self-hosted rather than linked from Google Fonts, per the speed rules in
+   README. Latin subset only, both weights, 19KB total. swap means text paints immediately
+   in the fallback and reflows when the file lands, so the font never blocks the render. */
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url('/fonts/space-mono-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal; font-weight: 700; font-display: swap;
+  src: url('/fonts/space-mono-700.woff2') format('woff2');
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0; min-height: 100dvh; overflow: hidden;
+  background: var(--os-desktop) var(--wallpaper) center / cover no-repeat fixed;
+  color: var(--os-ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+}
+
+img, svg, video { display: block; max-width: 100%; }
+
+/* ----------------------------------------------------------------
+   The retro cursor set, drawn by tools/draw-cursors.py.
+
+   Only on a real pointer. A touch screen has no cursor to replace, and a coarse pointer
+   should keep whatever the system gives it, which is usually bigger for a reason.
+
+   cursor inherits, so putting the arrow on html covers everything that does not name its
+   own. The components name theirs with the same tokens, so there is no !important
+   anywhere and any one of them can still opt out.
+
+   Worth knowing: this overrides the pointer size someone has set in their OS accessibility
+   settings. That is the cost of a custom cursor, and it is why it stops at fine pointers.
+   ---------------------------------------------------------------- */
+@media (hover: hover) and (pointer: fine) {
+  html { cursor: var(--cur-arrow); }
+  /* Links and labels get the hand from the UA stylesheet, not from our components, so
+     they have to be named here or they would fall back to the system pointer. */
+  a[href], summary, label[for], select { cursor: var(--cur-hand); }
+  input:not([type=hidden], [type=radio], [type=checkbox], [type=button], [type=submit]),
+  textarea { cursor: var(--cur-text); }
+}
+.pixel { image-rendering: pixelated; image-rendering: crisp-edges; }
+a { color: var(--os-accent); }
+
+/* ----------------------------------------------------------------
+   Buttons. Two of them, and only two.
+
+     .btn              primary, the main action in its window
+     .btn--secondary   everything else: cancel, dismiss, the quieter of two options
+     .btn--icon        icon only, so it stays round instead of stretching into a pill
+     .btn--lg          full width and taller, for the sound gate
+     .btn--on-dark     the lock screen sits on a dark overlay, so its secondary inverts
+
+   Global rather than scoped per component, because these had drifted badly: one action
+   was a 6px rectangle, another a pill, and the lock screen's two never used any shared
+   style at all. One place to change them, and no way for the next one to come out
+   different. Every one is a pill; nothing here has square corners.
+   ---------------------------------------------------------------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 18px; border: 1px solid transparent; border-radius: var(--r-pill);
+  background: var(--os-accent); color: #fff;
+  font: 12px var(--font-chrome); letter-spacing: .02em; text-decoration: none;
+  cursor: var(--cur-hand); transition: background var(--t-fast), border-color var(--t-fast);
+}
+.btn:hover { background: var(--os-accent-bright); }
+.btn:active { background: var(--os-accent); }
+
+.btn--secondary { background: none; color: var(--os-ink); border-color: var(--os-line); }
+.btn--secondary:hover { background: rgba(22,22,26,.06); }
+.btn--secondary:active { background: rgba(22,22,26,.12); }
+
+.btn--icon { padding: 0; width: 34px; height: 34px; border-radius: 50%; }
+
+.btn--lg { width: 100%; padding: 13px 20px; font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+
+/* On the lock screen's dark overlay the ink-on-white secondary disappears, so it flips. */
+.btn--on-dark { color: #fff; border-color: rgba(255,255,255,.45); }
+.btn--on-dark:hover { background: rgba(255,255,255,.16); }
+.btn--on-dark:active { background: rgba(255,255,255,.08); }
+/* Two-tone focus ring. The wallpaper is a photo with pale sand and dark ocean in it, so
+   no single colour survives everywhere. Pairing a light band with a dark one means one
+   of the two always reads: white carries the dark areas, teal carries the pale ones.
+   The transparent outline is what keeps a ring in Windows high-contrast mode, where
+   box-shadow is dropped. */
+:focus-visible {
+  outline: 2px solid transparent; outline-offset: 2px; border-radius: 2px;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--os-accent);
+}
+
+/* The rename field. Created by scripts/context.ts and dropped over an icon's label, so it
+   is global: a scoped rule would never match an element the browser never saw at build. */
+.icon-rename {
+  position: fixed; z-index: 950; box-sizing: border-box;
+  padding: 2px 4px; border: 1px solid var(--os-accent); border-radius: 3px;
+  background: #fff; color: var(--os-ink);
+  font-family: var(--font-chrome); font-size: 10px; text-align: center;
+}
+
+/* Focused window dims the rest, heyclicky style */
+body.has-focus .window:not(.is-focused) { opacity: .55; }

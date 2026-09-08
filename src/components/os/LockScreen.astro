@@ -1,0 +1,332 @@
+---
+/**
+ * The entry gate, back to the first layout: content pinned to the top and bottom edges
+ * with the identity floating in the middle, and the time as large translucent type
+ * rather than a card. No tiles, no dashboard.
+ */
+import { existsSync } from 'node:fs';
+import { site } from '../../data/site';
+import Icon from './Icon.astro';
+
+// Falls back to initials if the photo is ever missing, so it never renders broken.
+const hasAvatar = existsSync('public' + site.avatar);
+const initials = site.name.split(' ').map((w) => w[0]).join('');
+---
+{/* The sound gate. A corner pill was too easy to miss and could sit on top of the
+    fleeing button, so this covers the screen and has to be answered first. */}
+<div id="lock-gate" class="gate" role="dialog" aria-modal="true" aria-labelledby="gate-h" hidden>
+  <div class="gate__card">
+    <span class="gate__icon"><Icon name="volume-2" size={22} /></span>
+    <p class="gate__eyebrow">YVESOS</p>
+    <h2 class="gate__title" id="gate-h">Best with sound on</h2>
+    <p class="gate__body">There is a voice line and a few small sounds. Nothing plays until you say so.</p>
+    <button class="btn btn--lg" type="button" data-snd="on">Enter with sound</button>
+    <button class="btn btn--secondary btn--on-dark btn--lg gate__no" type="button" data-snd="off">Continue muted</button>
+  </div>
+</div>
+
+<div id="lock" class="lock" role="dialog" aria-label="Locked. Click to enter.">
+  <div class="lock__top">
+    <p class="lock__date" id="lock-date">---</p>
+    <p class="lock__time"><span id="lock-time">--:--</span></p>
+    <p class="lock__meta">{site.location} · {site.availability}</p>
+
+    <ul class="lock__socials">
+      {site.socials.map((s) => (
+        <li><a href={s.url} target="_blank" rel="noopener noreferrer" aria-label={s.name}>
+          <Icon name={s.glyph} size={16} />
+        </a></li>
+      ))}
+    </ul>
+  </div>
+
+  <div class="lock__id">
+    <span class="lock__face">
+      {hasAvatar
+        ? <img class="lock__avatar" id="lock-avatar" src={site.avatar} alt="" width="64" height="64" />
+        : <span class="lock__avatar lock__avatar--fallback" id="lock-avatar" aria-hidden="true">{initials}</span>}
+      {/* Short on purpose. This is the escape hatch, so it has one job: say the chase is
+          unwinnable and name the way out. The recording says the rest. */}
+      <p class="lock__shout" id="lock-shout" role="status">It does not get tired. Press <kbd>Space</kbd> or <kbd>Enter</kbd>.</p>
+    </span>
+    <p class="lock__name">{site.name}</p>
+    <p class="lock__title">{site.title}</p>
+    <p class="lock__status-line"><span class="lock__dot" aria-hidden="true"></span>{site.status}</p>
+  </div>
+
+  <audio id="lock-audio" src="/audio/too-slow.mp3" preload="none"></audio>
+
+  <div class="lock__bottom">
+    {/* Every line the button says lives here, not in the script. String literals are
+        not minified, so copy in JS is copy charged against the ~10KB budget, while copy
+        in markup is free and lands in the gzipped HTML instead. It also means editing
+        the jokes never means touching logic. Order is fixed, see scripts/lock.ts. */}
+    <button class="lock__cta" id="lock-cta" type="button" data-unlock
+      data-lines="Catch me if you can to unlock|Whatever you do, do not push me onto his face.|Ugh. Take me.|Fine. It is yours.|CLICK TO UNLOCK|UNLOCK IF YOU CAN|TAP TO UNLOCK"
+      data-taunts="Too slow.|Not even close.|Try harder.|Was that it?"
+      data-corner="Ow. Not the corner.|That one hurt.|Fine, that counts.">
+      <Icon name="lock" size={13} /><span id="lock-label">UNLOCK IF YOU CAN</span>
+    </button>
+
+
+    <p class="lock__status"><span>PREPARING DESKTOP…</span><span>READY</span></p>
+  </div>
+</div>
+
+<style>
+  .lock {
+    position: fixed; inset: 0; z-index: 1000;
+    display: grid; grid-template-rows: auto 1fr auto; justify-items: center;
+    padding: 6dvh var(--space-4) 4dvh; text-align: center; color: #fff;
+    background: var(--os-desktop) var(--wallpaper) center / cover no-repeat;
+    transition: opacity var(--t-base) var(--ease), visibility var(--t-base);
+  }
+  .lock::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(14,28,48,.78), rgba(14,28,48,.5) 45%, rgba(14,28,48,.72));
+    backdrop-filter: blur(2px) saturate(1.1); -webkit-backdrop-filter: blur(2px) saturate(1.1);
+  }
+  .lock__top, .lock__id, .lock__bottom { position: relative; display: grid; justify-items: center; }
+  .lock__top { gap: var(--space-2); }
+  .lock__id { align-content: center; gap: 3px; }
+  .lock__bottom { align-content: end; gap: var(--space-4); }
+
+  .lock__date { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .01em; }
+  .lock__time {
+    margin: 0; font-size: clamp(76px, 15vw, 150px); line-height: .95; font-weight: 700;
+    letter-spacing: -.03em; color: rgba(255,255,255,.55); font-variant-numeric: tabular-nums;
+  }
+
+  .lock__socials { display: flex; gap: var(--space-2); margin: var(--space-2) 0 0; padding: 0; list-style: none; }
+  .lock__socials a {
+    display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: #fff;
+    background: var(--glass); border: var(--glass-line); box-shadow: var(--glass-sheen);
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    transition: background var(--t-fast);
+  }
+
+  /* Positioning context for the bubble, so it sits just above his head */
+  .lock__face { position: relative; display: block; margin-bottom: var(--space-2); }
+  .lock__avatar { width: 64px; height: 64px; border-radius: 50%; display: block; }
+  .lock__avatar--fallback {
+    display: grid; place-items: center; font-size: 21px; font-weight: 700; letter-spacing: .04em;
+    background: var(--glass); border: var(--glass-line); box-shadow: var(--glass-sheen);
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  }
+  .lock__name { margin: 0; font-size: 20px; font-weight: 700; }
+  .lock__title { margin: 0; font-size: 11px; letter-spacing: .22em; color: rgba(255,255,255,.75); }
+
+  /* One rule, not two. This was declared twice and the second transition shorthand was
+     silently overriding the first. */
+  /* Deliberately NOT `all: unset`. That reset also wipes box-shadow, and because this
+     scoped rule outranks the `:focus-visible` in global.css it was cancelling the site's
+     own focus ring on the one control that matters. Resetting only what needs resetting
+     lets the shared ring apply, so this button focuses like everything else. */
+  .lock__cta {
+    appearance: none; margin: 0; cursor: var(--cur-hand); position: relative;
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    padding: 11px 26px; border-radius: var(--r-pill);
+    background: var(--glass); border: var(--glass-line); box-shadow: var(--glass-sheen);
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    font: inherit; font-size: 12px; letter-spacing: .18em; color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,.35);   /* keeps the label legible over any wallpaper */
+    /* Deliberately faster than --t-base, and local rather than a token change: --t-base
+       is shared with the dock and the windows, so lowering it would speed up the site.
+       At 220ms a lunge could reach the button mid-slide. */
+    transition: background var(--t-fast), transform 90ms var(--ease);
+  }
+  .lock__socials a:hover, .lock__cta:hover {
+    background: var(--glass-hover);
+  }
+  .lock__socials a:active, .lock__cta:active { background: var(--glass-press); }
+
+  /* The anti-cheat, and it has to be CSS rather than a click handler. A transitioning
+     element is hit-tested at its interpolated position, so for the whole 90ms slide the
+     button really is under the cursor and a click really does land. Taking it out of hit
+     testing entirely is the only way to close that window. A stab now falls through to
+     #lock, whose handler looks for [data-unlock] on the target and finds nothing.
+
+     This selector MUST mirror the matchMedia string in scripts/lock.ts. If they ever
+     drift, a reduced-motion visitor gets a button that cannot be clicked at all. */
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .lock__cta:not(.is-caught) { pointer-events: none; }
+  }
+
+  /* Speech bubble, same trick as the dock tooltip: a pseudo-element carrying
+     content: attr(), plus a border-triangle tail. Being a pseudo-element on the button
+     it travels with it for free, and the script only has to set one data attribute. */
+  .lock__cta[data-say]::after {
+    content: attr(data-say); position: absolute; left: 50%; bottom: calc(100% + 12px);
+    transform: translateX(-50%); padding: 7px 13px; border-radius: 12px;
+    white-space: nowrap; font-size: 11px; letter-spacing: .02em; font-weight: 700;
+    background: rgba(20,32,52,.92); color: #fff; pointer-events: none;
+    animation: pop var(--t-base) var(--ease);
+  }
+  .lock__cta[data-say]::before {
+    content: ''; position: absolute; left: 50%; bottom: calc(100% + 6px);
+    transform: translateX(-50%); border: 6px solid transparent;
+    border-top-color: rgba(20,32,52,.92); pointer-events: none;
+  }
+  @keyframes pop { from { opacity: 0; transform: translate(-50%, 4px) scale(.94); } }
+  /* Pure theatre, so it belongs in CSS. Both states ship in the markup stacked in one
+     grid cell and cross-fade on a delay, which drops a lookup, a timer and two strings
+     out of the JS budget. */
+  .lock__status {
+    margin: 0; display: grid; font-size: 10px; letter-spacing: .22em; color: rgba(255,255,255,.45);
+  }
+  .lock__status span { grid-area: 1 / 1; animation: 1ms var(--ease) 1200ms both; }
+  .lock__status span:first-child { animation-name: hide; }
+  .lock__status span:last-child { opacity: 0; animation-name: show; }
+  @keyframes hide { to { opacity: 0; } }
+  @keyframes show { to { opacity: 1; } }
+
+  .lock__meta { margin: 0; font-size: 11px; letter-spacing: .18em; color: rgba(255,255,255,.55); }
+  .lock__status-line {
+    display: inline-flex; align-items: center; gap: 7px; margin: var(--space-2) 0 0;
+    font-size: 11px; color: rgba(255,255,255,.8);
+  }
+  .lock__dot {
+    position: relative;
+    width: 7px; height: 7px; border-radius: 50%; background: #35d07f;
+    box-shadow: 0 0 0 3px rgba(53,208,127,.22);
+  }
+  /* The ring travels on a pseudo-element rather than on the dot's own box-shadow, so the
+     dot stays exactly the size it is and only the ring moves. */
+  .lock__dot::after {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    animation: ping 2.8s var(--ease) infinite;
+  }
+  /* Two pulses close together and then a rest, so it reads as a pulse rather than a
+     metronome. The jump back to nothing at 22% is invisible because the ring has already
+     faded to fully transparent by 18%. */
+  @keyframes ping {
+    0%        { box-shadow: 0 0 0 0 rgba(53,208,127,.55); }
+    18%       { box-shadow: 0 0 0 7px rgba(53,208,127,0); }
+    22%       { box-shadow: 0 0 0 0 rgba(53,208,127,.4); }
+    40%, 100% { box-shadow: 0 0 0 7px rgba(53,208,127,0); }
+  }
+  .lock__hint {
+    margin: 0; min-height: 1.2em; font-size: 11px; letter-spacing: .1em;
+    color: rgba(255,255,255,.7); transition: opacity var(--t-fast);
+  }
+  /* The win flash is a ring, not a scale. A scale keyframe would have to restate the
+     button's current translate to avoid snapping to origin, which is what the --ox/--oy
+     custom properties were for. Animating box-shadow instead lets both of them go. */
+  .lock__cta.is-caught {
+    background: var(--glass-hover);
+    animation: caught var(--t-base) var(--ease);
+  }
+  @keyframes caught { from { box-shadow: 0 0 0 0 rgba(255,255,255,.6); } to { box-shadow: 0 0 0 18px rgba(255,255,255,0); } }
+
+  /* Once the button tires, the avatar starts pulsing: herd it here to end the chase.
+     Nothing new is added to the resting screen, the target is the face already there. */
+  .lock__avatar.is-target {
+    box-shadow: 0 0 0 3px rgba(255,255,255,.5), 0 0 0 10px rgba(255,255,255,.14);
+    animation: beacon 1.4s var(--ease) infinite;
+  }
+  @keyframes beacon {
+    50% { box-shadow: 0 0 0 4px rgba(255,255,255,.75), 0 0 0 16px rgba(255,255,255,0); }
+  }
+
+  /* The escape, as a message from Yves rather than a system banner. It hangs off his
+     avatar with a tail pointing at his face, so it reads as him saying it. Absolutely
+     positioned inside .lock__id, which is already position: relative, so it cannot shift
+     the button's cached layout box. */
+  .lock__shout {
+    position: absolute; left: 50%; bottom: calc(100% + 12px);
+    transform: translateX(-50%) scale(.9); transform-origin: 50% 100%;
+    margin: 0; padding: 9px 13px; width: max-content; max-width: 236px;
+    border-radius: 14px;
+    background: #fff; color: #16161a;
+    font-size: 11px; font-weight: 700; line-height: 1.45; letter-spacing: .01em;
+    box-shadow: 0 14px 34px -10px rgba(0,0,0,.6);
+    opacity: 0; pointer-events: none;
+    transition: opacity var(--t-base) var(--ease), transform var(--t-base) var(--ease);
+  }
+  /* The tail sits dead centre, because the bubble is centred on the avatar. It used to
+     be pinned near the left edge, which left it pointing at empty space beside his head. */
+  .lock__shout::after {
+    content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%);
+    border: 7px solid transparent; border-top-color: #fff; border-bottom: 0;
+  }
+  .lock__shout kbd {
+    display: inline-block; padding: 1px 6px; margin: 0 1px; border-radius: 4px;
+    background: #16161a; color: #fff; font: inherit; font-size: 10px;
+  }
+  .lock__shout.is-on {
+    opacity: 1; transform: translateX(-50%) scale(1);
+    animation: nudge 520ms var(--ease) var(--t-base) 2;
+  }
+  @keyframes nudge {
+    30% { transform: translateX(-50%) scale(1) rotate(-1.6deg); }
+    70% { transform: translateX(-50%) scale(1) rotate(1.6deg); }
+  }
+
+  /* The sound gate. Covers everything, so the choice is made before the lock screen can
+     be touched at all. That also removes the old bug where a corner pill could sit on
+     top of the fleeing button and swallow the winning click. */
+  .gate {
+    position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center;
+    padding: var(--space-4); text-align: center; color: #fff;
+    background: rgba(8,14,24,.72);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    animation: fade var(--t-base) var(--ease);
+  }
+  .gate[hidden] { display: none; }
+  .gate__card {
+    display: grid; justify-items: center; gap: var(--space-2);
+    width: min(420px, 100%); padding: var(--space-5) var(--space-4) var(--space-4);
+    border-radius: 22px;
+    background: var(--glass); border: var(--glass-line); box-shadow: var(--glass-sheen);
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    animation: rise var(--t-base) var(--ease) both;
+  }
+  .gate__icon {
+    display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: var(--space-2);
+    border-radius: 50%; color: #fff;
+    background: var(--glass); border: var(--glass-line); box-shadow: var(--glass-sheen);
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  }
+  .gate__eyebrow { margin: 0; font-size: 10px; letter-spacing: .3em; color: rgba(255,255,255,.6); }
+  .gate__title { margin: 0; font-size: 22px; font-weight: 700; }
+  .gate__body {
+    margin: 0 0 var(--space-3); font-size: 13px; line-height: 1.5; color: rgba(255,255,255,.75);
+  }
+  /* Only what the shared .btn cannot know: this pair stacks, so the second needs a gap. */
+  .gate__no { margin-top: var(--space-2); }
+
+  /* Everything eases in once, so the screen assembles rather than just appearing.
+     .lock__bottom fades WITHOUT moving on purpose: it is the button's ancestor, and an
+     ancestor transform would offset the box the dodge maths measures, leaving the origin
+     permanently wrong for anyone who moves the mouse during the entrance. */
+  .lock__top, .lock__id { animation: rise var(--t-slow) var(--ease) both; }
+  .lock__bottom { animation: fade var(--t-slow) var(--ease) both; }
+  .lock__id { animation-delay: calc(var(--t-slow) * .15); }
+  .lock__bottom { animation-delay: calc(var(--t-slow) * .3); }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes fade { from { opacity: 0; } }
+
+  /* The token durations are zeroed globally under reduced motion, but these local
+     hard-coded ones are not, so they need naming here. */
+  @media (prefers-reduced-motion: reduce) {
+    .lock__top, .lock__id, .lock__bottom { animation: none; }
+    .lock__cta { transition: background var(--t-fast); }
+    .lock__cta.is-caught, .lock__cta[data-say]::after, .lock__avatar.is-target { animation: none; }
+    .lock__dot::after { animation: none; }
+    /* The shout still appears, it just does not shake. It is the escape hatch, so it has
+       to reach everyone. */
+    .lock__shout.is-on { animation: none; }
+  }
+
+  .lock.is-open { opacity: 0; visibility: hidden; pointer-events: none; }
+
+  @media (max-width: 640px) {
+    .lock__time { font-size: clamp(64px, 26vw, 110px); }
+    .lock__avatar { width: 56px; height: 56px; }
+  }
+</style>
+
+<script>
+  import { initLock } from '../../scripts/lock';
+  initLock();
+</script>

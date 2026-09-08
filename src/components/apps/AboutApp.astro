@@ -1,0 +1,44 @@
+---
+/**
+ * About Yves. The short version of who he is, in his own voice.
+ *
+ * This is a draft built only from things already true in the repo (his role and location
+ * in data/site.ts, the tools in data/dock.ts). Nothing here is invented: no client names,
+ * no numbers, no war stories. Replace it with the real thing whenever you like.
+ */
+import { site } from '../../data/site';
+---
+<div class="about">
+  <img src={site.avatar} alt={site.name} width="88" height="88" loading="eager" decoding="async" />
+  <div class="about__text">
+    <p class="about__name">{site.name}</p>
+    <p class="about__role">{site.role}</p>
+
+    <p>I design interfaces and I build them. Usually that means the design in Figma and the
+    build in Webflow or Framer, so the thing that ships is the thing that was designed.</p>
+
+    <p>I work from {site.location}, and I work to my clients' hours rather than mine.</p>
+
+    <p class="about__status"><span class="about__dot" aria-hidden="true"></span>{site.status}</p>
+
+    <button class="btn" type="button" data-open="contact">Send me a message</button>
+  </div>
+</div>
+
+<style>
+  .about { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--space-3); align-items: start; }
+  .about img { border-radius: 16px; }
+  .about__text { display: grid; gap: var(--space-2); font-size: 13px; line-height: 1.6; }
+  .about__text p { margin: 0; }
+  .about__name { font-family: var(--font-chrome); font-size: 14px; font-weight: 700; }
+  .about__role { color: var(--os-muted); font-size: 12px; }
+  .about__status { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--os-muted); }
+  .about__dot { width: 7px; height: 7px; border-radius: 50%; background: #35d07f; box-shadow: 0 0 0 3px rgba(53,208,127,.22); }
+  /* The button is the only grid item that should not stretch across the column. */
+  .about .btn { justify-self: start; margin-top: var(--space-1); }
+
+  @media (max-width: 640px) {
+    /* 88px of photo plus a text column does not fit at 320px, so the photo goes on top. */
+    .about { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

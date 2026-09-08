@@ -1,0 +1,20 @@
+---
+/**
+ * Inline a Pixelarticons glyph from public/icons/ui so it takes the current text colour.
+ * Usage: <Icon name="wifi" size={16} />
+ * Inlining (instead of <img>) is what makes fill="currentColor" work.
+ */
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+interface Props { name: string; size?: number; label?: string }
+const { name, size = 16, label } = Astro.props;
+
+const svg = readFileSync(resolve(`public/icons/ui/${name}.svg`), 'utf8')
+  .replace('<svg', `<svg width="${size}" height="${size}" class="glyph" ${label ? `role="img" aria-label="${label}"` : 'aria-hidden="true"'}`);
+---
+<Fragment set:html={svg} />
+
+<style is:global>
+  .glyph { display: inline-block; vertical-align: middle; shape-rendering: crispEdges; }
+</style>

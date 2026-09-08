@@ -1,0 +1,44 @@
+---
+/**
+ * Inline a tech-stack logo from src/icons/stack at build time.
+ * Usage: <StackIcon name="figma" label="Figma" size={44} />
+ *
+ * Inlined rather than <img src>, so the dock costs zero extra requests and paints
+ * with the first response. The dock sits above the fold, so that is the difference
+ * between the logos being there and popping in.
+ *
+ * The files live in src/, not public/. Anything in public/ is copied verbatim into
+ * dist/ and uploaded, so keeping them there shipped a second unused copy of every
+ * logo. src/ is build input only, so nothing ships but the inlined markup.
+ *
+ * Figma exports reuse ids across files (every one of ours has a "clip0_78_23").
+ * Inlined into one page those collide, and the browser resolves url(#id) to the first
+ * match, which breaks clips, masks and gradients. So every id is namespaced per icon
+ * here rather than in the files, which keeps a fresh Figma export safe to drop in.
+ */
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+interface Props { name: string; label: string; size?: number }
+const { name, label, size = 44 } = Astro.props;
+
+let svg = readFileSync(resolve(`src/icons/stack/${name}.svg`), 'utf8');
+
+for (const id of new Set([...svg.matchAll(/id="([^"]+)"/g)].map((m) => m[1]))) {
+  const q = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  svg = svg
+    .replace(new RegExp(`id="${q}"`, 'g'), `id="${id}--${name}"`)
+    .replace(new RegExp(`url\\(#${q}\\)`, 'g'), `url(#${id}--${name})`)
+    .replace(new RegExp(`href="#${q}"`, 'g'), `href="#${id}--${name}"`);
+}
+
+svg = svg.replace(
+  '<svg',
+  `<svg width="${size}" height="${size}" class="stack-icon" role="img" aria-label="${label}"`,
+);
+---
+<Fragment set:html={svg} />
+
+<style is:global>
+  .stack-icon { display: block; }
+</style>

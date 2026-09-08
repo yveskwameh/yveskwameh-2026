@@ -1,0 +1,45 @@
+MIT License
+
+Copyright (c) 2026 Yves Kwameh
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+WHAT THIS DOES AND DOES NOT COVER
+
+The MIT licence above covers the code: the components, scripts, styles, build
+tooling and the Worker. Take it, learn from it, build your own OS-desktop site
+with it.
+
+It does not cover the content, which is not mine to give away and is not the
+useful part anyway:
+
+  - The case studies in src/content/projects, and any client names in them
+  - The photographs, avatar and wallpaper
+  - The desktop icons in public/icons, which were drawn by hand
+  - The voice recording in public/audio
+  - "Yves Kwameh" as a name, and the likeness in the avatar
+
+Third-party assets keep their own licences, which travel with them:
+
+  - Space Mono is under the SIL Open Font License 1.1. See public/fonts/OFL.txt.
+  - Pixelarticons is MIT. See https://pixelarticons.com
+  - The tool logos in src/icons/stack are trademarks of their respective owners,
+    reproduced to identify the tools used, not to imply any endorsement.

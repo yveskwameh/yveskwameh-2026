@@ -1,0 +1,161 @@
+---
+/**
+ * Window chrome: traffic lights (close / minimise / zoom), drag by title bar,
+ * resize from the bottom-right corner. `filename` is the caption under the window.
+ */
+interface Props {
+  id: string; title: string; filename?: string;
+  width?: number; height?: number;
+  /** Render already open. The standalone case-study pages pass this. */
+  open?: boolean;
+  /** Chrome variant. 'compose' anchors the window bottom right and slides it up. */
+  variant?: 'compose';
+  /**
+   * Turn the close light into a link to here. The standalone case-study pages need this:
+   * they render a window but never load the window manager, so on those pages the close
+   * button would be a control that visibly does nothing.
+   */
+  closeHref?: string;
+}
+const { id, title, filename, width = 560, height, open = false, variant, closeHref } = Astro.props;
+---
+<section
+  class:list={['window', variant && `window--${variant}`, { 'is-open': open, 'is-focused': open }]}
+  id={`win-${id}`}
+  data-window={id}
+  role="dialog"
+  aria-labelledby={`win-${id}-title`}
+  style={`--w:${width}px;${height ? `--h:${height}px;` : ''}`}
+>
+  <div class="window__titlebar">
+    <div class="window__lights">
+      {closeHref
+        ? <a class="light light--close" href={closeHref} aria-label="Back to the desktop"></a>
+        : <button class="light light--close" data-close={id} aria-label="Close"></button>}
+      {/* Drawn but inactive, and disabled rather than merely grey so they are also out of
+          the tab order and out of the click handler. There is nowhere on this desktop to
+          minimise a window TO, and zoom fights the fixed two-column layout inside Work and
+          the corner anchoring of Mail, so leaving either live would promise something the
+          OS does not really do. macOS greys out the ones a window does not support. */}
+      <button class="light light--min" aria-label="Minimise (unavailable)" disabled></button>
+      <button class="light light--zoom" aria-label="Zoom (unavailable)" disabled></button>
+    </div>
+    <h2 class="window__title" id={`win-${id}-title`}>{title}</h2>
+  </div>
+  <div class="window__body"><slot /></div>
+  {/* Eight grips, one per edge and corner. data-resize holds the DIRECTION now, not the
+      window id, which is what scripts/drag.ts reads to decide which edges to move. */}
+  {['n', 'e', 's', 'w', 'ne', 'nw', 'se', 'sw'].map((d) => (
+    <span class={`window__grip window__grip--${d}`} data-resize={d} aria-hidden="true"></span>
+  ))}
+</section>
+{filename && <p class="window__filename" data-filename-for={id}>{filename}</p>}
+
+<style>
+  .window {
+    position: absolute; top: 10%; left: 18%; width: min(var(--w), calc(100vw - 32px)); height: var(--h, auto);
+    /* A window with no explicit height grows with its content, and a long one used to run
+       straight off the bottom of the screen and behind the dock. 80% of the desktop,
+       against a top of 10%, leaves the same 10% clear underneath. The body already
+       scrolls, so capping the window is all it takes. */
+    max-height: 80%;
+    min-width: 280px; min-height: 160px; display: none; flex-direction: column; overflow: hidden;
+    /* Deliberately no background. The title bar is glass, and glass needs something
+       behind it, so the surface colour moved down onto .window__body. Same split macOS
+       makes: chrome is vibrant, content is solid, because a case study has to stay
+       readable and a wallpaper showing through body text does not help anyone. */
+    border: var(--os-border); border-radius: var(--r-window); box-shadow: var(--os-shadow);
+    transition: opacity var(--t-fast);
+  }
+  .window.is-open { display: flex; }
+  .window__titlebar {
+    flex: none; height: var(--titlebar-h); display: flex; align-items: center; gap: var(--space-2); padding: 0 10px;
+    /* Kept translucent on purpose. Everything else went back to how it was before the
+       glass round, but a see-through title bar over the wallpaper is the one part of it
+       worth keeping. */
+    background: var(--os-titlebar);
+    backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    border-bottom: 1px solid rgba(0,0,0,.12);
+    cursor: var(--cur-grab); touch-action: none; user-select: none;
+  }
+  /* Both states. :active covers holding the bar down, and .is-dragging is what
+     scripts/drag.ts actually puts on the window, which until now no CSS matched at all. */
+  .window__titlebar:active,
+  .window.is-dragging .window__titlebar { cursor: var(--cur-grabbing); }
+  .window__lights { display: flex; gap: 8px; }
+  /* display: block so this works as an <a> as well as a <button>, for closeHref above. */
+  .light { display: block; width: 12px; height: 12px; border-radius: 50%; padding: 0; cursor: var(--cur-hand); border: 1px solid; }
+  .light--close { background: var(--light-close); border-color: var(--light-close-line); }
+  /* The inactive pair. Same grey the whole set goes when the window is not focused. */
+  .light--min, .light--zoom { background: #d5d5d3; border-color: #c2c2c0; cursor: var(--cur-arrow); }
+  /* macOS: lights go grey when the window is not focused, and the close symbol appears on
+     hover. Only close gets a symbol now, because it is the only one that does anything. */
+  .window:not(.is-focused) .light { background: #d5d5d3; border-color: #c2c2c0; }
+  /* content is what was missing here: without it the pseudo-element is never generated,
+     so this x had never once appeared in any state. */
+  .window__lights:hover .light--close::before {
+    content: ''; display: block; margin: 2px auto; width: 6px; height: 6px;
+    background-image:
+      linear-gradient(45deg, transparent 43%, rgba(0,0,0,.6) 43% 57%, transparent 57%),
+      linear-gradient(-45deg, transparent 43%, rgba(0,0,0,.6) 43% 57%, transparent 57%);
+  }
+  /* A 12px dot is a small thing to hit, and a near miss lands on the title bar and starts
+     a drag instead. This grows the hit area to 18px without changing what you see. Only
+     3px: the lights sit 8px apart, so more would have them overlapping each other. */
+  .light { position: relative; }
+  .light::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; }
+  /* Left aligned, sitting just after the traffic lights, rather than centred in the bar. */
+  .window__title { margin: 0; font: 11px var(--font-chrome); letter-spacing: .02em; }
+  /* Carries the surface colour now that .window itself is transparent. */
+  .window__body { flex: 1; min-height: 0; padding: var(--space-3); overflow: auto; background: var(--os-surface); }
+  /* Resize grips. Six pixels of grab area straddling each edge, and the corners sit on
+     top of the edges so a corner drag wins where they overlap. They are invisible: the
+     cursor is the affordance, which is how a real window manager does it. */
+  .window__grip { position: absolute; touch-action: none; }
+  .window__grip--n { top: -3px; left: 10px; right: 10px; height: 6px; cursor: var(--cur-ns); }
+  .window__grip--s { bottom: -3px; left: 10px; right: 10px; height: 6px; cursor: var(--cur-ns); }
+  .window__grip--w { left: -3px; top: 10px; bottom: 10px; width: 6px; cursor: var(--cur-ew); }
+  .window__grip--e { right: -3px; top: 10px; bottom: 10px; width: 6px; cursor: var(--cur-ew); }
+  .window__grip--nw, .window__grip--ne, .window__grip--sw, .window__grip--se { width: 14px; height: 14px; }
+  .window__grip--nw { top: -3px; left: -3px; cursor: var(--cur-nwse); }
+  .window__grip--se { bottom: -3px; right: -3px; cursor: var(--cur-nwse); }
+  .window__grip--ne { top: -3px; right: -3px; cursor: var(--cur-nesw); }
+  .window__grip--sw { bottom: -3px; left: -3px; cursor: var(--cur-nesw); }
+  .window__filename { display: none; }
+
+  /* ------------------------------------------------------------------
+     Compose. Mail sits in the bottom right corner over a desktop you can still use,
+     the way Gmail does, instead of arriving as another centred window.
+
+     It is still an ordinary .window, which is the whole reason this is six lines: close,
+     minimise, zoom, focus, z-order, the dim-others rule, Escape, drag, resize and the
+     mobile bottom sheet all already exist and all still apply. Only where it sits and how
+     it arrives are different, and both are CSS.
+
+     Dragging it works without any special case. drag.ts writes style.left and style.top,
+     and an element given both left and right is over-constrained, so the browser drops
+     right on its own. It starts anchored to the corner and becomes a normal window the
+     moment you move it.
+     ------------------------------------------------------------------ */
+  @media (min-width: 641px) {
+    .window.window--compose {
+      max-height: calc(100dvh - var(--menubar-h) - var(--dock-clear) - var(--space-3));
+    }
+    /* An animation rather than a transition, because display: none to flex restarts an
+       animation and cancels a transition outright. --t-base is already zeroed under
+       reduced motion, so this needs no media query of its own.
+
+       It only fades and lifts a little now. It used to slide up from the bottom right
+       corner, which was where the panel lived; it opens in the middle like everything
+       else, so a long travel would look wrong. */
+    .window.window--compose.is-open { animation: compose-in var(--t-base) var(--ease); }
+  }
+  /* No body padding: the compose rows draw their own dividers edge to edge. */
+  .window--compose .window__body { padding: 0; overflow: hidden; display: grid; }
+  @keyframes compose-in { from { opacity: 0; transform: translateY(8px) scale(.98); } }
+
+  @media (max-width: 640px) {
+    .window { top: auto !important; bottom: 0; left: 0 !important; width: 100vw !important; height: auto !important; max-height: 85dvh; border-radius: var(--r-window) var(--r-window) 0 0; }
+    .window__grip { display: none; }
+  }
+</style>

@@ -1,0 +1,130 @@
+/* ==========================================================
+   Design tokens. Retro pixel icons and chrome type, modern
+   surfaces: rounded corners, soft depth, translucent bars.
+   ========================================================== */
+:root {
+  /* Surfaces */
+  --wallpaper: url('/images/wallpaper.avif');    /* 33KB, source jpeg is in src/images */
+  --os-desktop: #3b5a72;                         /* shows while it loads, and if avif is unsupported */
+  --os-surface: #f3f3f1;                         /* window body */
+  --os-recess: #eaeae8;                          /* behind grouped cards, System Settings style */
+  --os-card: #fdfdfc;                            /* the cards themselves */
+  --os-chrome: #e6e6e3;                          /* title bars */
+  --os-bar: rgba(236, 236, 234, 0.72);           /* menu bar, blurred */
+  --os-dock: rgba(240, 240, 238, 0.55);          /* dock: the most see-through of the three */
+  --os-menu: rgba(246, 246, 244, 0.92);          /* dropdowns and right-click menus */
+  --os-titlebar: rgba(236, 236, 234, 0.72);      /* window title bars, same mix as the menu bar */
+  --os-ink: #16161a;
+  --os-muted: #6b6b70;
+  --os-line: rgba(22, 22, 26, 0.35);             /* 1px outline on windows */
+  /* Primary actions and every CTA. Yves's brand teal, carried over from the previous
+     site. White on it scores 5.89 and it scores 5.3 as a link on the window surface,
+     so it clears WCAG AA both ways. */
+  --os-accent: #077167;
+  /* Lighter teal for hover and active states */
+  --os-accent-bright: #0e9c8d;
+
+  /* macOS traffic lights, exact */
+  --light-close: #ff5f57;  --light-close-line: #e0443e;
+  --light-min:   #febc2e;  --light-min-line:   #d89e24;
+  --light-zoom:  #28c840;  --light-zoom-line:  #1aab29;
+
+  /* ----------------------------------------------------------------
+     Frosted panels, back to what they were before the glass experiment.
+
+     A translucent fill, a blur, a hairline. Nothing layered on top: no directional rim,
+     no specular inset, no deep drop shadow. That version was technically nicer and looked
+     wrong, heavy and fussy against flat pixel icons and 10px monospace.
+
+     These --glass tokens are for the lock screen and the sound gate only, which sit on
+     their own dark wash and carry white type. The chrome fills sit with the other surface
+     colours above, because each one is a different mix over a different thing.
+     ---------------------------------------------------------------- */
+  --glass: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.08));
+  --glass-hover: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.16));
+  --glass-press: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
+  --glass-blur: blur(22px) saturate(180%) brightness(1.06);
+  --glass-line: 1px solid rgba(255,255,255,.28);
+  --glass-sheen:
+    inset 0 1px 0 rgba(255,255,255,.5),
+    inset 0 -1px 0 rgba(255,255,255,.07),
+    0 10px 30px -12px rgba(0,0,0,.55);
+
+  /* Depth: one crisp line, one soft shadow */
+  --os-border: 1px solid var(--os-line);
+  --os-shadow: 0 18px 40px -12px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.18);
+  --os-shadow-sm: 0 6px 16px -6px rgba(0,0,0,.35);
+
+  /* Radius: rounded windows, square pixels */
+  --r-window: 10px;
+  --r-inner: 6px;
+  --r-pill: 999px;
+
+  /* Type: Space Mono throughout, self-hosted in public/fonts. One typeface for chrome,
+     body and captions, which is what the "one self-hosted font" speed rule asks for. The
+     fallbacks are monospace so the layout barely shifts while the file loads. */
+  --font-chrome: 'Space Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-body: 'Space Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-mono: 'Space Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Sizing */
+  --menubar-h: 40px;
+  --titlebar-h: 30px;
+  --icon-size: 56px;
+  /* Room the dock takes at the bottom, so a panel anchored down there clears it. The bar
+     sits 24px up and stands 1.38x its icon size, which is capped at 48px on anything
+     wider than a phone. Retune alongside the ratios in Dock.astro if those ever change. */
+  --dock-clear: calc(24px + 48px * 1.38 + var(--space-2));
+  --space-1: 4px; --space-2: 8px; --space-3: 16px; --space-4: 24px; --space-5: 40px;
+
+  /* ----------------------------------------------------------------
+     The cursor set. Drawn as pixel art by tools/draw-cursors.py, which is where to go to
+     change a shape: the art is ASCII in that file, one character per pixel.
+
+     image-set gives the browser a 2x file, because a soft pixel-art cursor is a
+     contradiction. The numbers after the url are the hotspot, the pixel in the image that
+     actually points at things: the tip for the arrow, the fingertip for the hand, the
+     middle for the I-beam. Each ends in a real keyword so a browser that refuses the
+     image still gets the right kind of cursor.
+
+     Hotspots are in 1x image pixels, and the art is now drawn 1:1, so they are art
+     coordinates too. They were halved when the art stopped being scaled 2x. If the scale
+     in that script ever changes again, these have to move with it or clicks land off.
+     ---------------------------------------------------------------- */
+  --cur-arrow:    image-set(url('/cursors/arrow.png') 1x, url('/cursors/arrow@2x.png') 2x) 0 0, auto;
+  --cur-hand:     image-set(url('/cursors/hand.png') 1x, url('/cursors/hand@2x.png') 2x) 3 0, pointer;
+  --cur-text:     image-set(url('/cursors/text.png') 1x, url('/cursors/text@2x.png') 2x) 4 8, text;
+  /* Drag and resize. These three point with their middle rather than a tip, so their
+     hotspots are centres. */
+  --cur-grab:     image-set(url('/cursors/grab.png') 1x, url('/cursors/grab@2x.png') 2x) 7 7, grab;
+  --cur-grabbing: image-set(url('/cursors/grabbing.png') 1x, url('/cursors/grabbing@2x.png') 2x) 6 7, grabbing;
+  /* One per edge and corner, so a window can be resized from any side. */
+  --cur-nwse: image-set(url('/cursors/resize-nwse.png') 1x, url('/cursors/resize-nwse@2x.png') 2x) 8 8, nwse-resize;
+  --cur-nesw: image-set(url('/cursors/resize-nesw.png') 1x, url('/cursors/resize-nesw@2x.png') 2x) 8 8, nesw-resize;
+  --cur-ns:   image-set(url('/cursors/resize-ns.png') 1x, url('/cursors/resize-ns@2x.png') 2x) 8 8, ns-resize;
+  --cur-ew:   image-set(url('/cursors/resize-ew.png') 1x, url('/cursors/resize-ew@2x.png') 2x) 8 8, ew-resize;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-fast: 120ms;
+  --t-base: 220ms;
+  --t-slow: 620ms;   /* entrances. Zeroed below like the others, so delays collapse too */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t-base: 0ms; --t-slow: 0ms; }
+}
+
+/* Without backdrop-filter there is no blur to hide anything, so the fill has to do the
+   whole job on its own. Firefox had this behind a flag for years and some Android
+   browsers still drop it, and on those the old values left the wallpaper showing through
+   the menu bar. Going nearly opaque is not as pretty, but it is legible, which matters
+   more. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --os-bar:      rgba(236, 236, 234, .97);
+    --os-dock:     rgba(240, 240, 238, .95);
+    --os-menu:     rgba(246, 246, 244, .99);
+    --os-titlebar: rgba(236, 236, 234, .97);
+  }
+}

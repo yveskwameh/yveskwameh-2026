@@ -1,0 +1,31 @@
+{
+  // Cloudflare Workers. Static assets first, with one small Worker behind them.
+  //
+  // The site is still entirely static: Cloudflare serves a file from ./dist whenever the
+  // path matches one, and only falls through to the Worker when it does not. The Worker
+  // exists for exactly one route, /ws, which is the websocket the live cursors talk over.
+  // No Astro adapter, no SSR, nothing about the pages changed.
+  //
+  // Docs: https://developers.cloudflare.com/workers/static-assets/routing/worker-script/
+  "name": "yveskwameh-portfolio",
+  "compatibility_date": "2026-09-06",
+  "main": "./worker/index.ts",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // Serve /404.html when a path is not found
+    "not_found_handling": "404-page"
+  },
+  // One Durable Object, holding whoever has the site open. Free on the Workers free plan,
+  // and the hibernation API in worker/index.ts means an idle room costs nothing.
+  "durable_objects": {
+    "bindings": [{ "name": "ROOM", "class_name": "Room" }]
+  },
+  // SQLite-backed, which is what makes Durable Objects available without a paid plan.
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Room"] }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

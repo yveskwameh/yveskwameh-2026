@@ -1,0 +1,183 @@
+---
+/** macOS-style dock: label pops up on hover, icon magnifies and the bar widens to fit it. */
+import { dockTools, dockSystem } from '../../data/dock';
+import StackIcon from './StackIcon.astro';
+import Icon from './Icon.astro';
+---
+<nav class="dock" aria-label="Tools">
+  <ul>
+    {dockTools.map((t) => (
+      <li class="dock__item" data-label={t.name} data-quip={t.quip}>
+        <StackIcon name={t.icon} label={t.name} size={48} />
+      </li>
+    ))}
+    <li class="dock__sep" role="separator"></li>
+    {dockSystem.map((s) => (
+      <li class="dock__item" data-label={s.name} data-quip={s.quip}>
+        <button class="dock__system" type="button" data-open={s.opens} aria-label={s.name}>
+          {s.icon
+            ? <span class="dock__drawn pixel" style={`background-image:url('${s.icon}')`}></span>
+            : <Icon name={s.glyph!} size={26} />}
+        </button>
+      </li>
+    ))}
+  </ul>
+  {/* Both build-time, so the wording is not charged against the JS budget. The hint shows
+      while something is dragged clear of the bar; the bubble is the answer when it is let
+      go, and its text comes from that item's data-quip. */}
+  <p class="dock__hint" id="dock-hint" hidden aria-hidden="true">Remove from dock</p>
+  <p class="dock__say" id="dock-say" role="status" hidden></p>
+</nav>
+
+<style>
+  .dock {
+    position: fixed; left: 50%; transform: translateX(-50%); z-index: 800;
+    /* 24px clear of the bottom edge, matching the side margins on mobile, plus whatever
+       the iOS home indicator needs on top of that. */
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+
+    /* One number drives the whole dock. Everything else is a ratio of it, so the bar
+       keeps its proportions at every size instead of needing a breakpoint per device.
+
+       8 tiles + 8 gaps (the divider is a flex child too) + the two paddings comes to
+       9.98x the icon size, so 8vw keeps the bar inside the viewport from a 320px phone
+       upward, and the 48px ceiling stops it growing past its designed size. */
+    --dock-icon: clamp(26px, 8vw, 48px);
+    --dock-near: calc(var(--dock-icon) * 1.25);  /* the two either side of the pointer */
+    --dock-hover: calc(var(--dock-icon) * 1.58); /* the one under the pointer */
+    --dock-gap: calc(var(--dock-icon) * 0.2);
+    --dock-pad: calc(var(--dock-icon) * 0.19);
+  }
+  .dock ul {
+    display: flex; align-items: flex-end; gap: var(--dock-gap);
+    margin: 0; padding: var(--dock-pad); list-style: none;
+    /* Height is pinned to the resting size, so the bar keeps its shape while the icons
+       grow up and out of it, the way the macOS dock does. */
+    height: calc(var(--dock-icon) + var(--dock-pad) * 2); box-sizing: border-box;
+    /* The most see-through surface in the OS, and meant to be. It carries artwork rather
+       than text, so the wallpaper coming through it costs nothing in legibility. */
+    background: var(--os-dock);
+    backdrop-filter: blur(20px) saturate(1.4); -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid rgba(255,255,255,.5);
+    border-radius: calc(var(--dock-icon) * .375); box-shadow: var(--os-shadow-sm);
+  }
+  .dock__item {
+    position: relative; flex: none;
+    width: var(--size, var(--dock-icon)); height: var(--size, var(--dock-icon));
+    /* Magnifying with width/height rather than transform: scale() is the whole point.
+       A transform is painted, not laid out, so a scaled icon would sit on top of its
+       neighbours. Growing the box makes the flex row reflow, so the dock widens and
+       nothing ever overlaps. */
+    transition: width var(--t-base) var(--ease), height var(--t-base) var(--ease);
+  }
+  /* No border-radius here: each logo is a full-bleed tile that carries its own rounded
+     corner from Figma, so rounding again would shave the corners twice. */
+  .dock__item :global(.stack-icon) { width: 100%; height: 100%; }
+
+  /* Divider between the tools and the system items, like the one before the macOS bin */
+  .dock__sep {
+    flex: none; align-self: center; width: 1px; height: 60%; margin: 0 2px;
+    background: rgba(22,22,26,.22);
+  }
+
+  /* Images and Trash sit completely plain: no tile, no shadow, just the drawn artwork.
+     They are system items rather than brands, so they read as objects on the shelf
+     instead of pretending to be apps like the six logos. */
+  .dock__system {
+    all: unset; display: grid; place-items: center; width: 100%; height: 100%;
+    box-sizing: border-box; cursor: var(--cur-hand); color: var(--os-ink);
+  }
+  .dock__system :global(.glyph) { width: 62%; height: 62%; }
+  .dock__drawn {
+    width: 100%; height: 100%; display: block;
+    /* The drawn icons only fill about 73% of their own canvas, the rest is transparent
+       margin, while the brand logos are tiles that fill theirs corner to corner, so
+       fitting both to the same box makes these read much smaller. Oversizing the
+       background corrects that, and the empty margin simply clips.
+
+       120% puts the artwork at roughly 88% of the tile: reads as the same family as the
+       logos without overpowering them. Sizing it to match the tiles exactly was too much,
+       because a loose illustration next to a solid filled square wants to sit a little
+       under it, not level with it. Nudge this one number to retune. */
+    background: center / 120% no-repeat;
+  }
+
+  /* Fallback for when the script has not taken over. scripts/dock.ts adds .is-live and
+     drives --size from the pointer instead, which is the effect we actually want. */
+  .dock:not(.is-live) .dock__item:hover { width: var(--dock-hover); height: var(--dock-hover); }
+  .dock:not(.is-live) .dock__item:hover + .dock__item,
+  .dock:not(.is-live) .dock__item:has(+ .dock__item:hover),
+  .dock:not(.is-live) .dock__item:hover + .dock__sep + .dock__item,
+  .dock:not(.is-live) .dock__item:has(+ .dock__sep + .dock__item:hover) { width: var(--dock-near); height: var(--dock-near); }
+
+  /* This used to be `transition: none`, which is what made the first hover a jump: the
+     pointer arrived and every icon snapped to its magnified size in a single frame.
+     It was none because the old script measured each icon's live position every frame,
+     so a transition fed mid-slide numbers back into the maths and the bulge chased its
+     own tail. scripts/dock.ts now computes positions from geometry cached at rest and
+     reads no layout at all, so the sizes it writes are stable and this is safe.
+
+     Short on purpose. Restarting a transition every frame works out as a smoothing
+     filter on the pointer, so this length is really "how much lag", and --t-fast is
+     enough to ease the engage without the bulge trailing behind the cursor. */
+  .dock.is-live .dock__item { transition: width var(--t-fast) var(--ease), height var(--t-fast) var(--ease); }
+  /* Leaving is one big movement rather than a lot of small ones, so it settles slower. */
+  .dock.is-live.is-resting .dock__item { transition: width var(--t-base) var(--ease), height var(--t-base) var(--ease); }
+
+  /* tooltip */
+  .dock__item::after {
+    content: attr(data-label); position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%) scale(.9);
+    padding: 4px 10px; border-radius: 8px; white-space: nowrap; font-size: 11px; font-family: var(--font-chrome);
+    background: rgba(30,30,34,.9); color: #fff; opacity: 0; pointer-events: none; transition: opacity var(--t-fast), transform var(--t-fast);
+  }
+  .dock__item::before {
+    content: ''; position: absolute; left: 50%; bottom: calc(100% + 5px); transform: translateX(-50%);
+    border: 5px solid transparent; border-top-color: rgba(30,30,34,.9); opacity: 0; transition: opacity var(--t-fast);
+  }
+  .dock__item:hover::after { opacity: 1; transform: translateX(-50%) scale(1); }
+  .dock__item:hover::before { opacity: 1; }
+
+  /* On a phone the dock stretches to fill the screen, leaving 24px either side.
+     The bar is 9.98x the icon size (8 tiles, 8 gaps, 2 paddings) plus 5px for the divider
+     and 2px for its own border, so solving bar = 100vw - 48 for the icon gives this.
+     Desktop keeps the compact centred dock above. */
+  @media (max-width: 640px) {
+    .dock { --dock-icon: max(26px, calc((100vw - 55px) / 9.98)); }
+  }
+
+  /* ------------------------------------------------------------------
+     Pulling a tool out of the dock. It never actually leaves: it springs back and answers.
+     See scripts/dock-drag.ts.
+     ------------------------------------------------------------------ */
+  /* The item being dragged is hidden in place, so the bar keeps its shape while the copy
+     of it follows the pointer. */
+  .dock__item.is-lifted :global(*) { opacity: 0; }
+
+  .dock__hint, .dock__say {
+    position: fixed; z-index: 860; margin: 0; padding: 6px 12px;
+    border-radius: var(--r-pill); white-space: nowrap;
+    font: 11px var(--font-chrome); pointer-events: none;
+  }
+  .dock__hint[hidden], .dock__say[hidden] { display: none; }
+  .dock__hint { background: rgba(20,24,32,.9); color: #fff; transform: translate(-50%, 14px); }
+  .dock__say {
+    left: 50%; bottom: calc(var(--dock-clear) + 8px); transform: translateX(-50%);
+    background: #fff; color: var(--os-ink); font-weight: 700;
+    box-shadow: 0 12px 30px -10px rgba(0,0,0,.55);
+    animation: say var(--t-base) var(--ease);
+  }
+  /* The tail, pointing down at the dock. */
+  .dock__say::after {
+    content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%);
+    border: 7px solid transparent; border-top-color: #fff; border-bottom: 0;
+  }
+  @keyframes say { from { opacity: 0; transform: translateX(-50%) translateY(6px); } }
+
+  /* Touch has no pointer to follow, so the dock just sits at its resting size */
+  @media (hover: none) {
+    .dock__item:hover,
+    .dock__item:hover + .dock__item,
+    .dock__item:has(+ .dock__item:hover) { width: var(--dock-icon); height: var(--dock-icon); }
+    .dock__item:hover::after, .dock__item:hover::before { opacity: 0; }
+  }
+</style>

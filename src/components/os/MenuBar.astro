@@ -1,0 +1,197 @@
+---
+/**
+ * Menu bar. Left: avatar + name + menus. Centre: notch. Right: status glyphs, full date + time.
+ * Menus close when you click anywhere else (scripts/menus.ts).
+ */
+import { existsSync } from 'node:fs';
+import { site } from '../../data/site';
+import Icon from './Icon.astro';
+
+// Same fallback as the lock screen: initials until the photo is in place
+const hasAvatar = existsSync('public' + site.avatar);
+const initials = site.name.split(' ').map((w) => w[0]).join('');
+---
+<header class="menubar">
+  <div class="menubar__left">
+    <details class="menu menu--brand" data-menu>
+      <summary aria-label="System menu">
+        {hasAvatar
+          ? <img class="menubar__avatar" src={site.avatar} alt="" width="22" height="22" />
+          : <span class="menubar__avatar menubar__avatar--fallback">{initials}</span>}
+      </summary>
+      <ul>
+        <li><button data-open="colophon">About this site</button></li>
+        <li><button data-action="lock">Lock desktop</button></li>
+        <li><button data-action="tidy">Clean up desktop</button></li>
+      </ul>
+    </details>
+    <strong class="menubar__name">{site.name}</strong>
+    <details class="menu" data-menu><summary>File</summary>
+      <ul>
+        <li><button data-open="about">About {site.name}</button></li>
+        <li><button data-open="contact">New message</button></li>
+      </ul>
+    </details>
+    <details class="menu" data-menu><summary>View</summary>
+      <ul>
+        <li><button data-action="tidy">Clean up desktop</button></li>
+        <li><button data-action="theme">Change theme</button></li>
+      </ul>
+    </details>
+  </div>
+
+  <div class="notch" aria-hidden="true"></div>
+
+  <div class="menubar__right">
+    {site.socials.map((so) => (
+      <a class="menubar__link" href={so.url} target="_blank" rel="noopener noreferrer" title={so.name} aria-label={so.name}>
+        <Icon name={so.glyph} size={15} />
+      </a>
+    ))}
+    {/* Drawn in CSS rather than a glyph, so the fill is a real percentage instead of
+        three discrete states, and so charging has somewhere to show. Defaults to full,
+        which is what a browser without the Battery API keeps. */}
+    <span class="batt" id="batt" title="Battery" aria-label="Battery">
+      <span class="batt__box"><i class="batt__fill"></i></span>
+    </span>
+    <span id="clock"></span>
+  </div>
+</header>
+
+<style>
+  .menubar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 900; height: var(--menubar-h);
+    padding: 0 var(--space-3); display: flex; align-items: center; justify-content: space-between;
+    /* The shared glass, mixed opaque enough to carry near-black type over the dark half
+       of the wallpaper. --glass-fill rather than --glass because a bar that runs edge to
+       edge has no rim to catch light: the only edge anyone sees is the bottom one, which
+       is the hairline and the shadow under it. */
+    background: var(--os-bar);
+    backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    /* One hairline to sit the bar on, and no drop shadow: a shadow under a bar that is
+       already pinned to the top edge only smears the wallpaper under it. */
+    border-bottom: 1px solid rgba(0,0,0,.12);
+    font-size: 13px;
+  }
+  .menubar__left { display: flex; align-items: center; gap: var(--space-3); }
+  .menubar__right { display: flex; align-items: center; gap: var(--space-1); }
+  .menubar__avatar { border-radius: 50%; display: block; width: 22px; height: 22px; }
+  .menubar__avatar--fallback {
+    display: grid; place-items: center; font-size: 9px; font-weight: 700; letter-spacing: .02em;
+    background: var(--os-accent); color: #fff;
+  }
+  /* The brand menu is just the avatar, so it needs tighter padding than a text menu */
+  .menu--brand summary { padding: 3px 6px; }
+  .menubar__name { font-family: var(--font-chrome); font-size: 12px; letter-spacing: .02em; }
+  /* Real links, so they get a real hit area and a hover state. wifi and volume were
+     decorative glyphs that did nothing when clicked. */
+  .menubar__link {
+    display: grid; place-items: center; width: 26px; height: 22px; border-radius: var(--r-inner);
+    color: inherit; transition: background var(--t-fast);
+  }
+  /* A flat wash. Deliberately no backdrop-filter: this sits inside the bar, which is
+     already blurring, and a nested backdrop-filter samples its parent's result rather than
+     the wallpaper, so it would cost a second filter pass and change nothing. */
+  .menubar__link:hover, .menubar__link:focus-visible,
+  .menu summary:hover, .menu[open] summary { background: rgba(22,22,26,.08); }
+  .menubar__link:active, .menu summary:active { background: rgba(22,22,26,.14); }
+  /* A real notch has four corners, not two. The bottom pair curve inward the ordinary
+     way. The top pair curve the other way, so the bar appears to flow into the notch
+     rather than butt against it. That outward flare is what a plain rounded rectangle
+     was missing.
+
+     There is no CSS property for a concave corner, so each one is a small square
+     parked just outside the notch, painted notch-colour, with a quarter circle punched
+     out of it by a radial gradient. The punched-out arc is the concave curve. */
+  .notch {
+    --notch-bg: #0f0f12;
+    --notch-flare: 10px;   /* radius of the concave top corners */
+    position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+    width: 196px; height: 30px; background: var(--notch-bg);
+    border-radius: 0 0 14px 14px;
+  }
+  .notch::before, .notch::after {
+    content: ''; position: absolute; top: 0;
+    width: var(--notch-flare); height: var(--notch-flare);
+  }
+  /* Circle sits on the outer bottom corner of each square, so the notch colour survives
+     along the top edge and along the edge touching the notch, and the arc runs between. */
+  .notch::before {
+    right: 100%;
+    background: radial-gradient(circle at 0 100%,
+      #0000 calc(var(--notch-flare) - .5px), var(--notch-bg) var(--notch-flare));
+  }
+  .notch::after {
+    left: 100%;
+    background: radial-gradient(circle at 100% 100%,
+      #0000 calc(var(--notch-flare) - .5px), var(--notch-bg) var(--notch-flare));
+  }
+  .menu { position: relative; }
+  .menu summary {
+    list-style: none; cursor: var(--cur-arrow); padding: 4px 8px; border-radius: var(--r-inner);
+    transition: background var(--t-fast);
+  }
+  .menu summary::-webkit-details-marker { display: none; }
+  .menu ul {
+    position: absolute; top: calc(100% + 6px); left: 0; margin: 0; padding: 6px; list-style: none; min-width: 200px;
+    /* The least see-through of the three: the smallest type in the OS sits on this. The
+       -webkit- prefix was missing here once, so Safari rendered these flat with no blur
+       while every other surface had one. */
+    background: var(--os-menu); border: 1px solid rgba(0,0,0,.12);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
+  }
+  .menu button { all: unset; display: block; width: 100%; padding: 6px 10px; border-radius: var(--r-inner); cursor: var(--cur-hand); font: inherit; }
+  .menu button:hover { background: var(--os-accent); color: #fff; }
+  /* Matches the margin on .batt, so the space either side of the battery is equal. The
+     row gap is 4px, so 8px here makes both gaps 12px. */
+  #clock { margin-left: var(--space-2); font-family: var(--font-chrome); font-size: 11px; letter-spacing: .02em; }
+
+  .batt { display: inline-flex; align-items: center; gap: 5px; margin-left: var(--space-2); }
+  .batt__box {
+    position: relative; box-sizing: border-box;
+    width: 23px; height: 12px; padding: 1.5px;
+    border: 1px solid currentColor; border-radius: 3px; opacity: .85;
+  }
+  /* The terminal nub on the positive end */
+  .batt__box::after {
+    content: ''; position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+    width: 2px; height: 5px; border-radius: 0 2px 2px 0; background: currentColor; opacity: .85;
+  }
+  .batt__fill {
+    display: block; height: 100%; width: var(--lvl, 100%);
+    border-radius: 1px; background: currentColor;
+    transition: width var(--t-base) var(--ease), background var(--t-fast);
+  }
+  .batt.is-low .batt__fill { background: var(--light-close); }
+  .batt.is-charging .batt__fill { background: var(--light-zoom); }
+  /* The bolt, drawn rather than fetched, so charging needs no extra glyph */
+  .batt.is-charging .batt__box::before {
+    content: ''; position: absolute; inset: 0; margin: auto; z-index: 1;
+    width: 7px; height: 10px; background: var(--os-ink);
+    clip-path: polygon(58% 0, 20% 55%, 45% 55%, 38% 100%, 80% 42%, 52% 42%);
+  }
+  /* The number rides on the same element, printed from its data attribute. Absent until
+     the API reports one, so an unsupported browser shows the battery and no figure. */
+  .batt[data-pct]::after {
+    content: attr(data-pct);
+    font-family: var(--font-chrome); font-size: 11px; letter-spacing: .02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 640px) {
+    /* File and View go, but the brand menu stays: it holds Lock desktop, which is the
+       one action worth having on a phone. */
+    .menubar__name, .notch { display: none; }
+    .menu:not(.menu--brand) { display: none; }
+  }
+</style>
+
+<script>
+  import { startClock } from '../../scripts/clock';
+  import { initMenus } from '../../scripts/menus';
+  import { initBattery } from '../../scripts/battery';
+  startClock(document.getElementById('clock'));
+  initMenus();
+  initBattery();
+</script>

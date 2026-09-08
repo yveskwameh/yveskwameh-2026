@@ -1,0 +1,52 @@
+---
+import type { DesktopItem } from '../../data/desktop';
+type Props = DesktopItem;
+const { id, label, icon, opens, x, y } = Astro.props;
+---
+{/*
+  The artwork is a CSS background on a span, not an <img>, and that is deliberate.
+
+  An <img> is natively draggable, so pressing on it started the browser's own image drag
+  and only the picture followed the cursor while the button stayed put. It also gave the
+  right-click menu a "Save image as" entry pointing straight at the PNG.
+
+  A background image does neither: there is no image element to drag and none to save.
+*/}
+{/* data-label keeps the name it shipped with, so "Reset name" has something to go back
+    to after the visitor has renamed it. */}
+<button class="icon" data-open={opens} data-icon-id={id} data-label={label} type="button"
+        data-home-x={x} data-home-y={y} style={`left:${x}px; top:${y}px`}>
+  <span class="icon__art pixel" style={`background-image:url('${icon}')`} aria-hidden="true"></span>
+  <span class="icon__label">{label}</span>
+</button>
+
+<style>
+  .icon {
+    all: unset; position: absolute; display: grid; justify-items: center; gap: var(--space-1);
+    width: 88px; padding: 6px 4px; border-radius: var(--r-inner); cursor: var(--cur-hand); touch-action: none; user-select: none;
+    /* Transparent, and reserved from the start so the hover state can paint a border in
+       without the icon jumping 1px when you touch it. Explicitly transparent rather than
+       --glass-line, which is a visible white hairline meant for the panels. */
+    border: 1px solid transparent;
+    /* opacity is here for the Refresh blink in scripts/context.ts. */
+    transition: background var(--t-fast), box-shadow var(--t-fast), opacity var(--t-fast);
+    font-family: var(--font-chrome); font-size: 10px; color: #fff; text-align: center;
+    /* Two shadows, a tight one to carve the letters out of pale wallpaper and a soft one
+       for depth. The single soft shadow vanished against the sand in the beach photo. */
+    text-shadow: 0 0 3px rgba(0,0,0,.85), 0 1px 3px rgba(0,0,0,.65);
+    -webkit-user-drag: none;
+  }
+  .icon__art {
+    width: 48px; height: 48px; display: block;
+    background: center / contain no-repeat;
+  }
+  /* A plain white wash, no blur and no border. An icon is a small thing on a photograph
+     and it does not need its own pane of glass. */
+  .icon:hover, .icon:focus-visible { background: rgba(255,255,255,.14); }
+  /* A single click selects, a double click opens, so selection has to read as the
+     stronger of the two states. */
+  .icon.is-selected { background: rgba(255,255,255,.28); }
+  .icon.is-dragging { opacity: .85; }
+  /* Only animated while Clean Up is running, so dragging stays instant */
+  .icon.is-tidying { transition: left var(--t-base) var(--ease), top var(--t-base) var(--ease); }
+</style>

@@ -1,0 +1,30 @@
+---
+/** Tic tac toe. You are X, the computer is O. Board and status are real HTML; the
+    script only flips text and classes, so there is nothing to fetch or render. */
+---
+<div class="ttt">
+  <p class="ttt__status" id="ttt-status" role="status">Your move. You are X.</p>
+  <div class="ttt__board" id="ttt-board">
+    {Array.from({ length: 9 }, (_, i) => (
+      <button class="ttt__cell" type="button" data-cell={i} aria-label={`Square ${i + 1}`}></button>
+    ))}
+  </div>
+  <button class="btn" type="button" data-ttt-reset>New game</button>
+</div>
+
+<style>
+  .ttt { display: grid; justify-items: center; gap: var(--space-3); }
+  .ttt__status { margin: 0; font: 12px var(--font-chrome); color: var(--os-muted); min-height: 1.2em; }
+  .ttt__board {
+    display: grid; grid-template-columns: repeat(3, 62px); gap: 4px;
+    background: var(--os-line); padding: 4px; border-radius: var(--r-inner);
+  }
+  .ttt__cell {
+    all: unset; width: 62px; height: 62px; display: grid; place-items: center; cursor: var(--cur-hand);
+    background: var(--os-surface); border-radius: 3px;
+    font: 700 30px var(--font-chrome); color: var(--os-ink); line-height: 1;
+  }
+  .ttt__cell:hover:empty { background: #fff; }
+  .ttt__cell[disabled] { cursor: var(--cur-arrow); }
+  .ttt__cell.is-win { background: var(--os-accent); color: #fff; }
+</style>

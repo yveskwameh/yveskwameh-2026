@@ -1,0 +1,28 @@
+---
+/**
+ * One static page per case study. Also reachable inside the desktop as a window,
+ * but having a real URL keeps it shareable and indexable.
+ */
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Window from '../../components/windows/Window.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((p) => ({ params: { id: p.id }, props: { p } }));
+}
+const { p } = Astro.props;
+const { Content } = await render(p);
+---
+
+<Base title={`${p.data.title} · Yves Kwameh`} description={p.data.summary}>
+  {/* closeHref rather than the usual close button: this page has no window manager, so
+      the light goes back to the desktop instead of doing nothing. The hash opens the Work
+      window on this same case study. */}
+  <Window id={p.id} title={p.data.title} filename={p.data.filename} open width={760}
+          closeHref={`/#work-${p.id}`}>
+    <p><strong>{p.data.client}</strong> · {p.data.year} · {p.data.role}</p>
+    <Content />
+    <p><a href={`/#work-${p.id}`}>Back to the desktop</a></p>
+  </Window>
+</Base>

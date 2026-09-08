@@ -1,0 +1,39 @@
+# Checks that run before anything reaches main.
+#
+# Cloudflare cannot give this project preview URLs, because preview URLs are not
+# generated for Workers that own a Durable Object and this one does, for the live
+# cursors. So branch builds there would burn minutes and hand back nothing to look
+# at. This runs the same checks here instead, where they are free and fast.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The pin lives in .nvmrc and nowhere else, so this, the local machine and
+      # Cloudflare's build image all read the same number.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # Without the key the build fails on purpose. See src/data/contact.ts: a
+      # composer that cannot send looks completely fine until someone has already
+      # written their message.
+      - run: npm run build
+        env:
+          PUBLIC_WEB3FORMS_KEY: ${{ secrets.PUBLIC_WEB3FORMS_KEY }}
+
+      # Exits non-zero over 10,240 bytes. The rule in CLAUDE.md, enforced rather
+      # than remembered.
+      - name: JavaScript budget
+        run: python3 tools/js-budget.py
