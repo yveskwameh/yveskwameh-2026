@@ -2,7 +2,11 @@
 import Base from '../layouts/Base.astro';
 ---
 
-<Base title="File not found">
+<Base
+  title="File not found"
+  description="That path does not exist. Everything on this site lives on the desktop."
+  noindex
+>
   <main style="padding: var(--space-5); color: #fff;">
     <h1>Error: file not found.</h1>
     <p><a href="/" style="color:#fff">Return to desktop</a></p>

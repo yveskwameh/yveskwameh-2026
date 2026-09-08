@@ -4,16 +4,45 @@
  * Keeps <head> lean on purpose: one font preload, one stylesheet, nothing blocking render.
  */
 import '../styles/global.css';
+import { site } from '../data/site';
 
 interface Props {
   title: string;
   description?: string;
+  /**
+   * Share copy. Defaults to the title and description above, which is right for the case
+   * studies, so only the home page overrides them. They are separate props because the
+   * two jobs are different: <title> is read in a list of search results next to other
+   * results, and og:title is read in a feed next to somebody's lunch. The first wants the
+   * name and the discipline, the second wants a reason to tap.
+   */
+  ogTitle?: string;
+  ogDescription?: string;
+  /** Share picture. Site-relative, made absolute below, because the crawlers demand it. */
+  image?: string;
+  imageAlt?: string;
+  /** 'article' on the case studies, 'website' everywhere else. */
+  type?: 'website' | 'article';
+  /** Keeps a page out of search. Only the 404 wants this. */
+  noindex?: boolean;
 }
 
 const {
   title,
   description = 'Yves Kwameh, strategic UX/UI designer and no-code developer.',
+  ogTitle = title,
+  ogDescription = description,
+  image = '/og/default.png',
+  imageAlt = 'Yves Kwameh, UX/UI designer and no-code developer.',
+  type = 'website',
+  noindex = false,
 } = Astro.props;
+
+/* Absolute, both of them. A canonical or an og:image given as a path is either ignored or
+   resolved against whatever site scraped it, so neither one may be relative.
+   Astro.site is set in astro.config.mjs and is the only reason these can be built. */
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL(image, Astro.site);
 ---
 
 <!doctype html>
@@ -23,9 +52,41 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {/* No canonical on the 404. It is served for every path that does not exist, so a
+        self-referencing one there would be telling a crawler that every broken URL on the
+        site is the same real page. noindex is the whole answer that page needs. */}
+    {noindex
+      ? <meta name="robots" content="noindex, follow" />
+      : <link rel="canonical" href={canonical} />}
     <link rel="icon" href="/favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
     <meta name="generator" content={Astro.generator} />
+
+    {/* Open Graph. Facebook, LinkedIn, WhatsApp, Slack and iMessage all read these.
+        og:title, og:type, og:image and og:url are the four the protocol actually
+        requires; the rest are here because leaving them out costs a worse card. */}
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={ogDescription} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content="en_GB" />
+    {/* Stated width and height let a scraper lay the card out on first pass instead of
+        waiting to download the file, which is the difference between a wide card and a
+        small square one in a slow feed. Keep them true to the file. */}
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={imageAlt} />
+
+    {/* X reads og: for everything except the card shape, so that one tag is not optional.
+        The three after it are, strictly, but they are what lets the share copy on X be
+        tuned away from LinkedIn's later without touching this file again. */}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={ogTitle} />
+    <meta name="twitter:description" content={ogDescription} />
+    <meta name="twitter:image" content={ogImage} />
+
     <!-- Preloaded because every label above the fold is set in it, so discovering it late
          would mean a visible reflow. Only the 400 weight, 700 is rare enough to wait. -->
     <link rel="preload" href="/fonts/space-mono-400.woff2" as="font" type="font/woff2" crossorigin />

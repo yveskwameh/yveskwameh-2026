@@ -3,13 +3,16 @@ import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-  /* Where this site actually is. Nothing reads it yet, since the layout emits no canonical
-     or og: tags and no sitemap integration is installed, but it is the value all three
-     would use, so it is worth being true rather than aspirational.
+  /* Where this site actually is. Base.astro builds the canonical link, og:url and
+     og:image from it, and every one of those is wrong if this is wrong: a canonical
+     pointing at the wrong host tells Google to index that host instead, and an og:image
+     on the wrong host shows a broken card. A sitemap would use it too, if one is ever
+     added.
 
      Deliberately NOT yveskwameh.com: that domain is live on Netlify serving the previous
      site, so anything built from it would point at pages showing something else. Change
-     this the day the domain moves. */
+     this the day the domain moves, and re-share any link that was already shared, because
+     the scrapers cache what they saw. */
   site: 'https://yveskwameh.2026-portfolio.workers.dev',
   // Fully static build. No adapter needed for Cloudflare Workers static assets.
   output: 'static',

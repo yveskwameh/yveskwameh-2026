@@ -15,7 +15,7 @@ const { p } = Astro.props;
 const { Content } = await render(p);
 ---
 
-<Base title={`${p.data.title} · Yves Kwameh`} description={p.data.summary}>
+<Base title={`${p.data.title} · Yves Kwameh`} description={p.data.summary} type="article">
   {/* closeHref rather than the usual close button: this page has no window manager, so
       the light goes back to the desktop instead of doing nothing. The hash opens the Work
       window on this same case study. */}

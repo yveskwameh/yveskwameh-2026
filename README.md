@@ -136,6 +136,26 @@ It appears in the Work folder and gets its own URL at `/work/<filename>/`.
 - Desktop icons: drawn by Yves, spec in `docs/ICON-SPEC.md`, generation prompts in `docs/ICON-PROMPTS.md`
 - Stack logos: exported from Figma into `public/icons/stack`, inlined by `<StackIcon name="figma" label="Figma" />`. Dock order lives in `src/data/dock.ts`
 
+## Search and social
+`src/layouts/Base.astro` emits the title, description, canonical link, Open Graph and
+Twitter Card tags for every page. Pages override what they need:
+
+- `title` and `description` are what a search result shows
+- `ogTitle` and `ogDescription` are what a LinkedIn or X card shows, and default to the
+  two above. Only the home page sets them, because a feed and a search result are read
+  for different reasons
+- `image` is the share picture, `type` is `website` or `article`, `noindex` keeps a page
+  out of search. The 404 is the only page that uses the last one
+
+The share picture is a **placeholder**. `public/og/default.png` is drawn by
+`python3 tools/draw-og.py` at 1200x630, which is the size every platform wants. Replace
+that file with the real card and no code changes. Pass `image="/og/something.png"` to
+`<Base>` to give one page its own.
+
+Both the canonical link and the image URL are built from `site` in `astro.config.mjs`,
+so that value has to stay true. After it changes, re-share any link already posted,
+because the scrapers cache the card they first saw.
+
 ## Speed rules (keep these)
 1. No UI framework on the page. Astro islands only if something truly needs React later.
 2. Images: webp/avif, sized, `loading="lazy"` unless above the fold.
@@ -145,6 +165,7 @@ It appears in the Work folder and gets its own URL at `/work/<filename>/`.
 6. Check with `npm run build` then Lighthouse on the preview. Target: 100/100/100/100.
 
 ## Next
+- [ ] Draw the real Open Graph card, replacing `public/og/default.png`
 - [ ] Draw the 7 desktop icons (docs/ICON-SPEC.md)
 - [ ] Decide whether the 5 bare stack marks get their own rounded tiles, like higgsfield already has
 - [ ] Remaining apps: Services, Feedback, Contact, Trash (MusicApp exists, add it to Desktop.astro)
