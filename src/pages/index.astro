@@ -4,12 +4,19 @@ import LockScreen from '../components/os/LockScreen.astro';
 import MenuBar from '../components/os/MenuBar.astro';
 import Desktop from '../components/os/Desktop.astro';
 import Dock from '../components/os/Dock.astro';
+import { website, person, profilePage } from '../data/schema';
+
+/* The home page is where the Person is declared in full. Every case study points back at
+   this node by @id rather than repeating it, so a crawler reading the whole site sees one
+   Yves, described once. */
+const schema = [website(Astro.site!), person(Astro.site!), profilePage(Astro.site!)];
 ---
 
 <Base
   title="Yves Kwameh, UX/UI Designer"
   ogTitle="Yves Kwameh, a portfolio built as an operating system"
   ogDescription="Strategic UX/UI design and no-code builds. Open the windows on the desktop to read the case studies."
+  schema={schema}
 >
   <LockScreen />
   <MenuBar />
