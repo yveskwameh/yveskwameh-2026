@@ -28,9 +28,16 @@ const sfx = (name: string) => document.dispatchEvent(new CustomEvent('sfx', { de
 const pick = <T,>(a: readonly T[]): T => a[(Math.random() * a.length) | 0];
 
 export function init() {
-  const board = $('ttt-board'), feed = $('ttt-feed'), status = $('ttt-status');
-  const actions = $('ttt-actions'), typing = $('ttt-typing');
-  if (!board || !feed || !status || !actions || !typing) return;
+  const board = $('ttt-board'), feedEl = $('ttt-feed'), statusEl = $('ttt-status');
+  const actionsEl = $('ttt-actions'), typingEl = $('ttt-typing');
+  if (!board || !feedEl || !statusEl || !actionsEl || !typingEl) return;
+
+  /* Rebound after the guard, and that is not busywork. TypeScript carries a narrowing into
+     an arrow function but not into a hoisted `function` declaration, because one of those
+     could in principle be called before the check runs. Most of this file is hoisted
+     declarations, so without this every use would need a `!` and `npm run check` would
+     report a dozen nulls that cannot happen. */
+  const feed = feedEl, status = statusEl, actions = actionsEl, typing = typingEl;
 
   /* Read off the markup rather than imported, so his face in the thread is the same file
      the header already loaded and there is no second request. */
