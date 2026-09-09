@@ -61,6 +61,7 @@ Secrets) so the build there has it too.
 
 ```sh
 git add -A && git commit -m "what changed" && git push
+npm run indexnow      # optional, after a deploy that changed pages
 ```
 
 Live at **https://yveskwameh.2026-portfolio.workers.dev** until the custom
@@ -131,7 +132,9 @@ wrangler.jsonc      Cloudflare config, points at /dist
 
 ## Adding a case study
 Copy `src/content/projects/_example.md`, rename without the underscore, fill the frontmatter.
-It appears in the Work folder and gets its own URL at `/work/<filename>/`.
+It appears in the Work folder and gets its own URL at `/work/<filename>/`. Then run
+`python3 tools/draw-og.py` to draw its share card, and it also picks itself up in the
+sitemap, `llms.txt` and the JSON-LD without anything else being touched.
 
 ## Icons
 - UI glyphs: [Pixelarticons](https://pixelarticons.com) (MIT). `node tools/sync-icons.mjs` copies the ones listed into `public/icons/ui`. Use `<Icon name="wifi" size={16} />`
@@ -149,14 +152,31 @@ Twitter Card tags for every page. Pages override what they need:
 - `image` is the share picture, `type` is `website` or `article`, `noindex` keeps a page
   out of search. The 404 is the only page that uses the last one
 
-The share picture is a **placeholder**. `public/og/default.png` is drawn by
-`python3 tools/draw-og.py` at 1200x630, which is the size every platform wants. Replace
-that file with the real card and no code changes. Pass `image="/og/something.png"` to
-`<Base>` to give one page its own.
+The share pictures are **placeholders**. `python3 tools/draw-og.py` draws
+`public/og/default.png` plus one card per case study in `public/og/work/`, all at
+1200x630, which is the size every platform wants. Run it after adding a case study.
+Replace any PNG with the real design and no code changes: `work/[id].astro` uses a case
+study's card if the file exists and falls back to the default if it does not.
+
+Also emitted, all built from `site` so they follow the domain on their own:
+
+- `/sitemap-index.xml` and `/sitemap-0.xml`, from `@astrojs/sitemap`. The five indexable
+  pages, no 404, no `priority` or `changefreq`, no invented `lastmod`
+- `/robots.txt`, from `src/pages/robots.txt.ts`. Search and AI answer engines allowed,
+  training-only crawlers disallowed behind one constant in that file. Note Cloudflare
+  serves a managed robots.txt too and appends its Content Signals Policy to ours
+- `/llms.txt`, generated from the case studies. Google ignores it; the AI engines do not
+- JSON-LD from `src/data/schema.ts`: Person, WebSite and ProfilePage on the home page,
+  CreativeWork and BreadcrumbList on each case study, joined by `@id`
+
+`npm run indexnow` tells Bing, Yandex, Naver and Seznam that pages changed. Run it after
+a deploy that changed something. The `<hex>.txt` file in `public/` is the ownership proof
+it needs, which is why it is committed. It is not a secret.
 
 Both the canonical link and the image URL are built from `site` in `astro.config.mjs`,
-so that value has to stay true. After it changes, re-share any link already posted,
-because the scrapers cache the card they first saw.
+so that value has to stay true. **`docs/DOMAIN-MOVE.md` is the whole checklist for the day
+that changes.** After it changes, re-share any link already posted, because the scrapers
+cache the card they first saw.
 
 ## Speed rules (keep these)
 1. No UI framework on the page. Astro islands only if something truly needs React later.
@@ -167,7 +187,7 @@ because the scrapers cache the card they first saw.
 6. Check with `npm run build` then Lighthouse on the preview. Target: 100/100/100/100.
 
 ## Next
-- [ ] Draw the real Open Graph card, replacing `public/og/default.png`
+- [ ] Draw the real Open Graph cards, replacing `public/og/default.png` and `public/og/work/*.png`
 - [ ] Draw the 7 desktop icons (docs/ICON-SPEC.md)
 - [ ] Decide whether the 5 bare stack marks get their own rounded tiles, like higgsfield already has
 - [ ] Remaining apps: Services, Feedback, Contact, Trash (MusicApp exists, add it to Desktop.astro)

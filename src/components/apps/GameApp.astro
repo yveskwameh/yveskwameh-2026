@@ -165,11 +165,20 @@ import { SAY } from '../../data/game';
     .ttt__feed { max-height: 96px; }
   }
 
-  /* On a phone the window is a bottom sheet with its own height, so the board takes the
-     width it is given and the panel sits under it. */
+  /* On a phone the window is a bottom sheet: `height: auto`, capped at 85dvh. That is the
+     one case where the container trick above cannot work, because `container-type: size`
+     needs a definite height to measure and an auto-height sheet has none, so `100cqh`
+     means nothing and the board has nothing stopping it growing until it pushes the panel
+     off the bottom.
+
+     So on mobile the containment comes off and the board is bounded by the viewport
+     instead. 58dvh leaves room for the title bar above it, Yves's panel below, and the
+     dock. The body scrolls here too, so a long conversation is still reachable. */
   @media (max-width: 640px) {
-    .ttt__stage { padding: var(--space-2); }
-    .ttt__board { width: 100%; }
+    :global(.window__body:has(> .ttt)) { overflow: auto; }
+    .ttt { height: auto; }
+    .ttt__stage { container-type: normal; padding: var(--space-2); }
+    .ttt__board { width: min(100%, 58dvh); }
   }
 
   @media (prefers-reduced-motion: reduce) {

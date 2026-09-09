@@ -40,7 +40,7 @@ const schema = [
   {/* closeHref rather than the usual close button: this page has no window manager, so
       the light goes back to the desktop instead of doing nothing. The hash opens the Work
       window on this same case study. */}
-  <Window id={p.id} title={p.data.title} filename={p.data.filename} open width={760}
+  <Window id={p.id} title={p.data.title} filename={p.data.filename} open main width={760}
           closeHref={`/#work-${p.id}`}>
     <p><strong>{p.data.client}</strong> · {p.data.year} · {p.data.role}</p>
     <Content />

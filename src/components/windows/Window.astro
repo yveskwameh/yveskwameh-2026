@@ -16,8 +16,17 @@ interface Props {
    * button would be a control that visibly does nothing.
    */
   closeHref?: string;
+  /**
+   * Render the title as the page's h1 instead of an h2.
+   *
+   * On the desktop many windows are open at once, so each one is a section and h2 is
+   * right. On a standalone case-study page the single window IS the page, and a page
+   * whose subject has no h1 is missing the strongest heading signal there is, as well as
+   * the landmark a screen reader user navigates by.
+   */
+  main?: boolean;
 }
-const { id, title, filename, width = 560, height, open = false, variant, closeHref } = Astro.props;
+const { id, title, filename, width = 560, height, open = false, variant, closeHref, main = false } = Astro.props;
 ---
 <section
   class:list={['window', variant && `window--${variant}`, { 'is-open': open, 'is-focused': open }]}
@@ -40,7 +49,12 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
       <button class="light light--min" aria-label="Minimise (unavailable)" disabled></button>
       <button class="light light--zoom" aria-label="Zoom (unavailable)" disabled></button>
     </div>
-    <h2 class="window__title" id={`win-${id}-title`}>{title}</h2>
+    {/* Both tags written out rather than one dynamic tag name, so Astro can see them and
+        scope .window__title to them. A computed tag is not always visible to the scoper,
+        and a heading that quietly loses its styling is a hard thing to notice. */}
+    {main
+      ? <h1 class="window__title" id={`win-${id}-title`}>{title}</h1>
+      : <h2 class="window__title" id={`win-${id}-title`}>{title}</h2>}
   </div>
   <div class="window__body"><slot /></div>
   {/* Eight grips, one per edge and corner. data-resize holds the DIRECTION now, not the

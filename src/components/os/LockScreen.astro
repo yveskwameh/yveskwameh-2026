@@ -49,7 +49,10 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
           unwinnable and name the way out. The recording says the rest. */}
       <p class="lock__shout" id="lock-shout" role="status">It does not get tired. Press <kbd>Space</kbd> or <kbd>Enter</kbd>.</p>
     </span>
-    <p class="lock__name">{site.name}</p>
+    {/* The h1 for the whole desktop. It is the page's subject, it is already the most
+        prominent text on it, and .lock__name sets margin and size, so making it a heading
+        changes nothing visually and gives the page the one heading it was missing. */}
+    <h1 class="lock__name">{site.name}</h1>
     <p class="lock__title">{site.title}</p>
     <p class="lock__status-line"><span class="lock__dot" aria-hidden="true"></span>{site.status}</p>
   </div>
