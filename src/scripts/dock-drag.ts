@@ -101,6 +101,8 @@ export function init() {
       say.hidden = false;
       clearTimeout(timer);
       timer = window.setTimeout(() => { say.hidden = true; }, SAY_MS);
+      // The sound of an icon refusing to leave. See scripts/sfx.ts for who listens.
+      document.dispatchEvent(new CustomEvent('sfx', { detail: 'dockDrop' }));
     }
     out = false;
   };

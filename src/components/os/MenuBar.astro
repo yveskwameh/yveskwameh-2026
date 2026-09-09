@@ -43,6 +43,14 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   <div class="notch" aria-hidden="true"></div>
 
   <div class="menubar__right">
+    {/* "Continue muted" is not a life sentence. Both icons ship and CSS shows whichever
+        matches aria-pressed, so the state is carried by the attribute a screen reader
+        already reads instead of by a class only the eye can see. scripts/snd.ts owns it. */}
+    <button class="menubar__link menubar__snd" id="snd" type="button"
+            aria-pressed="false" aria-label="Sound" title="Sound off">
+      <Icon name="volume-2" size={15} />
+      <Icon name="volume-x" size={15} />
+    </button>
     {site.socials.map((so) => (
       <a class="menubar__link" href={so.url} target="_blank" rel="noopener noreferrer" title={so.name} aria-label={so.name}>
         <Icon name={so.glyph} size={15} />
@@ -89,6 +97,20 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     display: grid; place-items: center; width: 26px; height: 22px; border-radius: var(--r-inner);
     color: inherit; transition: background var(--t-fast);
   }
+  /* The speaker. A <button> in a row of <a>s, so it needs the browser's button styling
+     reset off it before it matches its neighbours. */
+  .menubar__snd {
+    appearance: none; padding: 0; border: 0; background: none;
+    font: inherit; cursor: var(--cur-hand);
+  }
+  /* Both icons sit in the same grid cell and one is hidden, so switching state is a class
+     the browser already tracks rather than a DOM swap. Muted is the default because that
+     is what a visitor who has answered nothing yet is. */
+  .menubar__snd :global(svg) { grid-area: 1 / 1; }
+  .menubar__snd[aria-pressed='false'] :global(svg:first-child),
+  .menubar__snd[aria-pressed='true'] :global(svg:last-child) { display: none; }
+  /* Muted is a state worth noticing, so it sits back a little until you look for it. */
+  .menubar__snd[aria-pressed='false'] { opacity: .55; }
   /* A flat wash. Deliberately no backdrop-filter: this sits inside the bar, which is
      already blurring, and a nested backdrop-filter samples its parent's result rather than
      the wallpaper, so it would cost a second filter pass and change nothing. */
@@ -191,7 +213,14 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   import { startClock } from '../../scripts/clock';
   import { initMenus } from '../../scripts/menus';
   import { initBattery } from '../../scripts/battery';
+  /* Sound is a system setting, so it is wired up from the system chrome. initSound also
+     runs the first-visit gate on the lock screen, which is fine from here: the two
+     components always ship together, and it returns quietly if the gate is not on the
+     page. Doing it the other way round would leave the toggle dead on any page that ever
+     has a menu bar without a lock screen. */
+  import { initSound } from '../../scripts/snd';
   startClock(document.getElementById('clock'));
   initMenus();
   initBattery();
+  initSound();
 </script>

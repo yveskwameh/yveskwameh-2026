@@ -99,6 +99,8 @@ If that fails with `Authentication error [code: 10000]`, the token came back rea
 - [Space Mono](https://fonts.google.com/specimen/Space+Mono) by Colophon Foundry, under
   the SIL Open Font License. Licence text in `public/fonts/OFL.txt`.
 - [Pixelarticons](https://pixelarticons.com/) by Gerrit Halfmann, MIT.
+- Interface and 8-bit sounds by [Kenney](https://kenney.nl/assets), CC0. Nothing to
+  attribute, credited anyway. See `docs/SOUNDS.md`.
 - [Astro](https://astro.build) and [Cloudflare Workers](https://workers.cloudflare.com/).
 - The tool logos in `src/icons/stack` are trademarks of their respective owners,
   reproduced to identify the tools used. No endorsement implied.

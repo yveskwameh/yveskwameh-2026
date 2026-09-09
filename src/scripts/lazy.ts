@@ -106,4 +106,18 @@ export function initWarm() {
     addEventListener('pointermove', () => { import('./dock').then((m) => m.init()); },
       { once: true, passive: true });
   }
+
+  /* Sound, only for someone who asked for it. The flag is written by the gate and by the
+     menu bar speaker, both of which live in snd.ts.
+
+     Two triggers cover every route in. `pointerdown` is the returning visitor whose answer
+     is already stored, and it lands the player before their first click can need it. `snd`
+     is every change of mind: snd.ts fires it whenever the setting is written, which covers
+     both the gate on a first visit and the menu bar speaker later, so neither needs a
+     listener of its own here. */
+  const pullSfx = () => {
+    if (localStorage.snd === 'on') import('./sfx').then((m) => m.init());
+  };
+  addEventListener('pointerdown', pullSfx, { passive: true });
+  document.addEventListener('snd', pullSfx);
 }

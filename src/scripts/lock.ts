@@ -10,6 +10,10 @@ const set = (id: string, v: string) => {
   if (el) el.textContent = v;
 };
 
+/** Ask for a sound. Whether anything is listening is scripts/sfx.ts's problem, not ours,
+ *  which is what keeps the player out of this file and off the page load. */
+const sfx = (name: string) => document.dispatchEvent(new CustomEvent('sfx', { detail: name }));
+
 function tick() {
   const now = new Date();
   set('lock-time', now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
@@ -19,6 +23,7 @@ function tick() {
 export function unlock() {
   $('lock')?.classList.add('is-open');
   sessionStorage.u = '1';
+  sfx('unlock');
 }
 
 export function lock() {
@@ -51,7 +56,6 @@ export function initLock() {
     if (!el.classList.contains('is-open') && (e.key === 'Enter' || e.key === ' ')) unlock();
   });
 
-  initSound();
   initRunaway(el);
 }
 
@@ -90,6 +94,7 @@ const win = (line: string) => {
   cta!.classList.add('is-caught');
   say(line);
   set('lock-label', L[4]);
+  sfx('stuck');       // it gives up. Deliberately not the same blip as a dodge.
 };
 
 /** Back to a full round. Called on every re-lock. */
@@ -136,6 +141,7 @@ function flee(px: number, py: number, ts: number, forced = false) {
   ox = nx < x0 ? x0 : nx > x1 ? x1 : nx;
   oy = ny < y0 ? y0 : ny > y1 ? y1 : ny;
   cta.style.transform = `translate(${ox}px,${oy}px)`;
+  sfx('flee');        // one blip per dodge. The 40ms guard above already rate limits it.
 
   if (!began) { began = ts; say(L[0]); return; }
 
@@ -178,34 +184,19 @@ function shout(ts: number) {
 }
 
 /**
- * The sound gate. It covers the screen because the answer has to be given before anything
- * else, and because the click that answers it is also the gesture browsers demand before
- * audio may ever play. Remembered in localStorage, so it is asked exactly once.
- */
-/**
- * Hand the clip its permission to play. Browsers grant that per page load, from a real
- * click, and they do not care what we stored last week. So a remembered yes has to be
+ * Hand the voice clip its permission to play. Browsers grant that per page load, from a
+ * real click, and they do not care what we stored last week. So a remembered yes has to be
  * re-armed by the first click of every visit, and play-then-pause inside that click is
  * what marks the element allowed for later.
+ *
+ * This is only about the one self-hosted clip in the markup. The gate that asks the
+ * question, and the flag it writes, moved to scripts/snd.ts so the menu bar toggle and
+ * the gate share a single writer.
  */
 function arm() {
   if (snd || localStorage.snd !== 'on') return;
   snd = $('lock-audio') as HTMLAudioElement | null;
   snd?.play().then(() => snd?.pause(), () => {});
-}
-
-function initSound() {
-  const g = $('lock-gate');
-  if (!g) return;
-  if (localStorage.snd) return g.remove();
-  g.hidden = false;
-  g.addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-snd]');
-    if (!b) return;
-    localStorage.snd = b.dataset.snd;
-    arm();            // this very click is the gesture, so use it
-    g.remove();
-  });
 }
 
 function initRunaway(root: HTMLElement) {

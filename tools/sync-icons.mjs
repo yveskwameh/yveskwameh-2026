@@ -19,7 +19,9 @@ const ICONS = [
   // brands available in the free set
   'figma', 'github', 'linkedin', 'twitter-bird', 'instagram',
   // lock screen + menu actions + games
-  'unlock', 'circle-info', 'gamepad', 'volume-x',
+  'unlock', 'circle-info', 'gamepad', 'volume-x', 'volume-2',
+  // tic tac toe: the two marks, plus the scoreboard
+  'close', 'circle', 'trophy', 'zap',
 ];
 
 const src = resolve('node_modules/pixelarticons/svg');
