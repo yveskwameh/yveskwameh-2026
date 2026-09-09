@@ -47,7 +47,7 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
         : <span class="lock__avatar lock__avatar--fallback" id="lock-avatar" aria-hidden="true">{initials}</span>}
       {/* Short on purpose. This is the escape hatch, so it has one job: say the chase is
           unwinnable and name the way out. The recording says the rest. */}
-      <p class="lock__shout" id="lock-shout" role="status">It does not get tired. Press <kbd>Space</kbd> or <kbd>Enter</kbd>.</p>
+      <p class="lock__shout" id="lock-shout" role="status">Alright, that is enough. Press <kbd>Space</kbd> or <kbd>Enter</kbd> and come in.</p>
     </span>
     {/* The h1 for the whole desktop. It is the page's subject, it is already the most
         prominent text on it, and .lock__name sets margin and size, so making it a heading
@@ -62,14 +62,14 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
         not minified, so copy in JS is copy charged against the ~10KB budget, while copy
         in markup is free and lands in the gzipped HTML instead. It also means editing
         the jokes never means touching logic. Order is fixed, see scripts/lock.ts. */}
-    <p class="lock__status"><span>PREPARING DESKTOP…</span><span>READY</span></p>
-
     <button class="lock__cta" id="lock-cta" type="button" data-unlock
       data-lines="Catch me if you can to unlock|Whatever you do, do not push me onto his face.|Ugh. Take me.|Fine. It is yours.|CLICK TO UNLOCK|UNLOCK IF YOU CAN|TAP TO UNLOCK"
       data-taunts="Too slow.|Not even close.|Try harder.|Was that it?"
       data-corner="Ow. Not the corner.|That one hurt.|Fine, that counts.">
       <Icon name="lock" size={13} /><span id="lock-label">UNLOCK IF YOU CAN</span>
     </button>
+
+    <p class="lock__status"><span>PREPARING DESKTOP…</span><span>READY</span></p>
   </div>
 </div>
 
@@ -89,14 +89,11 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   .lock__top, .lock__id, .lock__bottom { position: relative; display: grid; justify-items: center; }
   .lock__top { gap: var(--space-2); }
   .lock__id { align-content: center; gap: 3px; }
-  .lock__bottom { align-content: end; gap: var(--space-3); }
-  /* READY sits above the button's resting spot and under it in paint order, so the glass
-     covers it when the two cross. It also fades the moment the chase begins (is-live, set
-     by scripts/lock.ts on the first dodge), so it is gone before the button can travel
-     over it, and nothing shows through however the backdrop blur behaves. */
-  .lock__status { position: relative; z-index: 1; transition: opacity var(--t-base) var(--ease); }
-  .is-live .lock__status { opacity: 0; }
-  .lock__cta { z-index: 2; }
+  .lock__bottom { align-content: end; gap: var(--space-4); }
+  /* The button moves, so it is the top layer of the whole lock screen: whatever it
+     travels over (READY, the clock, the name, the avatar) sits under its glass. Nothing
+     else here carries a z-index, so this one number is the entire stacking order. */
+  .lock__cta { z-index: 5; }
 
   .lock__date { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .01em; }
   .lock__time {
@@ -273,13 +270,17 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     display: inline-block; padding: 1px 6px; margin: 0 1px; border-radius: 4px;
     background: #16161a; color: #fff; font: inherit; font-size: 10px;
   }
+  /* It bounces every few seconds for as long as the visitor stays on the lock screen,
+     so the way out keeps catching the eye without being on screen all the time. */
   .lock__shout.is-on {
     opacity: 1; transform: translateX(-50%) scale(1);
-    animation: nudge 520ms var(--ease) var(--t-base) 2;
+    animation: nudge 3.4s var(--ease) var(--t-base) infinite;
   }
   @keyframes nudge {
-    30% { transform: translateX(-50%) scale(1) rotate(-1.6deg); }
-    70% { transform: translateX(-50%) scale(1) rotate(1.6deg); }
+    0%, 24%, 100% { transform: translateX(-50%) scale(1); }
+    6%  { transform: translateX(-50%) translateY(-6px) scale(1.04) rotate(-2deg); }
+    12% { transform: translateX(-50%) translateY(0) scale(1) rotate(1.6deg); }
+    18% { transform: translateX(-50%) translateY(-3px) rotate(0deg); }
   }
 
   /* The sound gate. Covers everything, so the choice is made before the lock screen can

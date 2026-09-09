@@ -104,7 +104,6 @@ function reset() {
   face?.classList.remove('is-target');
   $('lock-shout')?.classList.remove('is-on');
   if (!cta) return;
-  cta.parentElement!.classList.remove('is-live');
   cta.classList.remove('is-caught');   // before clearing transform, so it cannot re-fire
   cta.style.transform = '';
   delete cta.dataset.say;
@@ -144,9 +143,7 @@ function flee(px: number, py: number, ts: number, forced = false) {
   cta.style.transform = `translate(${ox}px,${oy}px)`;
   sfx('flee');        // one blip per dodge. The 40ms guard above already rate limits it.
 
-  // The chase is on, so the READY label under it has done its job. Fading it here, and
-  // not on overlap, means it can never show through the glass, whatever the blur does.
-  if (!began) { began = ts; cta.parentElement!.classList.add('is-live'); say(L[0]); return; }
+  if (!began) { began = ts; say(L[0]); return; }
 
   // The clue. Reverse psychology, so it reads as a joke and still names the target,
   // the goal and the verb in one line. Yves saw the pulse and could not tell it meant
