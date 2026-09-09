@@ -6,9 +6,10 @@
  * real HTML at build time, per rule 3: the marks are both drawn into every cell and shown
  * with a data attribute, so nothing is fetched or built when a square is played.
  *
- * The board scales with the window without a line of JavaScript. .ttt__stage is a size
- * container and the board is `min(100cqw, 100cqh)` square, so it follows whichever
- * dimension the resize made smaller. Dragging any grip resizes it live.
+ * The board scales with the window without a line of JavaScript. .ttt is a size
+ * container and one number, --round, sizes both the board and the grid row the side
+ * card sits in, so the two always share a top and bottom. Dragging any grip resizes
+ * it live.
  */
 import Icon from '../os/Icon.astro';
 import { site } from '../../data/site';
@@ -44,14 +45,14 @@ import { SAY } from '../../data/game';
         thing you want at the top is the score, and the conversation says who is talking
         by itself. */}
     <header class="sb">
-      <div class="sb__team">
-        <span class="sb__name">You</span>
-        <b class="sb__num" id="ttt-you">0</b>
+      <div class="sb__team sb__team--yves">
+        <span class="sb__name">Yves · O</span>
+        <b class="sb__num sb__num--yves" id="ttt-yves">0</b>
       </div>
       <span class="sb__vs" aria-hidden="true">vs</span>
-      <div class="sb__team sb__team--them">
-        <span class="sb__name">Yves</span>
-        <b class="sb__num sb__num--them" id="ttt-yves">0</b>
+      <div class="sb__team sb__team--you">
+        <span class="sb__name">You · X</span>
+        <b class="sb__num" id="ttt-you">0</b>
       </div>
     </header>
     <p class="sb__meta">
@@ -83,35 +84,40 @@ import { SAY } from '../../data/game';
      container would mean .ttt could never restyle itself and the two columns would just
      squeeze until the board was a postage stamp. The parent has to be the container. */
   :global(#win-game .window__body) {
-    padding: 0; overflow: hidden; container-type: inline-size;
+    padding: 0; overflow: hidden; container-type: size;
   }
 
   .ttt {
     display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-    height: 100%; min-height: 0; background: var(--os-recess);
+    /* One size drives the board and side card, so their top and bottom always align.
+       The second row is reserved even before the end buttons appear. */
+    --round: min(calc(100cqh - 64px), calc(66.666cqw - 20px));
+    grid-template-rows: calc(var(--round) + 20px) 44px;
+    grid-template-areas: 'stage side' 'actions empty';
+    align-content: center;
+    height: 100%; min-height: 0; background: var(--os-recess); container-type: size;
     font: 12px var(--font-chrome);
   }
 
   /* The board, and the buttons that act on it, in one column. The buttons row is `auto`,
      so it takes no space at all while it is hidden and the board keeps the lot. */
   .ttt__play {
-    display: grid; grid-template-rows: minmax(0, 1fr) auto;
-    gap: var(--space-2); min-width: 0; min-height: 0;
-    padding: var(--work-inset);
+    display: contents;
   }
-  .ttt__actions { display: flex; gap: 8px; }
+  .ttt__actions { grid-area: actions; display: flex; gap: 8px; padding: 0 var(--work-inset); }
   .ttt__actions .btn { flex: 1; }
 
   /* ---------------------------------------------------------------- board */
   .ttt__stage {
-    display: grid; place-items: center; min-width: 0; min-height: 0;
+    grid-area: stage; display: grid; place-items: center; min-width: 0; min-height: 0;
+    padding: var(--work-inset);
     background: var(--os-recess);
-    /* The whole point. A size container gives the board both cqw and cqh to measure
-       against, so it can stay square and still fill whatever shape the window is. */
-    container-type: size;
+    /* Not a container on purpose. cq units resolve against the nearest container of the
+       element that uses them, so a stage container would give the board a different
+       --round from the one the row above was sized with, and the two would drift. */
   }
   .ttt__board {
-    width: min(100cqw, 100cqh); aspect-ratio: 1;
+    width: var(--round); height: var(--round); aspect-ratio: 1;
     display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
     gap: clamp(3px, 2cqw, 9px);
   }
@@ -157,6 +163,7 @@ import { SAY } from '../../data/game';
 
   /* ----------------------------------------------------------------- side */
   .ttt__side {
+    grid-area: side;
     display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto;
     gap: var(--space-2); min-height: 0; padding: var(--space-3);
     background: var(--os-card); border: 1px solid var(--os-line);
@@ -170,14 +177,14 @@ import { SAY } from '../../data/game';
     border-bottom: 1px solid var(--os-line);
   }
   .sb__team { display: grid; gap: 1px; min-width: 0; }
-  .sb__team--them { justify-items: end; text-align: right; }
+  .sb__team--you { justify-items: end; text-align: right; }
   .sb__name {
     font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--os-muted);
   }
   .sb__num {
     font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--os-ink);
   }
-  .sb__num--them { color: var(--os-accent); }
+  .sb__num--yves { color: var(--os-accent); }
   .sb__vs { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--os-muted); }
 
   .sb__meta {
@@ -200,34 +207,44 @@ import { SAY } from '../../data/game';
     display: flex; flex-direction: column; gap: 8px; min-height: 0;
     overflow-y: auto; padding: 2px 2px 0 0;
   }
-
-  }
-
-
-
   /* Stacked, once the window is too narrow for two columns. Driven by the window's own
      width, not the viewport, so a small window on a big screen stacks too. */
   @container (max-width: 560px) {
-    .ttt { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
-    .ttt__side { min-height: 0; }
+    .ttt { display: block; height: 100%; overflow: auto; }
+    .ttt__play { display: grid; gap: var(--space-2); }
+    /* The named areas belong to the two-column grid. Left on, they would make this grid
+       grow implicit columns and hand the board the second one. */
+    .ttt__stage, .ttt__actions { grid-area: auto; }
+    .ttt__board { width: min(100%, 52dvh); height: auto; }
+    .ttt__actions { min-height: 44px; }
+    .ttt__side { min-height: 240px; margin: 0 var(--work-inset) var(--work-inset); }
     .ttt__feed { max-height: 96px; }
   }
 
-  /* On a phone the window is a bottom sheet: `height: auto`, capped at 85dvh. That is the
-     one case where the container trick above cannot work, because `container-type: size`
-     needs a definite height to measure and an auto-height sheet has none, so `100cqh`
-     means nothing and the board has nothing stopping it growing until it pushes the panel
-     off the bottom.
+  /* On a phone the window is a bottom sheet with `height: auto`. That is the one case
+     where the container trick above cannot work: `container-type: size` needs a definite
+     height to measure, and an auto-height box under size containment is 0px tall, so the
+     whole game would collapse and spill out under the dock.
 
-     So on mobile the containment comes off and the board is bounded by the viewport
-     instead. 58dvh leaves room for the title bar above it, Yves's panel below, and the
-     dock. The body scrolls here too, so a long conversation is still reachable. */
-  @media (max-width: 640px) {
-    :global(#win-game .window__body) { overflow: auto; padding-bottom: var(--dock-clear); }
-    .ttt { height: auto; grid-template-columns: 1fr; grid-template-rows: auto auto; }
+     So on mobile the containment comes off both the body and .ttt, and with no container
+     left to query, the stacked layout is spelled out here rather than borrowed from the
+     block above. The board is bounded by the viewport instead: 44dvh leaves room for the
+     title bar above it, Yves's panel below, and the dock. The body scrolls, so a long
+     conversation is still reachable.
+
+     Short viewports take the same route. A phone in landscape leaves about 130px of body
+     between the menu bar and the dock, which is no height for two columns, so it stacks
+     and scrolls like a portrait phone. */
+  @media (max-width: 640px), (max-height: 480px) {
+    :global(#win-game .window__body) { overflow: auto; container-type: normal; }
+    .ttt { display: block; height: auto; container-type: normal; }
+    .ttt__play { display: grid; gap: var(--space-2); }
+    .ttt__stage, .ttt__actions { grid-area: auto; }
+    .ttt__stage { padding: var(--space-2); }
+    .ttt__board { width: min(100%, 44dvh); height: auto; }
+    .ttt__actions { min-height: 44px; }
+    .ttt__side { min-height: 240px; margin: 0 var(--work-inset) var(--work-inset); }
     .ttt__feed { max-height: 96px; }
-    .ttt__stage { container-type: normal; padding: var(--space-2); }
-    .ttt__board { width: min(100%, 58dvh); }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -276,8 +293,11 @@ import { SAY } from '../../data/game';
   #ttt-feed .msg--in + .msg--in .msg__bubble { border-top-left-radius: 15px; }
   #ttt-feed .msg--out:not(:has(+ .msg--out:not([hidden]))) .msg__bubble { border-bottom-right-radius: 5px; }
 
-  #ttt-feed .msg--in .msg__bubble { background: var(--os-recess); color: var(--os-ink); }
-  #ttt-feed .msg--out .msg__bubble { background: var(--os-accent); color: #fff; }
+  /* Yves is teal and stays on the left. The visitor is neutral and stays on the right,
+     matching the scoreboard and the O/X mark colours above. */
+  #ttt-feed .msg--in .msg__name { color: var(--os-accent); }
+  #ttt-feed .msg--in .msg__bubble { background: var(--os-accent); color: #fff; }
+  #ttt-feed .msg--out .msg__bubble { background: var(--os-recess); color: var(--os-ink); }
 
   @keyframes msg-in {
     from { opacity: 0; transform: translateY(6px) scale(.96); }
@@ -287,7 +307,7 @@ import { SAY } from '../../data/game';
   #ttt-feed .msg__tag {
     display: block; margin-bottom: 2px;
     font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-    color: var(--os-accent);
+    color: currentColor; opacity: .72;
   }
 
   /* Three dots while he decides what to do to you. */

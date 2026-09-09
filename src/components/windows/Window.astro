@@ -67,16 +67,11 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
 
 <style>
   .window {
-    position: absolute; top: 10%; left: 18%; width: min(var(--w), calc(100vw - 32px)); height: var(--h, auto);
+    position: absolute; top: var(--window-top); left: 18%; width: min(var(--w), calc(100vw - 32px)); height: var(--h, auto);
     /* A window may ask for more height than the desktop has. The game asks for a lot on
        purpose, so it opens tall enough to read the conversation in, and this is what
        keeps that from running off the bottom on a short screen. Sits above the dock. */
-    max-height: calc(100dvh - var(--menubar-h) - 132px);
-    /* A window with no explicit height grows with its content, and a long one used to run
-       straight off the bottom of the screen and behind the dock. 80% of the desktop,
-       against a top of 10%, leaves the same 10% clear underneath. The body already
-       scrolls, so capping the window is all it takes. */
-    max-height: 80%;
+    max-height: calc(100% - var(--window-top) - var(--window-bottom));
     min-width: 280px; min-height: 160px; display: none; flex-direction: column; overflow: hidden;
     /* Deliberately no background. The title bar is glass, and glass needs something
        behind it, so the surface colour moved down onto .window__body. Same split macOS
@@ -157,7 +152,7 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
      ------------------------------------------------------------------ */
   @media (min-width: 641px) {
     .window.window--compose {
-      max-height: calc(100dvh - var(--menubar-h) - var(--dock-clear) - var(--space-3));
+      max-height: calc(100% - var(--window-top) - var(--window-bottom));
     }
     /* An animation rather than a transition, because display: none to flex restarts an
        animation and cancels a transition outright. --t-base is already zeroed under
@@ -173,7 +168,12 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
   @keyframes compose-in { from { opacity: 0; transform: translateY(8px) scale(.98); } }
 
   @media (max-width: 640px) {
-    .window { top: auto !important; bottom: 0; left: 0 !important; width: 100vw !important; height: auto !important; max-height: 85dvh; border-radius: var(--r-window) var(--r-window) 0 0; }
+    .window {
+      top: auto !important; bottom: var(--window-bottom); left: 0 !important;
+      width: 100vw !important; height: auto !important;
+      max-height: calc(100dvh - var(--menubar-h) - var(--window-top) - var(--window-bottom));
+      border-radius: var(--r-window);
+    }
     .window__grip { display: none; }
   }
 </style>

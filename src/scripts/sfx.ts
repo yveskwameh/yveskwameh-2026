@@ -27,7 +27,6 @@ const buffers = new Map<Sound, AudioBuffer>();
  *  twice for the same element, is the difference between playful and a swarm of bees. */
 const HOVER_MS = 90;
 let lastHover = 0;
-let lastEl: EventTarget | null = null;
 
 let started = false;
 
@@ -82,26 +81,33 @@ export function init() {
 const resume = () => { if (ctx?.state === 'suspended') ctx.resume(); };
 
 /** First matching selector wins. */
-function match(el: Element, map: [string, Sound][]): Sound | null {
-  for (const [sel, name] of map) if (el.closest(sel)) return name;
+function match(el: Element, map: [string, Sound][]): [Element, Sound] | null {
+  for (const [sel, name] of map) {
+    const control = el.closest(sel);
+    if (control) return [control, name];
+  }
   return null;
 }
 
 function onClick(e: Event) {
   const el = e.target as Element | null;
   if (!el?.closest) return;
-  play(match(el, CLICK) ?? 'tap');
+  play(match(el, CLICK)?.[1] ?? 'tap');
 }
 
-function onHover(e: Event) {
+function onHover(e: PointerEvent) {
   const el = e.target as Element | null;
-  if (!el?.closest || el === lastEl) return;
+  if (!el?.closest) return;
+  const hit = match(el, HOVER);
+  if (!hit) return;
+  const [control, name] = hit;
+  /* pointerover fires again at every child boundary. If the pointer came from another
+     part of this same control, it never left the control and this is not a new hover. */
+  const from = e.relatedTarget as Node | null;
+  if (from && control.contains(from)) return;
   const now = performance.now();
   if (now - lastHover < HOVER_MS) return;
-  const name = match(el, HOVER);
-  if (!name) return;
   lastHover = now;
-  lastEl = el;
   play(name);
 }
 

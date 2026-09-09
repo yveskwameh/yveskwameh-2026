@@ -106,58 +106,39 @@ a { color: var(--os-accent); }
   font: 12px var(--font-chrome); letter-spacing: .02em; text-decoration: none;
   cursor: var(--cur-hand); transition: background var(--t-fast), border-color var(--t-fast);
 }
-.btn:hover { background: var(--os-accent-bright); }
+.btn:hover { background: var(--os-accent); }
 .btn:active { background: var(--os-accent); }
 
 .btn--secondary { background: none; color: var(--os-ink); border-color: var(--os-line); }
-.btn--secondary:hover { background: rgba(22,22,26,.06); }
+.btn--secondary:hover { background: none; }
 .btn--secondary:active { background: rgba(22,22,26,.12); }
 
 .btn--icon { padding: 0; width: 34px; height: 34px; border-radius: 50%; }
 
 .btn--lg { width: 100%; padding: 13px 20px; font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
 
-/* ----------------------------------------------------------------
-   The sweep. A band of light crosses the button once when the pointer arrives, the
-   button lifts a millimetre, and the shadow under it deepens to match.
-
-   It runs on hover-in rather than looping, so it reads as the button answering you
-   instead of demanding attention. `animation` and not `transition` because a transition
-   would run backwards on the way out, and light does not un-sweep.
-
-   Only on .btn--lg, which is the sound gate's pair. The small buttons keep the plain
-   colour change: a sweep on every button in the OS would be noise.
-   ---------------------------------------------------------------- */
-.btn--lg {
-  position: relative; overflow: hidden;
-  transition: background var(--t-fast), border-color var(--t-fast),
-              transform var(--t-fast), box-shadow var(--t-fast);
+/* The same expanding ring that rewards catching the runaway button. It answers once on
+   hover-in and does not move the control itself, so it cannot fight window or dock drag. */
+.btn:not(:disabled):hover,
+button:not(:disabled):not(.lock__cta):hover,
+a.btn:hover { animation: button-ring var(--t-base) var(--ease); }
+@keyframes button-ring {
+  from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--os-accent) 55%, transparent); }
+  to { box-shadow: 0 0 0 12px transparent; }
 }
-.btn--lg::after {
-  content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 42%;
-  background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent);
-  transform: translateX(-160%) skewX(-14deg);
-  pointer-events: none;
-}
-.btn--lg:hover::after { animation: btn-sweep 620ms var(--ease); }
-@keyframes btn-sweep { to { transform: translateX(330%) skewX(-14deg); } }
-.btn--lg:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -8px rgba(0,0,0,.55); }
-.btn--lg:active { transform: translateY(0) scale(.985); box-shadow: none; }
 
 /* Reduced motion keeps the colour change and drops everything that moves. */
 @media (prefers-reduced-motion: reduce) {
-  .btn--lg:hover::after { animation: none; }
-  .btn--lg:hover, .btn--lg:active { transform: none; }
+  .btn:not(:disabled):hover, button:not(:disabled):hover, a.btn:hover { animation: none; }
 }
 /* A finger has no hover state, so the lift would only ever fire stuck-on after a tap. */
 @media (hover: none) {
-  .btn--lg:hover { transform: none; box-shadow: none; }
-  .btn--lg:hover::after { animation: none; }
+  .btn:not(:disabled):hover, button:not(:disabled):hover, a.btn:hover { animation: none; }
 }
 
 /* On the lock screen's dark overlay the ink-on-white secondary disappears, so it flips. */
 .btn--on-dark { color: #fff; border-color: rgba(255,255,255,.45); }
-.btn--on-dark:hover { background: rgba(255,255,255,.16); }
+.btn--on-dark:hover { background: none; }
 .btn--on-dark:active { background: rgba(255,255,255,.08); }
 /* Two-tone focus ring. The wallpaper is a photo with pale sand and dark ocean in it, so
    no single colour survives everywhere. Pairing a light band with a dark one means one

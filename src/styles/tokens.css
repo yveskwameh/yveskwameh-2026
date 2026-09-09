@@ -82,6 +82,11 @@
      sits 24px up and stands 1.38x its icon size, which is capped at 48px on anything
      wider than a phone. Retune alongside the ratios in Dock.astro if those ever change. */
   --dock-clear: calc(24px + 48px * 1.38 + var(--space-2));
+  /* Desktop windows reserve the fully magnified dock, its 24px outer margin, and a
+     16px breathing gap. Mobile overrides this with the resting dock because touch has
+     no magnification. */
+  --window-top: 40px;
+  --window-bottom: 144px;
   --space-1: 4px; --space-2: 8px; --space-3: 16px; --space-4: 24px; --space-5: 40px;
 
   /* ----------------------------------------------------------------
@@ -117,6 +122,20 @@
   --t-base: 220ms;
   --t-slow: 620ms;   /* entrances. Zeroed below like the others, so delays collapse too */
 }
+
+@media (max-width: 640px) {
+  :root { --window-top: 24px; --window-bottom: calc(var(--dock-clear) + 16px); }
+}
+/* A phone in landscape, or a very short desktop window. The dock reserve is the tight
+   version here or there is no room left to work in. */
+@media (max-height: 480px) {
+  :root { --window-top: 16px; --window-bottom: calc(var(--dock-clear) + 16px); }
+}
+/* Registered so a calc() value computes down to plain pixels. window-manager.ts and
+   drag.ts read these two, which is what keeps opening, dragging and resizing on one
+   set of numbers with the CSS. */
+@property --window-top { syntax: '<length>'; inherits: true; initial-value: 40px; }
+@property --window-bottom { syntax: '<length>'; inherits: true; initial-value: 144px; }
 
 @media (prefers-reduced-motion: reduce) {
   :root { --t-fast: 0ms; --t-base: 0ms; --t-slow: 0ms; }

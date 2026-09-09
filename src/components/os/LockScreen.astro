@@ -57,22 +57,19 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     <p class="lock__status-line"><span class="lock__dot" aria-hidden="true"></span>{site.status}</p>
   </div>
 
-  <audio id="lock-audio" src="/audio/too-slow.mp3" preload="none"></audio>
-
   <div class="lock__bottom">
     {/* Every line the button says lives here, not in the script. String literals are
         not minified, so copy in JS is copy charged against the ~10KB budget, while copy
         in markup is free and lands in the gzipped HTML instead. It also means editing
         the jokes never means touching logic. Order is fixed, see scripts/lock.ts. */}
+    <p class="lock__status"><span>PREPARING DESKTOP…</span><span>READY</span></p>
+
     <button class="lock__cta" id="lock-cta" type="button" data-unlock
       data-lines="Catch me if you can to unlock|Whatever you do, do not push me onto his face.|Ugh. Take me.|Fine. It is yours.|CLICK TO UNLOCK|UNLOCK IF YOU CAN|TAP TO UNLOCK"
       data-taunts="Too slow.|Not even close.|Try harder.|Was that it?"
       data-corner="Ow. Not the corner.|That one hurt.|Fine, that counts.">
       <Icon name="lock" size={13} /><span id="lock-label">UNLOCK IF YOU CAN</span>
     </button>
-
-
-    <p class="lock__status"><span>PREPARING DESKTOP…</span><span>READY</span></p>
   </div>
 </div>
 
@@ -82,7 +79,7 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     display: grid; grid-template-rows: auto 1fr auto; justify-items: center;
     padding: 6dvh var(--space-4) 4dvh; text-align: center; color: #fff;
     background: var(--os-desktop) var(--wallpaper) center / cover no-repeat;
-    transition: opacity var(--t-base) var(--ease), visibility var(--t-base);
+    transition: opacity 420ms var(--ease), transform 420ms var(--ease), visibility 0s;
   }
   .lock::before {
     content: ''; position: absolute; inset: 0;
@@ -92,7 +89,14 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   .lock__top, .lock__id, .lock__bottom { position: relative; display: grid; justify-items: center; }
   .lock__top { gap: var(--space-2); }
   .lock__id { align-content: center; gap: 3px; }
-  .lock__bottom { align-content: end; gap: var(--space-4); }
+  .lock__bottom { align-content: end; gap: var(--space-3); }
+  /* READY sits above the button's resting spot and under it in paint order, so the glass
+     covers it when the two cross. It also fades the moment the chase begins (is-live, set
+     by scripts/lock.ts on the first dodge), so it is gone before the button can travel
+     over it, and nothing shows through however the backdrop blur behaves. */
+  .lock__status { position: relative; z-index: 1; transition: opacity var(--t-base) var(--ease); }
+  .is-live .lock__status { opacity: 0; }
+  .lock__cta { z-index: 2; }
 
   .lock__date { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .01em; }
   .lock__time {
@@ -129,16 +133,8 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     appearance: none; margin: 0; cursor: var(--cur-hand); position: relative;
     display: inline-flex; align-items: center; gap: var(--space-2);
     padding: 11px 26px; border-radius: var(--r-pill);
-    /* Two layers: the sweep on top, the glass fill under it. The sweep has to live in the
-       background rather than in a pseudo-element, because both of this button's are
-       already the speech bubble and its tail. Parked off to the right until hover. */
     background-color: var(--unlock-fill);
-    background-image:
-      linear-gradient(100deg, transparent 34%, rgba(255,255,255,.5) 50%, transparent 66%),
-      var(--glass);
-    background-size: 300% 100%, auto;
-    background-position: 125% 0, 0 0;
-    background-repeat: no-repeat;
+    background-image: var(--glass);
     border: var(--glass-line); box-shadow: var(--glass-sheen);
     -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
     font: inherit; font-size: 12px; letter-spacing: .18em; color: #fff;
@@ -151,25 +147,18 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
        dodge maths reconstructs the button's origin from it. A hover lift would either be
        overwritten by the inline style or, worse, apply and leave the origin wrong. So the
        CTA lifts with light and shadow only, and the movement stays the button's own. */
-    transition: background-position 620ms var(--ease), background-color var(--t-fast),
-                box-shadow var(--t-fast), border-color var(--t-fast),
+    transition: background-color var(--t-fast), box-shadow var(--t-fast), border-color var(--t-fast),
                 transform 90ms var(--ease);
   }
   .lock__socials a:hover { background: var(--glass-hover); }
   .lock__socials a:active { background: var(--glass-press); }
-  /* The sweep crosses, the rim brightens, the shadow deepens. Worth knowing: during the
-     chase the button is `pointer-events: none` (see the anti-cheat below), so this is the
-     reward state, seen once the button has been caught, and by anyone the chase never
-     starts for. */
+  /* During the chase the button is out of hit testing. Once caught, the ring below is
+     the reward and this hover only strengthens the glass edge. */
   .lock__cta:hover {
-    background-position: -70% 0, 0 0;
     border-color: rgba(255,255,255,.55);
     box-shadow: var(--glass-sheen), 0 10px 26px -10px rgba(0,0,0,.6);
   }
   .lock__cta:active { box-shadow: var(--glass-sheen); }
-  @media (prefers-reduced-motion: reduce) {
-    .lock__cta:hover { background-position: 125% 0, 0 0; }
-  }
 
   /* The anti-cheat, and it has to be CSS rather than a click handler. A transitioning
      element is hit-tested at its interpolated position, so for the whole 90ms slide the
@@ -244,12 +233,7 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
      button's current translate to avoid snapping to origin, which is what the --ox/--oy
      custom properties were for. Animating box-shadow instead lets both of them go. */
   .lock__cta.is-caught {
-    /* background-image, not the `background` shorthand: the shorthand would drop the
-       sweep layer set above and the button would lose its hover for good, right at the
-       moment it finally becomes hoverable. */
-    background-image:
-      linear-gradient(100deg, transparent 34%, rgba(255,255,255,.5) 50%, transparent 66%),
-      var(--glass-hover);
+    background-image: var(--glass-hover);
     animation: caught var(--t-base) var(--ease);
   }
   @keyframes caught { from { box-shadow: 0 0 0 0 rgba(255,255,255,.6); } to { box-shadow: 0 0 0 18px rgba(255,255,255,0); } }
@@ -359,9 +343,13 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     /* The shout still appears, it just does not shake. It is the escape hatch, so it has
        to reach everyone. */
     .lock__shout.is-on { animation: none; }
+    .lock { transition-duration: 150ms; transform: none !important; }
   }
 
-  .lock.is-open { opacity: 0; visibility: hidden; pointer-events: none; }
+  .lock.is-open {
+    opacity: 0; visibility: hidden; transform: translateY(-12px); pointer-events: none;
+    transition: opacity 420ms var(--ease), transform 420ms var(--ease), visibility 0s linear 420ms;
+  }
 
   @media (max-width: 640px) {
     .lock__time { font-size: clamp(64px, 26vw, 110px); }

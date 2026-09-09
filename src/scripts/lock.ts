@@ -21,7 +21,9 @@ function tick() {
 }
 
 export function unlock() {
-  $('lock')?.classList.add('is-open');
+  const el = $('lock');
+  if (!el || el.classList.contains('is-open')) return;
+  el.classList.add('is-open');
   sessionStorage.u = '1';
   sfx('unlock');
 }
@@ -47,13 +49,12 @@ export function initLock() {
   // The button is taken out of hit testing by CSS while the game is on, so reaching this
   // at all means it has been won. See the pointer-events note in LockScreen.astro.
   el.addEventListener('click', (e) => {
-    arm();
     if ((e.target as HTMLElement).closest('[data-unlock]')) unlock();
   });
   // Always available, and the way past for anyone who does not want to play
   document.addEventListener('keydown', (e) => {
-    arm();
-    if (!el.classList.contains('is-open') && (e.key === 'Enter' || e.key === ' ')) unlock();
+    if ($('lock-gate') || el.classList.contains('is-open')) return;
+    if (e.key === 'Enter' || e.key === ' ') unlock();
   });
 
   initRunaway(el);
@@ -85,7 +86,6 @@ let ox = 0, oy = 0;
 let bx = 0, by = 0, bw = 0, bh = 0;   // untransformed layout box, measured once
 let last = 0, began = 0, said = '', n = 0;
 let won = false, armed = false, shouted = false, pins = 0;
-let snd: HTMLAudioElement | null = null;
 let mq: MediaQueryList;
 
 const say = (t: string) => cta && (cta.dataset.say = said = t);
@@ -104,6 +104,7 @@ function reset() {
   face?.classList.remove('is-target');
   $('lock-shout')?.classList.remove('is-on');
   if (!cta) return;
+  cta.parentElement!.classList.remove('is-live');
   cta.classList.remove('is-caught');   // before clearing transform, so it cannot re-fire
   cta.style.transform = '';
   delete cta.dataset.say;
@@ -143,7 +144,9 @@ function flee(px: number, py: number, ts: number, forced = false) {
   cta.style.transform = `translate(${ox}px,${oy}px)`;
   sfx('flee');        // one blip per dodge. The 40ms guard above already rate limits it.
 
-  if (!began) { began = ts; say(L[0]); return; }
+  // The chase is on, so the READY label under it has done its job. Fading it here, and
+  // not on overlap, means it can never show through the glass, whatever the blur does.
+  if (!began) { began = ts; cta.parentElement!.classList.add('is-live'); say(L[0]); return; }
 
   // The clue. Reverse psychology, so it reads as a joke and still names the target,
   // the goal and the verb in one line. Yves saw the pulse and could not tell it meant
@@ -180,23 +183,7 @@ function shout(ts: number) {
   if (shouted || ts - began < 10_000) return;
   shouted = true;
   $('lock-shout')?.classList.add('is-on');
-  if (snd) { snd.currentTime = 0; snd.play().catch(() => {}); }
-}
-
-/**
- * Hand the voice clip its permission to play. Browsers grant that per page load, from a
- * real click, and they do not care what we stored last week. So a remembered yes has to be
- * re-armed by the first click of every visit, and play-then-pause inside that click is
- * what marks the element allowed for later.
- *
- * This is only about the one self-hosted clip in the markup. The gate that asks the
- * question, and the flag it writes, moved to scripts/snd.ts so the menu bar toggle and
- * the gate share a single writer.
- */
-function arm() {
-  if (snd || localStorage.snd !== 'on') return;
-  snd = $('lock-audio') as HTMLAudioElement | null;
-  snd?.play().then(() => snd?.pause(), () => {});
+  sfx('menu');
 }
 
 function initRunaway(root: HTMLElement) {

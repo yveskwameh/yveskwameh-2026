@@ -21,17 +21,20 @@ const openWindows = () => document.querySelectorAll<HTMLElement>('.window.is-ope
  * and unlike `inset: 0; margin: auto` they also work for the windows sized by their
  * content rather than by a height prop.
  */
-function centre(win: HTMLElement) {
+/** A layout token in pixels. The window area lives in tokens.css and is read, not copied. */
+export const px = (el: Element, name: string) => parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0;
+
+function placeWindow(win: HTMLElement) {
   const p = win.offsetParent as HTMLElement | null;
   if (!p) return;
   win.style.left = `${Math.max(0, Math.round((p.clientWidth - win.offsetWidth) / 2))}px`;
-  win.style.top = `${Math.max(0, Math.round((p.clientHeight - win.offsetHeight) / 2))}px`;
+  win.style.top = `${px(p, '--window-top')}px`;
 }
 
 export function openWindow(id: string) {
   const win = q(id); if (!win) return;
   win.classList.add('is-open');
-  centre(win);          // every open, so a window you moved comes back to the middle
+  placeWindow(win);     // every open: centred across, --window-top below the menu bar
   focusWindow(win);
   launch(id);           // the app's own code, fetched the first time its window opens
 }
