@@ -19,6 +19,10 @@ export default defineConfig({
   // Fully static build. No adapter needed for Cloudflare Workers static assets.
   output: 'static',
 
+  // Use one public preview address and fail rather than silently moving to another port.
+  server: { port: 4321 },
+  vite: { server: { strictPort: true } },
+
   // Prefetch is off for now. It ships 2.5KB of client JS, a quarter of the whole budget,
   // and the only internal links are the four case studies, which are one click from the
   // desktop and already cheap. Worth revisiting when there are more of them.

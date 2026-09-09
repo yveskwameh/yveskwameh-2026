@@ -65,13 +65,13 @@ import { SAY } from '../../data/game';
      and not on .ttt: an element cannot answer its own container query, so making .ttt the
      container would mean .ttt could never restyle itself and the two columns would just
      squeeze until the board was a postage stamp. The parent has to be the container. */
-  :global(.window__body:has(> .ttt)) {
+  :global(#win-game .window__body) {
     padding: 0; overflow: hidden; container-type: inline-size;
   }
 
   .ttt {
-    display: grid; grid-template-columns: minmax(0, 1fr) 246px;
-    height: 100%; min-height: 0;
+    display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    height: 100%; min-height: 0; background: var(--os-recess);
     font: 12px var(--font-chrome);
   }
 
@@ -92,7 +92,7 @@ import { SAY } from '../../data/game';
   .ttt__cell {
     all: unset; position: relative; display: grid; place-items: center;
     background: var(--os-surface); border: 1px solid var(--os-line);
-    border-radius: var(--r-inner); cursor: var(--cur-hand);
+    border-radius: var(--r-window); cursor: var(--cur-hand);
     transition: background var(--t-fast), transform var(--t-fast);
   }
   .ttt__cell:hover:not([data-mark]):not([disabled]) { background: var(--os-card); }
@@ -132,7 +132,8 @@ import { SAY } from '../../data/game';
   .ttt__side {
     display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto auto;
     gap: var(--space-2); min-height: 0; padding: var(--space-3);
-    background: var(--os-card); border-left: 1px solid var(--os-line);
+    background: var(--os-card); border: 1px solid var(--os-line);
+    border-radius: var(--panel-radius); margin: var(--work-inset); min-width: 0; overflow: auto;
   }
   .ttt__who { display: flex; align-items: center; gap: var(--space-2); }
   .ttt__face { border-radius: 50%; flex: none; }
@@ -160,8 +161,8 @@ import { SAY } from '../../data/game';
   /* Stacked, once the window is too narrow for two columns. Driven by the window's own
      width, not the viewport, so a small window on a big screen stacks too. */
   @container (max-width: 560px) {
-    .ttt { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
-    .ttt__side { border-left: 0; border-top: 1px solid var(--os-line); }
+    .ttt { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+    .ttt__side { min-height: 0; }
     .ttt__feed { max-height: 96px; }
   }
 
@@ -175,8 +176,9 @@ import { SAY } from '../../data/game';
      instead. 58dvh leaves room for the title bar above it, Yves's panel below, and the
      dock. The body scrolls here too, so a long conversation is still reachable. */
   @media (max-width: 640px) {
-    :global(.window__body:has(> .ttt)) { overflow: auto; }
-    .ttt { height: auto; }
+    :global(#win-game .window__body) { overflow: auto; padding-bottom: var(--dock-clear); }
+    .ttt { height: auto; grid-template-columns: 1fr; grid-template-rows: auto auto; }
+    .ttt__feed { max-height: 96px; }
     .ttt__stage { container-type: normal; padding: var(--space-2); }
     .ttt__board { width: min(100%, 58dvh); }
   }
