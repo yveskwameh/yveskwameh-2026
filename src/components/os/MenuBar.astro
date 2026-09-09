@@ -67,7 +67,7 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
        edge has no rim to catch light: the only edge anyone sees is the bottom one, which
        is the hairline and the shadow under it. */
     background: var(--os-bar);
-    backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
     /* One hairline to sit the bar on, and no drop shadow: a shadow under a bar that is
        already pinned to the top edge only smears the wallpaper under it. */
     border-bottom: 1px solid rgba(0,0,0,.12);
@@ -138,7 +138,7 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
        -webkit- prefix was missing here once, so Safari rendered these flat with no blur
        while every other surface had one. */
     background: var(--os-menu); border: 1px solid rgba(0,0,0,.12);
-    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
     border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
   }
   .menu button { all: unset; display: block; width: 100%; padding: 6px 10px; border-radius: var(--r-inner); cursor: var(--cur-hand); font: inherit; }

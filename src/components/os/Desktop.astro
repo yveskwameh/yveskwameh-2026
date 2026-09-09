@@ -88,7 +88,7 @@ import { desktopItems } from '../../data/desktop';
   .scrim {
     position: absolute; inset: 0; z-index: 5; pointer-events: none;
     background: rgba(10, 14, 20, .22);
-    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
     opacity: 0; transition: opacity var(--t-base) var(--ease);
   }
   /* window-manager.ts puts has-window on the body whenever anything is open. */
@@ -97,7 +97,7 @@ import { desktopItems } from '../../data/desktop';
   .ctx {
     position: fixed; z-index: 950; min-width: 190px; padding: 6px;
     background: var(--os-menu);
-    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
     border: 1px solid rgba(0,0,0,.12); border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
   }
   .ctx[hidden] { display: none; }
@@ -123,8 +123,17 @@ import { desktopItems } from '../../data/desktop';
     /* translate3d keeps each cursor on its own layer, so a room full of them moves without
        relaying out the page. */
     will-change: transform;
+    /* Parked off screen until a script gives them a real position. Everything in this
+       layer is `fixed` at 0,0 by default, which is directly under the menu bar, so
+       without this any of them flashes there for a frame on the way to being placed.
+       The global `[hidden]` rule in global.css handles the hidden case; this handles
+       the shown-but-not-yet-positioned one. */
+    transform: translate3d(-200px, -200px, 0);
   }
   .me { z-index: 851; }
+  /* Repeated locally although global.css now covers every `hidden`, because the two rules
+     above set `display: flex` and a reader of this file needs to see why that is safe. */
+  .me[hidden], .chip--edit[hidden] { display: none; }
   /* Drawn rather than the cursor PNG, because each visitor needs their own colour and a
      bitmap cannot be tinted. */
   .peer__arrow {
@@ -144,17 +153,17 @@ import { desktopItems } from '../../data/desktop';
   #me-chip { opacity: .75; }
   #me-chip:hover { opacity: 1; }
   .chip--edit {
-    position: fixed; z-index: 860; width: 130px; border: 0; text-align: center;
+    position: fixed; z-index: 860; left: -999px; width: 130px; border: 0; text-align: center;
     background: var(--os-accent); color: #fff; font: 10px var(--font-chrome);
     padding: 4px 9px; border-radius: var(--r-pill);
   }
   .chip--edit:focus { outline: 2px solid #fff; outline-offset: 1px; }
 
   .react {
-    position: fixed; z-index: 860; display: flex; gap: 2px; padding: 4px;
+    position: fixed; z-index: 860; left: -999px; display: flex; gap: 2px; padding: 4px;
     background: var(--os-menu); border: 1px solid rgba(0,0,0,.12);
     border-radius: var(--r-pill); box-shadow: var(--os-shadow-sm);
-    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
   }
   .react[hidden] { display: none; }
   .react button {

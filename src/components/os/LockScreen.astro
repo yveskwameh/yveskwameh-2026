@@ -84,7 +84,7 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   .lock::before {
     content: ''; position: absolute; inset: 0;
     background: linear-gradient(180deg, rgba(14,28,48,.78), rgba(14,28,48,.5) 45%, rgba(14,28,48,.72));
-    backdrop-filter: blur(2px) saturate(1.1); -webkit-backdrop-filter: blur(2px) saturate(1.1);
+    -webkit-backdrop-filter: blur(2px) saturate(1.1); backdrop-filter: blur(2px) saturate(1.1);
   }
   .lock__top, .lock__id, .lock__bottom { position: relative; display: grid; justify-items: center; }
   .lock__top { gap: var(--space-2); }
@@ -101,7 +101,7 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   .lock__socials a {
     display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: #fff;
     background: var(--glass); border: var(--glass-line); box-shadow: var(--glass-sheen);
-    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
     transition: background var(--t-fast);
   }
 
@@ -111,7 +111,7 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   .lock__avatar--fallback {
     display: grid; place-items: center; font-size: 21px; font-weight: 700; letter-spacing: .04em;
     background: var(--glass); border: var(--glass-line); box-shadow: var(--glass-sheen);
-    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
   }
   .lock__name { margin: 0; font-size: 20px; font-weight: 700; }
   .lock__title { margin: 0; font-size: 11px; letter-spacing: .22em; color: rgba(255,255,255,.75); }
@@ -126,19 +126,46 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     appearance: none; margin: 0; cursor: var(--cur-hand); position: relative;
     display: inline-flex; align-items: center; gap: var(--space-2);
     padding: 11px 26px; border-radius: var(--r-pill);
-    background: var(--glass); border: var(--glass-line); box-shadow: var(--glass-sheen);
-    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    /* Two layers: the sweep on top, the glass fill under it. The sweep has to live in the
+       background rather than in a pseudo-element, because both of this button's are
+       already the speech bubble and its tail. Parked off to the right until hover. */
+    background-image:
+      linear-gradient(100deg, transparent 34%, rgba(255,255,255,.5) 50%, transparent 66%),
+      var(--glass);
+    background-size: 300% 100%, auto;
+    background-position: 125% 0, 0 0;
+    background-repeat: no-repeat;
+    border: var(--glass-line); box-shadow: var(--glass-sheen);
+    -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
     font: inherit; font-size: 12px; letter-spacing: .18em; color: #fff;
     text-shadow: 0 1px 2px rgba(0,0,0,.35);   /* keeps the label legible over any wallpaper */
     /* Deliberately faster than --t-base, and local rather than a token change: --t-base
        is shared with the dock and the windows, so lowering it would speed up the site.
        At 220ms a lunge could reach the button mid-slide. */
-    transition: background var(--t-fast), transform 90ms var(--ease);
+    /* No `transform` in this transition beyond the 90ms dodge, and deliberately no hover
+       transform anywhere below: scripts/lock.ts owns this element's transform, and the
+       dodge maths reconstructs the button's origin from it. A hover lift would either be
+       overwritten by the inline style or, worse, apply and leave the origin wrong. So the
+       CTA lifts with light and shadow only, and the movement stays the button's own. */
+    transition: background-position 620ms var(--ease), background-color var(--t-fast),
+                box-shadow var(--t-fast), border-color var(--t-fast),
+                transform 90ms var(--ease);
   }
-  .lock__socials a:hover, .lock__cta:hover {
-    background: var(--glass-hover);
+  .lock__socials a:hover { background: var(--glass-hover); }
+  .lock__socials a:active { background: var(--glass-press); }
+  /* The sweep crosses, the rim brightens, the shadow deepens. Worth knowing: during the
+     chase the button is `pointer-events: none` (see the anti-cheat below), so this is the
+     reward state, seen once the button has been caught, and by anyone the chase never
+     starts for. */
+  .lock__cta:hover {
+    background-position: -70% 0, 0 0;
+    border-color: rgba(255,255,255,.55);
+    box-shadow: var(--glass-sheen), 0 10px 26px -10px rgba(0,0,0,.6);
   }
-  .lock__socials a:active, .lock__cta:active { background: var(--glass-press); }
+  .lock__cta:active { box-shadow: var(--glass-sheen); }
+  @media (prefers-reduced-motion: reduce) {
+    .lock__cta:hover { background-position: 125% 0, 0 0; }
+  }
 
   /* The anti-cheat, and it has to be CSS rather than a click handler. A transitioning
      element is hit-tested at its interpolated position, so for the whole 90ms slide the
@@ -213,7 +240,12 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
      button's current translate to avoid snapping to origin, which is what the --ox/--oy
      custom properties were for. Animating box-shadow instead lets both of them go. */
   .lock__cta.is-caught {
-    background: var(--glass-hover);
+    /* background-image, not the `background` shorthand: the shorthand would drop the
+       sweep layer set above and the button would lose its hover for good, right at the
+       moment it finally becomes hoverable. */
+    background-image:
+      linear-gradient(100deg, transparent 34%, rgba(255,255,255,.5) 50%, transparent 66%),
+      var(--glass-hover);
     animation: caught var(--t-base) var(--ease);
   }
   @keyframes caught { from { box-shadow: 0 0 0 0 rgba(255,255,255,.6); } to { box-shadow: 0 0 0 18px rgba(255,255,255,0); } }
@@ -268,8 +300,9 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   .gate {
     position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center;
     padding: var(--space-4); text-align: center; color: #fff;
-    background: rgba(8,14,24,.72);
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    background: rgba(8,14,24,.86);
+    -webkit-backdrop-filter: blur(28px) saturate(120%);
+    backdrop-filter: blur(28px) saturate(120%);
     animation: fade var(--t-base) var(--ease);
   }
   .gate[hidden] { display: none; }
@@ -278,14 +311,14 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     width: min(420px, 100%); padding: var(--space-5) var(--space-4) var(--space-4);
     border-radius: 22px;
     background: var(--glass); border: var(--glass-line); box-shadow: var(--glass-sheen);
-    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
     animation: rise var(--t-base) var(--ease) both;
   }
   .gate__icon {
     display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: var(--space-2);
     border-radius: 50%; color: #fff;
     background: var(--glass); border: var(--glass-line); box-shadow: var(--glass-sheen);
-    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
   }
   .gate__eyebrow { margin: 0; font-size: 10px; letter-spacing: .3em; color: rgba(255,255,255,.6); }
   .gate__title { margin: 0; font-size: 22px; font-weight: 700; }
@@ -298,9 +331,15 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   /* Everything eases in once, so the screen assembles rather than just appearing.
      .lock__bottom fades WITHOUT moving on purpose: it is the button's ancestor, and an
      ancestor transform would offset the box the dodge maths measures, leaving the origin
-     permanently wrong for anyone who moves the mouse during the entrance. */
-  .lock__top, .lock__id { animation: rise var(--t-slow) var(--ease) both; }
-  .lock__bottom { animation: fade var(--t-slow) var(--ease) both; }
+     permanently wrong for anyone who moves the mouse during the entrance.
+
+     `backwards`, not `both`. A filled opacity animation makes an element a backdrop root
+     for as long as it is filling, and `both` fills forever, so the unlock button inside
+     .lock__bottom could only ever blur its own transparent parent instead of the clock
+     behind it. `backwards` still holds the start frame through the delay, which is all
+     the entrance needs, and lets go once the animation ends. */
+  .lock__top, .lock__id { animation: rise var(--t-slow) var(--ease) backwards; }
+  .lock__bottom { animation: fade var(--t-slow) var(--ease) backwards; }
   .lock__id { animation-delay: calc(var(--t-slow) * .15); }
   .lock__bottom { animation-delay: calc(var(--t-slow) * .3); }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } }

@@ -17,6 +17,13 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 
+/* The `hidden` attribute only works through the browser's default `display: none`, so any
+   author `display` rule silently beats it. That is a real bug and not a style choice: an
+   element written as hidden then given `display: flex` by a component paints at 0,0 until
+   a script moves it. Every modern reset ships this line for that reason. Keep it above
+   the components so nothing has to remember to guard its own hidden state. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0; min-height: 100dvh; overflow: hidden;
   background: var(--os-desktop) var(--wallpaper) center / cover no-repeat fixed;
@@ -80,6 +87,44 @@ a { color: var(--os-accent); }
 .btn--icon { padding: 0; width: 34px; height: 34px; border-radius: 50%; }
 
 .btn--lg { width: 100%; padding: 13px 20px; font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+
+/* ----------------------------------------------------------------
+   The sweep. A band of light crosses the button once when the pointer arrives, the
+   button lifts a millimetre, and the shadow under it deepens to match.
+
+   It runs on hover-in rather than looping, so it reads as the button answering you
+   instead of demanding attention. `animation` and not `transition` because a transition
+   would run backwards on the way out, and light does not un-sweep.
+
+   Only on .btn--lg, which is the sound gate's pair. The small buttons keep the plain
+   colour change: a sweep on every button in the OS would be noise.
+   ---------------------------------------------------------------- */
+.btn--lg {
+  position: relative; overflow: hidden;
+  transition: background var(--t-fast), border-color var(--t-fast),
+              transform var(--t-fast), box-shadow var(--t-fast);
+}
+.btn--lg::after {
+  content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 42%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent);
+  transform: translateX(-160%) skewX(-14deg);
+  pointer-events: none;
+}
+.btn--lg:hover::after { animation: btn-sweep 620ms var(--ease); }
+@keyframes btn-sweep { to { transform: translateX(330%) skewX(-14deg); } }
+.btn--lg:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -8px rgba(0,0,0,.55); }
+.btn--lg:active { transform: translateY(0) scale(.985); box-shadow: none; }
+
+/* Reduced motion keeps the colour change and drops everything that moves. */
+@media (prefers-reduced-motion: reduce) {
+  .btn--lg:hover::after { animation: none; }
+  .btn--lg:hover, .btn--lg:active { transform: none; }
+}
+/* A finger has no hover state, so the lift would only ever fire stuck-on after a tap. */
+@media (hover: none) {
+  .btn--lg:hover { transform: none; box-shadow: none; }
+  .btn--lg:hover::after { animation: none; }
+}
 
 /* On the lock screen's dark overlay the ink-on-white secondary disappears, so it flips. */
 .btn--on-dark { color: #fff; border-color: rgba(255,255,255,.45); }

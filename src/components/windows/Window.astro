@@ -74,7 +74,7 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
        glass round, but a see-through title bar over the wallpaper is the one part of it
        worth keeping. */
     background: var(--os-titlebar);
-    backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
     border-bottom: 1px solid rgba(0,0,0,.12);
     cursor: var(--cur-grab); touch-action: none; user-select: none;
   }
