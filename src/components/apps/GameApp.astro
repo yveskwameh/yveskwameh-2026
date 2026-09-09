@@ -30,15 +30,27 @@ import { SAY } from '../../data/game';
 
   <aside class="ttt__side">
     <header class="ttt__who">
-      <img class="ttt__face" src={site.avatar} width="40" height="40" alt="" />
-      <div>
+      <span class="ttt__face">
+        <img src={site.avatar} width="34" height="34" alt="" />
+        {/* The presence dot every messenger has. He is always here. That is the joke. */}
+        <i class="ttt__dot" aria-hidden="true"></i>
+      </span>
+      <div class="ttt__whoText">
         <b>Yves</b>
         <p class="ttt__status" id="ttt-status" role="status">{SAY.status.you}</p>
       </div>
     </header>
 
-    {/* aria-live so the running commentary is announced, not just drawn. */}
-    <div class="ttt__feed" id="ttt-feed" aria-live="polite" aria-label="What Yves is saying"></div>
+    {/* The conversation. His messages come in on the left, yours go out on the right, and
+        game.ts writes both. aria-live so a screen reader hears the commentary rather than
+        only seeing it; the typing dots are hidden from it, because three animated dots
+        announced every turn would be unbearable. */}
+    <div class="ttt__feed" id="ttt-feed" aria-live="polite" aria-label="Your conversation with Yves">
+      <div class="msg msg--in msg--typing" id="ttt-typing" aria-hidden="true" hidden>
+        <span class="msg__face"><img src={site.avatar} width="22" height="22" alt="" /></span>
+        <span class="msg__bubble"><i></i><i></i><i></i></span>
+      </div>
+    </div>
 
     <dl class="ttt__score" id="ttt-score">
       <div><dt><Icon name="trophy" size={12} /> Match</dt><dd id="ttt-match">#001</dd></div>
@@ -135,20 +147,31 @@ import { SAY } from '../../data/game';
     background: var(--os-card); border: 1px solid var(--os-line);
     border-radius: var(--panel-radius); margin: var(--work-inset); min-width: 0; overflow: auto;
   }
-  .ttt__who { display: flex; align-items: center; gap: var(--space-2); }
-  .ttt__face { border-radius: 50%; flex: none; }
+  /* The conversation header, the way every messenger does it: face, name, presence. */
+  .ttt__who {
+    display: flex; align-items: center; gap: var(--space-2);
+    padding-bottom: var(--space-2); border-bottom: 1px solid var(--os-line);
+  }
+  .ttt__face { position: relative; flex: none; display: block; }
+  .ttt__face img { border-radius: 50%; display: block; }
+  .ttt__dot {
+    position: absolute; right: -1px; bottom: -1px; width: 10px; height: 10px;
+    border-radius: 50%; background: #31a24c; border: 2px solid var(--os-card);
+  }
+  .ttt__whoText { min-width: 0; }
   .ttt__who b { font-size: 13px; }
-  .ttt__status { margin: 1px 0 0; color: var(--os-muted); font-size: 11px; }
+  .ttt__status {
+    margin: 1px 0 0; color: var(--os-muted); font-size: 10px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
 
+  /* ------------------------------------------------------------------ chat */
   .ttt__feed {
-    display: flex; flex-direction: column; gap: 5px; min-height: 0;
-    overflow-y: auto; padding-right: 2px;
+    display: flex; flex-direction: column; gap: 8px; min-height: 0;
+    overflow-y: auto; padding: 2px 2px 0 0;
   }
-  .ttt__feed p {
-    margin: 0; padding: 6px 9px; border-radius: 10px 10px 10px 3px;
-    background: var(--os-recess); color: var(--os-ink); font-size: 11px; line-height: 1.45;
+
   }
-  .ttt__feed p b { color: var(--os-accent); }
 
   .ttt__score { margin: 0; display: grid; gap: 2px; font-size: 11px; }
   .ttt__score > div { display: flex; justify-content: space-between; align-items: center; }
@@ -186,5 +209,72 @@ import { SAY } from '../../data/game';
   @media (prefers-reduced-motion: reduce) {
     .ttt__cell, .ttt__cell.is-cheat, .ttt__cell.is-gone { animation: none; transition: none; }
     .ttt__cell.is-gone { opacity: .25; }
+  }
+</style>
+
+{/* The chat bubbles live in a global block on purpose.
+    game.ts creates these nodes at runtime, and Astro scopes component styles to elements
+    it can see in the markup, so a scoped rule here would match none of them: exactly the
+    bug that left the emoji reactions unstyled. Every selector is namespaced under
+    #ttt-feed, which is unique to this window, so nothing escapes into the rest of the OS. */}
+<style is:global>
+  #ttt-feed .msg { display: flex; align-items: flex-end; gap: 6px; max-width: 100%; }
+  #ttt-feed .msg--in { justify-content: flex-start; }
+  #ttt-feed .msg--out { justify-content: flex-end; }
+
+  /* Runs of messages from the same person sit close together, the way a burst of replies
+     does in a real thread, so you can see at a glance where one person stopped. */
+  #ttt-feed .msg--in + .msg--in:not([hidden]),
+  #ttt-feed .msg--out + .msg--out:not([hidden]) { margin-top: -5px; }
+
+  /* The avatar rides on the LAST message of his run, not every one. The space is always
+     reserved so the bubbles above it stay in line rather than stepping left. */
+  #ttt-feed .msg__face { flex: none; width: 22px; height: 22px; visibility: hidden; }
+  #ttt-feed .msg__face img { border-radius: 50%; display: block; }
+  /* `+ .msg--in` also matches the typing row, which is always the last child and is
+     usually `hidden`. A hidden element is still a sibling, so without excluding it the
+     last real message never counted as last, and never got its avatar or its tail. */
+  #ttt-feed .msg--in:not(:has(+ .msg--in:not([hidden]))) .msg__face { visibility: visible; }
+
+  #ttt-feed .msg__bubble {
+    max-width: 82%; padding: 7px 11px; border-radius: 15px;
+    font-size: 11px; line-height: 1.45; overflow-wrap: anywhere;
+    animation: msg-in 220ms var(--ease);
+  }
+  /* The tail. Only the last bubble of a run gets the squared corner, which is what makes a
+     run read as one turn of speech instead of a list. */
+  #ttt-feed .msg--in:not(:has(+ .msg--in:not([hidden]))) .msg__bubble { border-bottom-left-radius: 5px; }
+  #ttt-feed .msg--out:not(:has(+ .msg--out:not([hidden]))) .msg__bubble { border-bottom-right-radius: 5px; }
+
+  #ttt-feed .msg--in .msg__bubble { background: var(--os-recess); color: var(--os-ink); }
+  #ttt-feed .msg--out .msg__bubble { background: var(--os-accent); color: #fff; }
+
+  @keyframes msg-in {
+    from { opacity: 0; transform: translateY(6px) scale(.96); }
+  }
+
+  /* The violation number, as a label on the message rather than a sentence in it. */
+  #ttt-feed .msg__tag {
+    display: block; margin-bottom: 2px;
+    font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--os-accent);
+  }
+
+  /* Three dots while he decides what to do to you. */
+  #ttt-feed .msg--typing .msg__bubble { display: flex; gap: 3px; padding: 9px 11px; }
+  #ttt-feed .msg--typing i {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--os-muted);
+    animation: msg-dot 1.2s var(--ease) infinite;
+  }
+  #ttt-feed .msg--typing i:nth-child(2) { animation-delay: .16s; }
+  #ttt-feed .msg--typing i:nth-child(3) { animation-delay: .32s; }
+  @keyframes msg-dot {
+    0%, 60%, 100% { opacity: .3; transform: translateY(0); }
+    30%           { opacity: 1;  transform: translateY(-3px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #ttt-feed .msg__bubble { animation: none; }
+    #ttt-feed .msg--typing i { animation: none; opacity: .55; }
   }
 </style>

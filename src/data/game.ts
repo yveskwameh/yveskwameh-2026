@@ -17,6 +17,26 @@
 export type Trick =
   | 'expire' | 'maintenance' | 'double' | 'swap' | 'slide' | 'misclick' | 'offside';
 
+/**
+ * Your side of the conversation.
+ *
+ * The panel is a chat, so it needs two people in it. You do not type, you play, and these
+ * are your moves said out loud: you name the square you took, he replies with what he has
+ * done about it. Short, because nobody narrates their own tic tac toe at length.
+ */
+export const YOU = {
+  /** Squares 0 to 8, named the way a person would say them out loud. */
+  square: [
+    'Top left', 'Top middle', 'Top right',
+    'Middle left', 'Centre', 'Middle right',
+    'Bottom left', 'Bottom middle', 'Bottom right',
+  ],
+  /** When a square will not take your mark. */
+  taken: ['That one is taken.', 'Cannot click that.'],
+  appeal: 'I would like to appeal.',
+  again: 'Again.',
+} as const;
+
 export const SAY = {
   /** The line under his name. */
   status: {
@@ -25,6 +45,13 @@ export const SAY = {
     again: 'Your move.',
     over: 'Match over.',
   },
+
+  /** The first thing he says, so the chat is never an empty box. */
+  opener: [
+    'You are X. Go first, I insist.',
+    'X is you. I will keep score.',
+    'Your move. I am not going anywhere.',
+  ],
 
   /** He plays it straight. Always the first move of a match, sometimes later. */
   honest: [

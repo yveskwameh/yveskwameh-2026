@@ -14,7 +14,7 @@
  *
  * Fetched the first time the game window opens. See scripts/lazy.ts.
  */
-import { SAY, WEIGHTS, IDLE_S, PATIENCE, type Trick } from '../data/game';
+import { SAY, YOU, WEIGHTS, IDLE_S, PATIENCE, type Trick } from '../data/game';
 
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 /** Squares reachable from each square, for `slide`. */
@@ -29,8 +29,12 @@ const pick = <T,>(a: readonly T[]): T => a[(Math.random() * a.length) | 0];
 
 export function init() {
   const board = $('ttt-board'), feed = $('ttt-feed'), status = $('ttt-status');
-  const actions = $('ttt-actions');
-  if (!board || !feed || !status || !actions) return;
+  const actions = $('ttt-actions'), typing = $('ttt-typing');
+  if (!board || !feed || !status || !actions || !typing) return;
+
+  /* Read off the markup rather than imported, so his face in the thread is the same file
+     the header already loaded and there is no second request. */
+  const avatar = typing.querySelector('img')!.src;
 
   const cells = [...board.querySelectorAll<HTMLButtonElement>('.ttt__cell')];
 
@@ -72,19 +76,56 @@ export function init() {
   const scrollFeed = () =>
     requestAnimationFrame(() => { feed.scrollTop = feed.scrollHeight; });
 
-  function say(line: string, violation = false) {
-    const p = document.createElement('p');
+  /**
+   * Put a message in the thread.
+   *
+   * `mine` decides the side, which is the whole point of the panel: your moves go out on
+   * the right, his replies come in on the left, and the two of you are having a
+   * conversation about a game he is rigging. The avatar and the bubble tail are handled in
+   * CSS off the position in a run, so nothing here has to know what came before.
+   */
+  function post(line: string, mine: boolean, violation = false) {
+    const row = document.createElement('div');
+    row.className = `msg msg--${mine ? 'out' : 'in'}`;
+
+    if (!mine) {
+      const face = document.createElement('span');
+      face.className = 'msg__face';
+      const img = document.createElement('img');
+      img.src = avatar; img.width = 22; img.height = 22; img.alt = '';
+      face.appendChild(img);
+      row.appendChild(face);
+    }
+
+    const bubble = document.createElement('span');
+    bubble.className = 'msg__bubble';
     if (violation) {
       score.viol++;
-      const b = document.createElement('b');
-      b.textContent = `Violation #${score.viol}`;
-      p.append(b, ' ');
+      const tag = document.createElement('span');
+      tag.className = 'msg__tag';
+      tag.textContent = `Violation #${score.viol}`;
+      bubble.appendChild(tag);
       paintScore();
     }
-    p.append(line);
-    feed.appendChild(p);
-    while (feed.children.length > 30) feed.firstElementChild!.remove();
+    bubble.append(line);
+    row.appendChild(bubble);
+
+    // Always before the typing indicator, which lives at the end of the thread.
+    feed.insertBefore(row, typing);
+    // Trim the oldest, never the typing row.
+    let msgs = feed.querySelectorAll('.msg:not(.msg--typing)');
+    while (msgs.length > 40) { msgs[0].remove(); msgs = feed.querySelectorAll('.msg:not(.msg--typing)'); }
     scrollFeed();
+  }
+
+  const say = (line: string, violation = false) => { setTyping(false); post(line, false, violation); };
+  /** Your side. You do not type, you play, so your moves are your messages. */
+  const me = (line: string) => post(line, true);
+
+  /** The three dots. Shown while he is deciding what to do to you. */
+  function setTyping(on: boolean) {
+    typing.hidden = !on;
+    if (on) { feed.appendChild(typing); scrollFeed(); }
   }
 
   /* ------------------------------------------------------------------ board */
@@ -169,6 +210,7 @@ export function init() {
   function houseTurn() {
     if (over) return;
     status.textContent = SAY.status.thinking;
+    setTyping(true);
 
     const trick = chooseTrick();
     lastTrick = trick;
@@ -176,7 +218,7 @@ export function init() {
 
     /* Out of patience. He clears a line and takes it, so a long match still ends. */
     if (turns >= PATIENCE - 1) {
-      return run([[420, () => {
+      return run([[660, () => {
         const line = LINES.find((l) => l.filter((i) => grid[i] !== 'X').length >= 2) ?? LINES[0];
         line.forEach((i) => { grid[i] = 'O'; });
         say(pick(SAY.time), true);
@@ -186,6 +228,11 @@ export function init() {
       }]]);
     }
 
+    /* How long the three dots are readable for. The steps below already pause before he
+       acts, but only by about 400ms, which is long enough to feel like thinking and too
+       short to see a typing indicator. This buys the dots a beat without making a turn
+       feel slow. */
+    const THINK = 240;
     const steps: [number, () => void][] = [];
 
     switch (trick) {
@@ -238,6 +285,7 @@ export function init() {
         steps.push([420, () => { placeO(); say(pick(SAY.honest)); paint(); after(); }]);
     }
 
+    if (steps.length) steps[0][0] += THINK;
     run(steps);
   }
 
@@ -274,6 +322,7 @@ export function init() {
   function finish(line: number[] | undefined) {
     over = true;
     clearTimeout(idleTimer);
+    setTyping(false);
     line?.forEach((i) => cells[i].classList.add('is-win'));
 
     const style = Math.random() < 0.25;
@@ -297,7 +346,8 @@ export function init() {
     locked = -1; turns = 0; over = false; appealed = false; lastTrick = '';
     score.match++;
     cells.forEach((c) => c.classList.remove('is-win', 'is-cheat', 'is-gone'));
-    feed.textContent = '';
+    feed.querySelectorAll('.msg:not(.msg--typing)').forEach((n) => n.remove());
+    setTyping(false);
     actions.hidden = true;
     // One appeal per match, so a new match gets a fresh one.
     actions.querySelector<HTMLButtonElement>('[data-ttt="appeal"]')!.disabled = false;
@@ -325,8 +375,18 @@ export function init() {
   }
 
   function play(i: number, forced = false) {
-    if (over || grid[i] || i === locked) return;
+    if (over) return;
+    /* A square that will not take your mark still gets a reply, so the thread never goes
+       quiet on a click that did something. */
+    if (grid[i] || i === locked) {
+      if (!forced) me(pick(YOU.taken));
+      return;
+    }
     clearTimeout(idleTimer);
+
+    /* You say the square you actually clicked, before any drift, so when he moves it you
+       are on record having called the other one. */
+    if (!forced) me(`${YOU.square[i]}.`);
 
     /* Your click drifts one square over. Never on your first move of a match, because it
        would read as a broken board rather than as him. */
@@ -371,12 +431,13 @@ export function init() {
   actions.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-ttt]');
     if (!b) return;
-    if (b.dataset.ttt === 'reset') return reset();
+    if (b.dataset.ttt === 'reset') { me(YOU.again); return reset(); }
     // Appeal. Once per match, and it costs you.
     if (appealed) return;
     appealed = true;
     (b as HTMLButtonElement).disabled = true;
     score.yves++;
+    me(YOU.appeal);
     say(pick(SAY.appeal), true);
     sfx('deny');
     paintScore();
@@ -385,5 +446,6 @@ export function init() {
 
   paintScore();
   paint();
+  say(pick(SAY.opener));
   armIdle();
 }
