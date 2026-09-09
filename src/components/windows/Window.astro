@@ -68,6 +68,10 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
 <style>
   .window {
     position: absolute; top: 10%; left: 18%; width: min(var(--w), calc(100vw - 32px)); height: var(--h, auto);
+    /* A window may ask for more height than the desktop has. The game asks for a lot on
+       purpose, so it opens tall enough to read the conversation in, and this is what
+       keeps that from running off the bottom on a short screen. Sits above the dock. */
+    max-height: calc(100dvh - var(--menubar-h) - 132px);
     /* A window with no explicit height grows with its content, and a long one used to run
        straight off the bottom of the screen and behind the dock. 80% of the desktop,
        against a top of 10%, leaves the same 10% clear underneath. The body already

@@ -15,50 +15,21 @@ import { site } from '../../data/site';
 import { SAY } from '../../data/game';
 ---
 <div class="ttt">
-  <div class="ttt__stage">
-    <div class="ttt__board" id="ttt-board" role="grid" aria-label="Tic tac toe board">
-      {Array.from({ length: 9 }, (_, i) => (
-        <button class="ttt__cell" type="button" data-cell={i} aria-label={`Square ${i + 1}, empty`}>
-          {/* Both marks ship in every cell. data-mark decides which one shows, so playing
-              a square is one attribute and never a DOM build. */}
-          <span class="ttt__x"><Icon name="close" size={64} /></span>
-          <span class="ttt__o"><Icon name="circle" size={64} /></span>
-        </button>
-      ))}
-    </div>
-  </div>
-
-  <aside class="ttt__side">
-    <header class="ttt__who">
-      <span class="ttt__face">
-        <img src={site.avatar} width="34" height="34" alt="" />
-        {/* The presence dot every messenger has. He is always here. That is the joke. */}
-        <i class="ttt__dot" aria-hidden="true"></i>
-      </span>
-      <div class="ttt__whoText">
-        <b>Yves</b>
-        <p class="ttt__status" id="ttt-status" role="status">{SAY.status.you}</p>
-      </div>
-    </header>
-
-    {/* The conversation. His messages come in on the left, yours go out on the right, and
-        game.ts writes both. aria-live so a screen reader hears the commentary rather than
-        only seeing it; the typing dots are hidden from it, because three animated dots
-        announced every turn would be unbearable. */}
-    <div class="ttt__feed" id="ttt-feed" aria-live="polite" aria-label="Your conversation with Yves">
-      <div class="msg msg--in msg--typing" id="ttt-typing" aria-hidden="true" hidden>
-        <span class="msg__face"><img src={site.avatar} width="22" height="22" alt="" /></span>
-        <span class="msg__bubble"><i></i><i></i><i></i></span>
+  {/* Left column: the board, with the end-of-match buttons under it rather than buried in
+      the conversation. They act on the game, so they belong beside the game. */}
+  <div class="ttt__play">
+    <div class="ttt__stage">
+      <div class="ttt__board" id="ttt-board" role="grid" aria-label="Tic tac toe board">
+        {Array.from({ length: 9 }, (_, i) => (
+          <button class="ttt__cell" type="button" data-cell={i} aria-label={`Square ${i + 1}, empty`}>
+            {/* Both marks ship in every cell. data-mark decides which one shows, so playing
+                a square is one attribute and never a DOM build. */}
+            <span class="ttt__x"><Icon name="close" size={64} /></span>
+            <span class="ttt__o"><Icon name="circle" size={64} /></span>
+          </button>
+        ))}
       </div>
     </div>
-
-    <dl class="ttt__score" id="ttt-score">
-      <div><dt><Icon name="trophy" size={12} /> Match</dt><dd id="ttt-match">#001</dd></div>
-      <div><dt>You</dt><dd id="ttt-you">0</dd></div>
-      <div><dt>Yves</dt><dd id="ttt-yves">0</dd></div>
-      <div><dt><Icon name="zap" size={12} /> Violations</dt><dd id="ttt-viol">0</dd></div>
-    </dl>
-    <p class="ttt__note">Counted by Yves. Do not check.</p>
 
     <div class="ttt__actions" id="ttt-actions" hidden>
       <button class="btn btn--lg" type="button" data-ttt="reset">
@@ -66,6 +37,40 @@ import { SAY } from '../../data/game';
       </button>
       <button class="btn btn--secondary btn--lg" type="button" data-ttt="appeal">Appeal</button>
     </div>
+  </div>
+
+  <aside class="ttt__side">
+    {/* The scoreboard. It sits where the chat header would be, because in a game the
+        thing you want at the top is the score, and the conversation says who is talking
+        by itself. */}
+    <header class="sb">
+      <div class="sb__team">
+        <span class="sb__name">You</span>
+        <b class="sb__num" id="ttt-you">0</b>
+      </div>
+      <span class="sb__vs" aria-hidden="true">vs</span>
+      <div class="sb__team sb__team--them">
+        <span class="sb__name">Yves</span>
+        <b class="sb__num sb__num--them" id="ttt-yves">0</b>
+      </div>
+    </header>
+    <p class="sb__meta">
+      <span>Match <b id="ttt-match">#001</b></span>
+      <span><Icon name="zap" size={10} /> <b id="ttt-viol">0</b> violations</span>
+      <span class="sb__note">Counted by Yves.</span>
+    </p>
+
+    {/* The conversation. His messages come in on the left with his face and his name on
+        them, yours go out on the right, and game.ts writes both. aria-live so a screen
+        reader hears the commentary; the typing dots are hidden from it, because three
+        animated dots announced every turn would be unbearable. */}
+    <div class="ttt__feed" id="ttt-feed" aria-live="polite" aria-label="Your conversation with Yves">
+      <div class="msg msg--in msg--typing" id="ttt-typing" aria-hidden="true" hidden>
+        <span class="msg__face"><img src={site.avatar} width="24" height="24" alt="" /></span>
+        <span class="msg__col"><span class="msg__bubble"><i></i><i></i><i></i></span></span>
+      </div>
+    </div>
+    <p class="ttt__status" id="ttt-status" role="status">{SAY.status.you}</p>
   </aside>
 </div>
 
@@ -87,10 +92,20 @@ import { SAY } from '../../data/game';
     font: 12px var(--font-chrome);
   }
 
+  /* The board, and the buttons that act on it, in one column. The buttons row is `auto`,
+     so it takes no space at all while it is hidden and the board keeps the lot. */
+  .ttt__play {
+    display: grid; grid-template-rows: minmax(0, 1fr) auto;
+    gap: var(--space-2); min-width: 0; min-height: 0;
+    padding: var(--work-inset);
+  }
+  .ttt__actions { display: flex; gap: 8px; }
+  .ttt__actions .btn { flex: 1; }
+
   /* ---------------------------------------------------------------- board */
   .ttt__stage {
     display: grid; place-items: center; min-width: 0; min-height: 0;
-    padding: var(--space-3); background: var(--os-recess);
+    background: var(--os-recess);
     /* The whole point. A size container gives the board both cqw and cqh to measure
        against, so it can stay square and still fill whatever shape the window is. */
     container-type: size;
@@ -142,26 +157,41 @@ import { SAY } from '../../data/game';
 
   /* ----------------------------------------------------------------- side */
   .ttt__side {
-    display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+    display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto;
     gap: var(--space-2); min-height: 0; padding: var(--space-3);
     background: var(--os-card); border: 1px solid var(--os-line);
-    border-radius: var(--panel-radius); margin: var(--work-inset); min-width: 0; overflow: auto;
+    border-radius: var(--panel-radius); margin: var(--work-inset) var(--work-inset) var(--work-inset) 0;
+    min-width: 0; overflow: hidden;
   }
-  /* The conversation header, the way every messenger does it: face, name, presence. */
-  .ttt__who {
-    display: flex; align-items: center; gap: var(--space-2);
-    padding-bottom: var(--space-2); border-bottom: 1px solid var(--os-line);
+  /* ------------------------------------------------------------ scoreboard */
+  .sb {
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    gap: var(--space-2); padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--os-line);
   }
-  .ttt__face { position: relative; flex: none; display: block; }
-  .ttt__face img { border-radius: 50%; display: block; }
-  .ttt__dot {
-    position: absolute; right: -1px; bottom: -1px; width: 10px; height: 10px;
-    border-radius: 50%; background: #31a24c; border: 2px solid var(--os-card);
+  .sb__team { display: grid; gap: 1px; min-width: 0; }
+  .sb__team--them { justify-items: end; text-align: right; }
+  .sb__name {
+    font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--os-muted);
   }
-  .ttt__whoText { min-width: 0; }
-  .ttt__who b { font-size: 13px; }
+  .sb__num {
+    font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--os-ink);
+  }
+  .sb__num--them { color: var(--os-accent); }
+  .sb__vs { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--os-muted); }
+
+  .sb__meta {
+    margin: 0; display: flex; flex-wrap: wrap; gap: 2px var(--space-2);
+    font-size: 9px; letter-spacing: .03em; color: var(--os-muted);
+  }
+  .sb__meta b { color: var(--os-ink); font-variant-numeric: tabular-nums; }
+  .sb__note { opacity: .8; }
+
+  /* The running line, under the conversation rather than over it, because it is a status
+     and not something he said. */
   .ttt__status {
-    margin: 1px 0 0; color: var(--os-muted); font-size: 10px;
+    margin: 0; padding-top: var(--space-2); border-top: 1px solid var(--os-line);
+    color: var(--os-muted); font-size: 10px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
@@ -173,13 +203,7 @@ import { SAY } from '../../data/game';
 
   }
 
-  .ttt__score { margin: 0; display: grid; gap: 2px; font-size: 11px; }
-  .ttt__score > div { display: flex; justify-content: space-between; align-items: center; }
-  .ttt__score dt { color: var(--os-muted); display: flex; align-items: center; gap: 4px; }
-  .ttt__score dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .ttt__note { margin: 0; font-size: 9px; letter-spacing: .04em; color: var(--os-muted); }
 
-  .ttt__actions { display: grid; gap: 6px; }
 
   /* Stacked, once the window is too narrow for two columns. Driven by the window's own
      width, not the viewport, so a small window on a big screen stacks too. */
@@ -218,32 +242,38 @@ import { SAY } from '../../data/game';
     bug that left the emoji reactions unstyled. Every selector is namespaced under
     #ttt-feed, which is unique to this window, so nothing escapes into the rest of the OS. */}
 <style is:global>
-  #ttt-feed .msg { display: flex; align-items: flex-end; gap: 6px; max-width: 100%; }
+  #ttt-feed .msg { display: flex; align-items: flex-start; gap: 7px; max-width: 100%; }
   #ttt-feed .msg--in { justify-content: flex-start; }
   #ttt-feed .msg--out { justify-content: flex-end; }
+  #ttt-feed .msg__col { display: grid; gap: 3px; min-width: 0; max-width: 84%; }
+  #ttt-feed .msg--out .msg__col { justify-items: end; }
 
   /* Runs of messages from the same person sit close together, the way a burst of replies
      does in a real thread, so you can see at a glance where one person stopped. */
   #ttt-feed .msg--in + .msg--in:not([hidden]),
-  #ttt-feed .msg--out + .msg--out:not([hidden]) { margin-top: -5px; }
+  #ttt-feed .msg--out + .msg--out:not([hidden]) { margin-top: -4px; }
 
-  /* The avatar rides on the LAST message of his run, not every one. The space is always
-     reserved so the bubbles above it stay in line rather than stepping left. */
-  #ttt-feed .msg__face { flex: none; width: 22px; height: 22px; visibility: hidden; }
+  /* His face and his name ride on the FIRST message of a run, together, so a message
+     plainly reads as Yves sending it. The rest of the run is just him continuing, so it
+     repeats neither: the space is kept so the bubbles stay in line. */
+  #ttt-feed .msg__face { flex: none; width: 24px; height: 24px; }
   #ttt-feed .msg__face img { border-radius: 50%; display: block; }
-  /* `+ .msg--in` also matches the typing row, which is always the last child and is
-     usually `hidden`. A hidden element is still a sibling, so without excluding it the
-     last real message never counted as last, and never got its avatar or its tail. */
-  #ttt-feed .msg--in:not(:has(+ .msg--in:not([hidden]))) .msg__face { visibility: visible; }
+  #ttt-feed .msg__name {
+    font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--os-muted);
+  }
+  #ttt-feed .msg--in + .msg--in .msg__face { visibility: hidden; }
+  #ttt-feed .msg--in + .msg--in .msg__name { display: none; }
 
   #ttt-feed .msg__bubble {
-    max-width: 82%; padding: 7px 11px; border-radius: 15px;
+    display: block; width: fit-content; padding: 7px 11px; border-radius: 15px;
     font-size: 11px; line-height: 1.45; overflow-wrap: anywhere;
     animation: msg-in 220ms var(--ease);
   }
-  /* The tail. Only the last bubble of a run gets the squared corner, which is what makes a
-     run read as one turn of speech instead of a list. */
-  #ttt-feed .msg--in:not(:has(+ .msg--in:not([hidden]))) .msg__bubble { border-bottom-left-radius: 5px; }
+  /* The tail. His points up at the face that sent it, so it goes on the first bubble of a
+     run. Yours has no face to point at, so it keeps the usual last-of-run corner. */
+  #ttt-feed .msg--in .msg__bubble { border-top-left-radius: 5px; }
+  #ttt-feed .msg--in + .msg--in .msg__bubble { border-top-left-radius: 15px; }
   #ttt-feed .msg--out:not(:has(+ .msg--out:not([hidden]))) .msg__bubble { border-bottom-right-radius: 5px; }
 
   #ttt-feed .msg--in .msg__bubble { background: var(--os-recess); color: var(--os-ink); }

@@ -14,7 +14,7 @@
  *
  * Fetched the first time the game window opens. See scripts/lazy.ts.
  */
-import { SAY, YOU, WEIGHTS, IDLE_S, PATIENCE, type Trick } from '../data/game';
+import { SAY, YOU, WEIGHTS, PHASE, IDLE_S, PATIENCE, type Trick } from '../data/game';
 
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 /** Squares reachable from each square, for `slide`. */
@@ -84,17 +84,27 @@ export function init() {
    * conversation about a game he is rigging. The avatar and the bubble tail are handled in
    * CSS off the position in a run, so nothing here has to know what came before.
    */
-  function post(line: string, mine: boolean, violation = false) {
+  function post(line: string, out: boolean, violation = false) {
     const row = document.createElement('div');
-    row.className = `msg msg--${mine ? 'out' : 'in'}`;
+    row.className = `msg msg--${out ? 'out' : 'in'}`;
 
-    if (!mine) {
+    if (!out) {
       const face = document.createElement('span');
       face.className = 'msg__face';
       const img = document.createElement('img');
-      img.src = avatar; img.width = 22; img.height = 22; img.alt = '';
+      img.src = avatar; img.width = 24; img.height = 24; img.alt = '';
       face.appendChild(img);
       row.appendChild(face);
+    }
+
+    const col = document.createElement('span');
+    col.className = 'msg__col';
+    if (!out) {
+      // His name on the message itself. CSS hides it on the rest of a run.
+      const name = document.createElement('span');
+      name.className = 'msg__name';
+      name.textContent = 'Yves';
+      col.appendChild(name);
     }
 
     const bubble = document.createElement('span');
@@ -108,7 +118,8 @@ export function init() {
       paintScore();
     }
     bubble.append(line);
-    row.appendChild(bubble);
+    col.appendChild(bubble);
+    row.appendChild(col);
 
     // Always before the typing indicator, which lives at the end of the thread.
     feed.insertBefore(row, typing);
@@ -132,7 +143,34 @@ export function init() {
   const winner = (g: Mark[], m: Mark) =>
     LINES.find((l) => l.every((i) => g[i] === m));
 
+  /**
+   * Never let a line of yours reach the screen.
+   *
+   * play() handles the ordinary case, where you complete a line with your own click. This
+   * is the safety net for every other way one can appear: `slide` moves an X and can land
+   * it on the end of a row, and any trick added later could do the same. It lives inside
+   * paint() because paint() is the only way anything reaches the board, so putting the
+   * check here makes the invariant structural instead of something each trick has to
+   * remember.
+   */
+  function denyLine(): boolean {
+    const line = winner(grid, 'X');
+    if (!line) return false;
+    const drop = pick(line);
+    grid[drop] = '';
+    /* Silently once the match is over. The mark still cannot stay, but a fresh violation
+       announced after the final whistle reads as a bug rather than as him. */
+    if (!over) {
+      say(pick(SAY.offside), true);
+      sfx('cheat');
+      // After this repaint, or the flash would be cleared by it.
+      setTimeout(() => flag(drop, true), 0);
+    }
+    return true;
+  }
+
   function paint() {
+    denyLine();
     cells.forEach((c, i) => {
       const m = grid[i];
       if (m) c.dataset.mark = m; else delete c.dataset.mark;
@@ -145,6 +183,7 @@ export function init() {
 
   const empties = () => grid.map((v, i) => (v ? -1 : i)).filter((i) => i >= 0 && i !== locked);
   const mine = () => grid.map((v, i) => (v === 'X' ? i : -1)).filter((i) => i >= 0);
+  const his = () => grid.map((v, i) => (v === 'O' ? i : -1)).filter((i) => i >= 0);
 
   /** Flash a square as interfered with. */
   function flag(i: number, gone = false) {
@@ -163,47 +202,99 @@ export function init() {
     let t = 0;
     for (const [wait, fn] of steps) {
       t += wait;
-      setTimeout(() => { if (epoch === mine) fn(); }, t);
+      /* `over` as well as the epoch. A turn is several steps a beat apart, and one of them
+         can end the match, which used to leave the rest of the turn still queued: he would
+         say "I win", then carry on committing violations and talking about how well you
+         were doing, after the match was over. */
+      setTimeout(() => { if (epoch === mine && !over) fn(); }, t);
     }
   }
 
   /* ------------------------------------------------------------------- rig */
+  /**
+   * Which phase of the match we are in. This is the pacing, and it is the difference
+   * between a joke you hear once and a game you stay in.
+   *
+   *   opening   he plays it straight and stays out of your way
+   *   tease     light tricks, but he still will not take a win or block yours
+   *   pressure  heavier tricks, he starts blocking, still declines his own win
+   *   closing   he actually tries
+   */
+  const phase = () =>
+    turns < PHASE.tease ? 'opening'
+    : turns < PHASE.pressure ? 'tease'
+    : turns < PHASE.closing ? 'pressure'
+    : 'closing';
+
   /** Weighted pick, never the same trick twice running, nothing impossible right now. */
   function chooseTrick(): Trick | 'honest' {
     // The first house turn of a match is always clean. It has to look like a game first.
     if (turns === 0) return 'honest';
-    const late = turns >= 3;
+    const ph = phase();
+    const band = ph === 'opening' || ph === 'tease' ? 'early' : ph === 'pressure' ? 'mid' : 'late';
     const pool: (Trick | 'honest')[] = [];
-    for (const [name, w] of Object.entries(WEIGHTS) as [Trick | 'honest', typeof WEIGHTS[Trick]][]) {
-      if (name === 'offside') continue;              // never chosen, only triggered
-      if (name === lastTrick) continue;              // no repeats back to back
+    for (const [name, w] of Object.entries(WEIGHTS) as [Trick | 'honest', typeof WEIGHTS['honest']][]) {
+      if (name === 'offside' || name === 'misclick') continue;   // not chosen here
+      if (name === lastTrick) continue;                          // no repeats back to back
       if ((name === 'swap' || name === 'slide' || name === 'expire') && !mine().length) continue;
-      if (name === 'misclick') continue;             // handled on your click, not here
-      const n = late ? w.late : w.base;
-      for (let i = 0; i < n; i++) pool.push(name);
+      if (name === 'mercy' && !his().length) continue;
+      for (let i = 0; i < w[band]; i++) pool.push(name);
     }
     return pool.length ? pick(pool) : 'honest';
   }
 
-  /** Put an O somewhere useful: win if possible, block you, else centre, corner, any. */
-  function best(): number {
+  /**
+   * Where to put an O.
+   *
+   * `mode` is the whole pacing story:
+   *   'loose'  never completes his own line, and never blocks yours. This is what gives
+   *            you room: your two in a row survives, you go for the third, and the offside
+   *            rule takes it off you. That is the loop.
+   *   'block'  stops your immediate win, but still declines his own.
+   *   'win'    takes it.
+   *
+   * Returns -1 when there is nowhere sensible, which the caller treats as a pass.
+   */
+  function best(mode: 'loose' | 'block' | 'win'): number {
     const free = empties();
     if (!free.length) return -1;
-    for (const m of ['O', 'X'] as Mark[]) {
-      for (const i of free) {
-        const test = [...grid]; test[i] = m;
-        if (winner(test, m)) return i;
-      }
+
+    const wins = free.filter((i) => { const g = [...grid]; g[i] = 'O'; return !!winner(g, 'O'); });
+    const blocks = free.filter((i) => { const g = [...grid]; g[i] = 'X'; return !!winner(g, 'X'); });
+
+    if (mode === 'win' && wins.length) return pick(wins);
+    if ((mode === 'win' || mode === 'block') && blocks.length) return pick(blocks);
+
+    /* Anything that is not a winning square for him. Under 'loose' the blocking squares
+       come off the list too, so your threat is left standing on purpose. */
+    let quiet = free.filter((i) => !wins.includes(i));
+    if (mode === 'loose') {
+      const roomy = quiet.filter((i) => !blocks.includes(i));
+      if (roomy.length) quiet = roomy;
     }
-    return [4, 0, 2, 6, 8, 1, 3, 5, 7].find((i) => free.includes(i)) ?? free[0];
+    const from = quiet.length ? quiet : free;
+    return [4, 0, 2, 6, 8, 1, 3, 5, 7].find((i) => from.includes(i)) ?? from[0];
   }
 
+  /** True when he had a winning square in front of him and walked past it. */
+  let passedUp = false;
+
   function placeO(): boolean {
-    const i = best();
+    const ph = phase();
+    const mode = ph === 'closing' ? 'win' : ph === 'pressure' ? 'block' : 'loose';
+    const free = empties();
+    passedUp = mode !== 'win'
+      && free.some((i) => { const g = [...grid]; g[i] = 'O'; return !!winner(g, 'O'); });
+    const i = best(mode);
     if (i < 0) return false;
     grid[i] = 'O';
     sfx('house');
     return true;
+  }
+
+  /** Every so often, tell you he let you off. Not every time, or it stops landing. */
+  function maybeNearMiss() {
+    if (passedUp && Math.random() < 0.55) say(pick(SAY.nearMiss));
   }
 
   /* ------------------------------------------------------------- the house */
@@ -237,13 +328,29 @@ export function init() {
 
     switch (trick) {
       case 'honest':
-        steps.push([420, () => { placeO(); say(pick(SAY.honest)); paint(); after(); }]);
+        steps.push([420, () => {
+          placeO();
+          /* Early on he is not cheating, so there is nothing to announce. A loose line
+             keeps him present without pretending something happened. */
+          say(pick(phase() === 'opening' || phase() === 'tease' ? SAY.loose : SAY.honest));
+          maybeNearMiss();
+          paint(); after();
+        }]);
         break;
+
+      /* He gives a square back. The only trick that helps you, and the reason a match can
+         go long enough to feel like one. */
+      case 'mercy': {
+        const gift = pick(his());
+        steps.push([420, () => { flag(gift, true); say(pick(SAY.mercy)); sfx('house'); }]);
+        steps.push([320, () => { grid[gift] = ''; placeO(); paint(); after(); }]);
+        break;
+      }
 
       case 'expire': {
         const victim = pick(mine());
         steps.push([360, () => { flag(victim, true); say(pick(SAY.expire), true); sfx('cheat'); }]);
-        steps.push([300, () => { grid[victim] = ''; placeO(); paint(); after(); }]);
+        steps.push([300, () => { grid[victim] = ''; placeO(); maybeNearMiss(); paint(); after(); }]);
         break;
       }
 
@@ -267,13 +374,20 @@ export function init() {
       case 'swap': {
         const victim = pick(mine());
         steps.push([360, () => { flag(victim); say(pick(SAY.swap), true); sfx('cheat'); }]);
-        steps.push([300, () => { grid[victim] = 'O'; placeO(); paint(); after(); }]);
+        steps.push([300, () => { grid[victim] = 'O'; placeO(); maybeNearMiss(); paint(); after(); }]);
         break;
       }
 
       case 'slide': {
         const from = pick(mine());
-        const to = NEXT_TO[from].filter((i) => !grid[i] && i !== locked);
+        /* Not onto the end of one of your own rows. The guard in paint() would catch it,
+           but landing your mark on a winning square only to take it straight back reads as
+           a glitch rather than as him. */
+        const to = NEXT_TO[from].filter((i) => {
+          if (grid[i] || i === locked) return false;
+          const g = [...grid]; g[from] = ''; g[i] = 'X';
+          return !winner(g, 'X');
+        });
         if (!to.length) { steps.push([420, () => { placeO(); say(pick(SAY.honest)); paint(); after(); }]); break; }
         const dest = pick(to);
         steps.push([360, () => { flag(from); say(pick(SAY.slide), true); sfx('cheat'); }]);
@@ -296,11 +410,30 @@ export function init() {
     if (line) return finish(line);
 
     if (!empties().length) {
-      /* A full board with no line for him is a draw, and he does not accept those. One of
-         yours goes and he takes the square. */
-      const victim = mine();
-      if (!victim.length) return finish(undefined);
-      const i = pick(victim);
+      /* The board is full and he has no line. Before, that ended the match: one of yours
+         went and he took the square. That made every game short, which is the thing Yves
+         asked to fix. Now, until he is nearly out of patience, a full board is just a full
+         board, and he clears room so the match carries on. He only converts it into a win
+         once CLOSING has arrived. */
+      const victims = mine();
+      if (!victims.length) return finish(undefined);
+
+      if (turns < PHASE.closing) {
+        // Three of yours go. Rude, but it is the reason you get to keep playing.
+        const gone = [...victims].sort(() => Math.random() - 0.5).slice(0, 3);
+        return run([[520, () => {
+          gone.forEach((i) => flag(i, true));
+          say(pick(SAY.sweep), true);
+          sfx('cheat');
+        }], [340, () => {
+          gone.forEach((i) => { grid[i] = ''; });
+          paint();
+          status.textContent = SAY.status.again;
+          armIdle();
+        }]]);
+      }
+
+      const i = pick(victims);
       return run([[420, () => {
         flag(i, true);
         say(pick(SAY.draw), true);

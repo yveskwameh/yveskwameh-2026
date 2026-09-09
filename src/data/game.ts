@@ -15,7 +15,8 @@
 
 /** Each trick, its weight, and what he says while doing it. */
 export type Trick =
-  | 'expire' | 'maintenance' | 'double' | 'swap' | 'slide' | 'misclick' | 'offside';
+  | 'expire' | 'maintenance' | 'double' | 'swap' | 'slide' | 'misclick' | 'offside'
+  | 'mercy';
 
 /**
  * Your side of the conversation.
@@ -110,6 +111,38 @@ export const SAY = {
     'That would have been a win last season.',
   ],
 
+  /** He hands one of his own squares back. Generosity, and a way to keep you in it. */
+  mercy: [
+    'Have that one back. I am feeling generous.',
+    'Take it. I was not using it.',
+    'A gift. Do not read anything into it.',
+    'I am giving you a chance. One.',
+  ],
+
+  /** He had the winning square and did not take it. You should notice, and worry. */
+  nearMiss: [
+    'I could have taken that. I am not finished with you yet.',
+    'I saw it. I am enjoying myself too much.',
+    'That would have ended it. Where is the fun.',
+    'Not yet. You are doing so well.',
+  ],
+
+  /** Filler while he is playing it straight and letting you build. */
+  loose: [
+    'Go on then.',
+    'Take your time.',
+    'Interesting. Carry on.',
+    'I am watching.',
+    'You are getting somewhere. Probably.',
+  ],
+
+  /** The board filled and he is making room rather than ending it. */
+  sweep: [
+    'The board was getting crowded. I have tidied it.',
+    'Spring cleaning. Play on.',
+    'Too full. I have opened it up for you.',
+  ],
+
   /** You left it too long and he moved for you. */
   idle: [
     'You took too long, so I moved for you.',
@@ -158,24 +191,43 @@ export const SAY = {
 /**
  * How likely each trick is, and how that changes as the match goes on.
  *
- * `base` is the weight on an ordinary turn. `late` is the weight from the fourth house
- * turn, when he stops being subtle. `offside` is not here because it is not chosen: it
- * fires the moment you complete a line, every time, because letting a win paint for even
- * one frame would give the game away.
+ * Three phases, read off the house turn count against PHASE below. Early he is mostly
+ * honest, because a game that cheats immediately is not a game. Mid he starts helping
+ * himself. Late he stops pretending. `mercy` is the opposite of the others, and it is
+ * deliberately an early and mid thing: handing a square back is how you stay in it.
+ *
+ * `offside` is not here because it is never chosen. It fires the moment you complete a
+ * line, every time, because letting your win paint for even one frame gives it away.
+ * `misclick` is not chosen here either, it is rolled on your click.
  */
-export const WEIGHTS: Record<Trick | 'honest', { base: number; late: number }> = {
-  honest:      { base: 3, late: 1 },
-  expire:      { base: 3, late: 4 },
-  maintenance: { base: 2, late: 3 },
-  double:      { base: 2, late: 4 },
-  swap:        { base: 1, late: 3 },
-  slide:       { base: 2, late: 2 },
-  misclick:    { base: 1, late: 2 },
-  offside:     { base: 0, late: 0 },
+export const WEIGHTS: Record<Trick | 'honest', { early: number; mid: number; late: number }> = {
+  honest:      { early: 9, mid: 3, late: 1 },
+  /* Nothing that takes one of your marks in the early band. The offside rule already does
+     that every time you get three, and stacking `expire` on top of it left you with one X
+     on the board, which is the opposite of feeling close to winning. */
+  expire:      { early: 0, mid: 3, late: 4 },
+  maintenance: { early: 1, mid: 2, late: 3 },
+  double:      { early: 0, mid: 2, late: 4 },
+  swap:        { early: 0, mid: 1, late: 3 },
+  slide:       { early: 1, mid: 2, late: 2 },
+  mercy:       { early: 3, mid: 2, late: 0 },
+  misclick:    { early: 0, mid: 0, late: 0 },
+  offside:     { early: 0, mid: 0, late: 0 },
 };
+
+/**
+ * How the match is paced.
+ *
+ * The old version had him winning in about three turns, which is a joke you hear once.
+ * Now he takes his time. Through OPENING and TEASE he will not take a winning square and
+ * will not block yours, so you build threats, get to three in a row, and have it taken off
+ * you. That is the loop worth staying for. Only in CLOSING does he actually try, and
+ * PATIENCE is the backstop so a match cannot run forever.
+ */
+export const PHASE = { tease: 2, pressure: 6, closing: 11 };
 
 /** Seconds of no move before he plays your turn for you. */
 export const IDLE_S = 20;
 
 /** He wins by this house turn at the latest, whatever the board says. */
-export const PATIENCE = 7;
+export const PATIENCE = 15;
