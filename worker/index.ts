@@ -18,7 +18,10 @@
 
 const MAX_PEERS = 30;      // a portfolio, not a chat room
 const MAX_NAME = 24;
+/** Must match the list rendered in src/components/os/Desktop.astro. */
 const EMOJI = ['👋', '💗', '😂', '⭐', '👀', '🎉', '🥂'];
+/** One reaction per person per 400ms. Fast enough to feel free, slow enough to not spam. */
+const REACT_MS = 400;
 
 /* Kept in the room rather than the browser so two people cannot arrive as the same one.
    The noun stays "visitor" and the adjective does the telling apart, which reads better
@@ -33,6 +36,11 @@ type Peer = { id: string; name: string; hue: number };
 export class Room {
   ctx: any;
   pos = new Map<string, [number, number]>();
+  /* When a reaction was last accepted from each person. One reaction is now a burst of
+     ten animated nodes on every screen in the room, so holding the button down would be
+     other people's problem rather than the sender's. Kept in memory on purpose: it is
+     worth nothing after a hibernation, and the worst a reset allows is one extra emoji. */
+  react = new Map<string, number>();
 
   constructor(ctx: any) {
     this.ctx = ctx;
@@ -110,6 +118,9 @@ export class Room {
     }
 
     if (m.t === 'react' && EMOJI.includes(m.e)) {
+      const now = Date.now();
+      if (now - (this.react.get(me.id) ?? 0) < REACT_MS) return;
+      this.react.set(me.id, now);
       // Not back to the sender: their own client already showed it the instant they
       // clicked, rather than waiting for the round trip, so echoing would double it.
       this.send({ t: 'react', id: me.id, to: String(m.to ?? '').slice(0, 8), e: m.e }, ws);
@@ -120,6 +131,7 @@ export class Room {
     const me = this.who(ws);
     if (!me) return;
     this.pos.delete(me.id);
+    this.react.delete(me.id);
     this.send({ t: 'bye', id: me.id }, ws);
   }
 

@@ -148,8 +148,15 @@ import { desktopItems } from '../../data/desktop';
     font: 10px var(--font-chrome); letter-spacing: .02em; white-space: nowrap;
     box-shadow: 0 2px 6px rgba(0,0,0,.25);
   }
-  /* The chips are the one part that answers the pointer. */
-  .peer__chip, #me-chip { pointer-events: auto; cursor: var(--cur-hand); }
+  /* Only your own chip answers the pointer, and only so you can click it to rename
+     yourself. Everybody else's cursor is completely inert, which is stronger than it used
+     to be: their chip used to be hoverable, which meant a stranger parking on a button
+     could stop you pressing it. Hovering somebody to react to them no longer needs hit
+     testing at all. presence.ts knows where every cursor is, because it put them there,
+     so it compares your pointer against those positions instead. That also fixes the bug
+     this all started with: your own chip rides under your pointer, so whenever you point
+     at somebody it lands on top of them and swallowed the hover. */
+  #me-chip { pointer-events: auto; cursor: var(--cur-hand); }
   #me-chip { opacity: .75; }
   #me-chip:hover { opacity: 1; }
   .chip--edit {
@@ -173,16 +180,11 @@ import { desktopItems } from '../../data/desktop';
   }
   .react button:hover { background: rgba(22,22,26,.08); transform: scale(1.25); }
 
-  /* A reaction, on its way up and out. Removed by the script when the animation ends. */
-  .pop {
-    position: fixed; z-index: 861; pointer-events: none; font-size: 22px;
-    animation: pop-up 1.1s var(--ease) forwards;
-  }
-  @keyframes pop-up {
-    from { opacity: 1; transform: translate(-50%, 0) scale(.6); }
-    35%  { opacity: 1; transform: translate(-50%, -26px) scale(1.15); }
-    to   { opacity: 0; transform: translate(-50%, -64px) scale(1); }
-  }
+  /* The reaction emoji are styled in global.css, not here. They are created by
+     presence.ts rather than written in this file's markup, and Astro scopes these styles
+     to the elements it can see, so a rule for them here matches nothing. That is not a
+     guess: the old .pop rule lived here and never applied, which is why a reaction was a
+     bare inline emoji stuck in the top corner instead of anything rising. */
 
   @media (prefers-reduced-motion: reduce) {
     .peer, .me { will-change: auto; }

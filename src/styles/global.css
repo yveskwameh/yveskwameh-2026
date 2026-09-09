@@ -57,6 +57,35 @@ img, svg, video { display: block; max-width: 100%; }
 a { color: var(--os-accent); }
 
 /* ----------------------------------------------------------------
+   Reaction emoji.
+
+   Global rather than scoped into Desktop.astro, because presence.ts creates these nodes
+   at runtime and a scoped rule only ever matches elements Astro can see in the markup.
+   They used to be declared there and silently matched nothing, so a reaction rendered as
+   a plain inline emoji in the top-left corner rather than the thing it was meant to be.
+
+   One reaction is a handful of these at once, rising and drifting apart until they fade.
+   Each node carries its own drift, rise, spin, size and duration as custom properties, set
+   in presence.ts, so they share one keyframe rule and no two travel the same path.
+   Removed on animationend, so nothing accumulates.
+   ---------------------------------------------------------------- */
+.pop {
+  position: fixed; z-index: 861; pointer-events: none;
+  font-size: 22px; line-height: 1; will-change: transform, opacity;
+  animation: pop-up var(--dur, 1.6s) var(--ease) forwards;
+}
+@keyframes pop-up {
+  from { opacity: 0; transform: translate(-50%, 0) scale(.4); }
+  12%  { opacity: 1; }
+  68%  { opacity: 1; }
+  to   {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx, 0px)), var(--rise, -200px))
+               scale(var(--s, 1)) rotate(var(--r, 0deg));
+  }
+}
+
+/* ----------------------------------------------------------------
    Buttons. Two of them, and only two.
 
      .btn              primary, the main action in its window
