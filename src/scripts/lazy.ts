@@ -85,7 +85,13 @@ export function initWarm() {
      The two guards it used to carry, the ones that cancel native image dragging and the
      Save image as menu, now live in window-manager.ts: a cancelled default cannot wait. */
   const dragOnce = { once: true, passive: true } as const;
+  /* Two listeners, one guard: `once` only retires the listener that fired, and a mouse
+     moves before it presses, so without the guard both would run and every dock drag
+     would lift two ghosts. */
+  let pulled = false;
   const pullDrag = () => {
+    if (pulled) return;
+    pulled = true;
     import('./drag').then((m) => m.init('.icon, .window__titlebar'));
     import('./dock-drag').then((m) => m.init());
   };

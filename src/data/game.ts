@@ -13,7 +13,7 @@ export const YOU = {
 export const SAY = {
   status: { you: 'Your move. You are X.', thinking: 'Thinking.', review: 'Reviewing the result.', over: 'Match over.' },
   opener: ['You are X. Go first.', 'Your move. I will keep score.', 'You can start. I am ready.'],
-  move: ['Your move.', 'Go on.', 'I see what you are doing.', 'That was close.'],
+  move: ['Your move.', 'Go on.', 'I see what you are doing.', 'Next.'],
   near: ['You nearly had me.', 'I saw that.', 'That is getting close.'],
   review: [
     'I have reviewed the result. I win.',
