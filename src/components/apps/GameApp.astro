@@ -1,30 +1,179 @@
 ---
-/** Tic tac toe. You are X, the computer is O. Board and status are real HTML; the
-    script only flips text and classes, so there is nothing to fetch or render. */
+/**
+ * Tic tac toe against Yves, which you cannot win.
+ *
+ * Board on the left, Yves on the right saying what he has just done to you. Everything is
+ * real HTML at build time, per rule 3: the marks are both drawn into every cell and shown
+ * with a data attribute, so nothing is fetched or built when a square is played.
+ *
+ * The board scales with the window without a line of JavaScript. .ttt__stage is a size
+ * container and the board is `min(100cqw, 100cqh)` square, so it follows whichever
+ * dimension the resize made smaller. Dragging any grip resizes it live.
+ */
+import Icon from '../os/Icon.astro';
+import { site } from '../../data/site';
+import { SAY } from '../../data/game';
 ---
 <div class="ttt">
-  <p class="ttt__status" id="ttt-status" role="status">Your move. You are X.</p>
-  <div class="ttt__board" id="ttt-board">
-    {Array.from({ length: 9 }, (_, i) => (
-      <button class="ttt__cell" type="button" data-cell={i} aria-label={`Square ${i + 1}`}></button>
-    ))}
+  <div class="ttt__stage">
+    <div class="ttt__board" id="ttt-board" role="grid" aria-label="Tic tac toe board">
+      {Array.from({ length: 9 }, (_, i) => (
+        <button class="ttt__cell" type="button" data-cell={i} aria-label={`Square ${i + 1}, empty`}>
+          {/* Both marks ship in every cell. data-mark decides which one shows, so playing
+              a square is one attribute and never a DOM build. */}
+          <span class="ttt__x"><Icon name="close" size={64} /></span>
+          <span class="ttt__o"><Icon name="circle" size={64} /></span>
+        </button>
+      ))}
+    </div>
   </div>
-  <button class="btn" type="button" data-ttt-reset>New game</button>
+
+  <aside class="ttt__side">
+    <header class="ttt__who">
+      <img class="ttt__face" src={site.avatar} width="40" height="40" alt="" />
+      <div>
+        <b>Yves</b>
+        <p class="ttt__status" id="ttt-status" role="status">{SAY.status.you}</p>
+      </div>
+    </header>
+
+    {/* aria-live so the running commentary is announced, not just drawn. */}
+    <div class="ttt__feed" id="ttt-feed" aria-live="polite" aria-label="What Yves is saying"></div>
+
+    <dl class="ttt__score" id="ttt-score">
+      <div><dt><Icon name="trophy" size={12} /> Match</dt><dd id="ttt-match">#001</dd></div>
+      <div><dt>You</dt><dd id="ttt-you">0</dd></div>
+      <div><dt>Yves</dt><dd id="ttt-yves">0</dd></div>
+      <div><dt><Icon name="zap" size={12} /> Violations</dt><dd id="ttt-viol">0</dd></div>
+    </dl>
+    <p class="ttt__note">Counted by Yves. Do not check.</p>
+
+    <div class="ttt__actions" id="ttt-actions" hidden>
+      <button class="btn btn--lg" type="button" data-ttt="reset">
+        <Icon name="reload" size={13} /> Play again
+      </button>
+      <button class="btn btn--secondary btn--lg" type="button" data-ttt="appeal">Appeal</button>
+    </div>
+  </aside>
 </div>
 
 <style>
-  .ttt { display: grid; justify-items: center; gap: var(--space-3); }
-  .ttt__status { margin: 0; font: 12px var(--font-chrome); color: var(--os-muted); min-height: 1.2em; }
+  /* The window body has its own padding, which this layout has to escape so the two
+     columns reach the edges. Same trick ProjectsApp uses.
+
+     It is also the container the layout below measures itself against. Deliberately here
+     and not on .ttt: an element cannot answer its own container query, so making .ttt the
+     container would mean .ttt could never restyle itself and the two columns would just
+     squeeze until the board was a postage stamp. The parent has to be the container. */
+  :global(.window__body:has(> .ttt)) {
+    padding: 0; overflow: hidden; container-type: inline-size;
+  }
+
+  .ttt {
+    display: grid; grid-template-columns: minmax(0, 1fr) 246px;
+    height: 100%; min-height: 0;
+    font: 12px var(--font-chrome);
+  }
+
+  /* ---------------------------------------------------------------- board */
+  .ttt__stage {
+    display: grid; place-items: center; min-width: 0; min-height: 0;
+    padding: var(--space-3); background: var(--os-recess);
+    /* The whole point. A size container gives the board both cqw and cqh to measure
+       against, so it can stay square and still fill whatever shape the window is. */
+    container-type: size;
+  }
   .ttt__board {
-    display: grid; grid-template-columns: repeat(3, 62px); gap: 4px;
-    background: var(--os-line); padding: 4px; border-radius: var(--r-inner);
+    width: min(100cqw, 100cqh); aspect-ratio: 1;
+    display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+    gap: clamp(3px, 2cqw, 9px);
   }
+
   .ttt__cell {
-    all: unset; width: 62px; height: 62px; display: grid; place-items: center; cursor: var(--cur-hand);
-    background: var(--os-surface); border-radius: 3px;
-    font: 700 30px var(--font-chrome); color: var(--os-ink); line-height: 1;
+    all: unset; position: relative; display: grid; place-items: center;
+    background: var(--os-surface); border: 1px solid var(--os-line);
+    border-radius: var(--r-inner); cursor: var(--cur-hand);
+    transition: background var(--t-fast), transform var(--t-fast);
   }
-  .ttt__cell:hover:empty { background: #fff; }
+  .ttt__cell:hover:not([data-mark]):not([disabled]) { background: var(--os-card); }
   .ttt__cell[disabled] { cursor: var(--cur-arrow); }
-  .ttt__cell.is-win { background: var(--os-accent); color: #fff; }
+
+  /* Both marks are present; neither shows until the cell says which. Sized as a share of
+     the cell rather than in pixels, so they grow with the window like everything else. */
+  .ttt__x, .ttt__o {
+    display: none; width: 62%; height: 62%; place-items: center;
+  }
+  .ttt__x :global(svg), .ttt__o :global(svg) { width: 100%; height: 100%; }
+  .ttt__cell[data-mark='X'] .ttt__x { display: grid; color: var(--os-ink); }
+  .ttt__cell[data-mark='O'] .ttt__o { display: grid; color: var(--os-accent); }
+
+  /* The line he wins with. */
+  .ttt__cell.is-win { background: var(--os-accent); border-color: var(--os-accent); }
+  .ttt__cell.is-win .ttt__o, .ttt__cell.is-win .ttt__x { color: #fff; }
+
+  /* A square being interfered with. Short, because it happens mid-turn and the feed is
+     what explains it. */
+  .ttt__cell.is-cheat { animation: ttt-shake 300ms var(--ease); }
+  @keyframes ttt-shake {
+    25% { transform: translateX(-4px); background: var(--os-accent); }
+    75% { transform: translateX(4px); }
+  }
+  .ttt__cell.is-gone { animation: ttt-gone 250ms var(--ease) forwards; }
+  @keyframes ttt-gone { to { opacity: .25; transform: scale(.82); } }
+  /* Closed for maintenance: hatched and not clickable. */
+  .ttt__cell.is-locked {
+    cursor: var(--cur-arrow);
+    background:
+      repeating-linear-gradient(45deg, var(--os-line) 0 5px, transparent 5px 10px),
+      var(--os-surface);
+  }
+
+  /* ----------------------------------------------------------------- side */
+  .ttt__side {
+    display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+    gap: var(--space-2); min-height: 0; padding: var(--space-3);
+    background: var(--os-card); border-left: 1px solid var(--os-line);
+  }
+  .ttt__who { display: flex; align-items: center; gap: var(--space-2); }
+  .ttt__face { border-radius: 50%; flex: none; }
+  .ttt__who b { font-size: 13px; }
+  .ttt__status { margin: 1px 0 0; color: var(--os-muted); font-size: 11px; }
+
+  .ttt__feed {
+    display: flex; flex-direction: column; gap: 5px; min-height: 0;
+    overflow-y: auto; padding-right: 2px;
+  }
+  .ttt__feed p {
+    margin: 0; padding: 6px 9px; border-radius: 10px 10px 10px 3px;
+    background: var(--os-recess); color: var(--os-ink); font-size: 11px; line-height: 1.45;
+  }
+  .ttt__feed p b { color: var(--os-accent); }
+
+  .ttt__score { margin: 0; display: grid; gap: 2px; font-size: 11px; }
+  .ttt__score > div { display: flex; justify-content: space-between; align-items: center; }
+  .ttt__score dt { color: var(--os-muted); display: flex; align-items: center; gap: 4px; }
+  .ttt__score dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ttt__note { margin: 0; font-size: 9px; letter-spacing: .04em; color: var(--os-muted); }
+
+  .ttt__actions { display: grid; gap: 6px; }
+
+  /* Stacked, once the window is too narrow for two columns. Driven by the window's own
+     width, not the viewport, so a small window on a big screen stacks too. */
+  @container (max-width: 560px) {
+    .ttt { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+    .ttt__side { border-left: 0; border-top: 1px solid var(--os-line); }
+    .ttt__feed { max-height: 96px; }
+  }
+
+  /* On a phone the window is a bottom sheet with its own height, so the board takes the
+     width it is given and the panel sits under it. */
+  @media (max-width: 640px) {
+    .ttt__stage { padding: var(--space-2); }
+    .ttt__board { width: 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ttt__cell, .ttt__cell.is-cheat, .ttt__cell.is-gone { animation: none; transition: none; }
+    .ttt__cell.is-gone { opacity: .25; }
+  }
 </style>
