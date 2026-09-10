@@ -117,10 +117,11 @@ a { color: var(--os-accent); }
 
 .btn--lg { width: 100%; padding: 13px 20px; font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
 
-/* The same expanding ring that rewards catching the runaway button. It answers once on
-   hover-in and does not move the control itself, so it cannot fight window or dock drag. */
+/* The same expanding ring that rewards catching the runaway button. Only the .btn family
+   gets it, primary and secondary: window lights, menu items, dock items and game cells
+   are buttons too, and a ring on those reads as noise. It answers once
+   on hover-in and does not move the control itself, so it cannot fight window or dock drag. */
 .btn:not(:disabled):hover,
-button:not(:disabled):not(.lock__cta):hover,
 a.btn:hover { animation: button-ring var(--t-base) var(--ease); }
 @keyframes button-ring {
   from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--os-accent) 55%, transparent); }
@@ -129,7 +130,7 @@ a.btn:hover { animation: button-ring var(--t-base) var(--ease); }
 
 /* Reduced motion keeps the colour change and drops everything that moves. */
 @media (prefers-reduced-motion: reduce) {
-  .btn:not(:disabled):hover, button:not(:disabled):hover, a.btn:hover { animation: none; }
+  .btn:hover, a.btn:hover { animation: none; }
 }
 /* A finger has no hover state, so the lift would only ever fire stuck-on after a tap. */
 @media (hover: none) {
