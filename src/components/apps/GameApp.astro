@@ -95,10 +95,11 @@ import { SAY } from '../../data/game';
     background: var(--os-surface); font: 12px var(--font-chrome);
   }
 
-  /* Every band shares one capped column. The window is 860 and this is 520, so the space
-     either side is deliberate: a conversation has a reading width, and past about here you
-     are only adding margin. */
-  .ttt__col { width: 100%; max-width: 520px; margin-inline: auto; }
+  /* Every band shares one capped column, and the cap is set to what the widest thing in
+     the thread actually needs, which is a board plus its card and Yves's avatar gutter.
+     Any wider and the column runs on past the content, which reads as a ragged right edge
+     rather than as margin. The margin is the space outside this, and it stays even. */
+  .ttt__col { width: 100%; max-width: 400px; margin-inline: auto; }
 
   /* -------------------------------------------------------------- who and score */
   .ttt__head {
@@ -133,6 +134,10 @@ import { SAY } from '../../data/game';
     display: flex; flex-direction: column; justify-content: flex-end;
     gap: var(--space-2); min-height: 100%;
   }
+  /* Flex items shrink by default once the column overflows, and a board carries
+     aspect-ratio, so a squashed height was quietly taking pixels off its width too. The
+     thread scrolls; nothing in it should be compressed to avoid that. */
+  .ttt__feed .ttt__col > * { flex: none; }
 
   /* ------------------------------------------------------------------- footer */
   .ttt__foot {
@@ -222,12 +227,16 @@ import { SAY } from '../../data/game';
   #ttt-feed .ttt__post { display: flex; align-items: flex-start; gap: 7px; }
   /* The board is not something Yves said, so it takes his indent without his face. */
   #ttt-feed .ttt__post .msg__face { visibility: hidden; }
-  /* The live card takes the width of the row, which is what gives the board a definite
-     box to be a percentage of. Left to hug its content the percentage is circular and the
-     board collapses to the intrinsic size of nine empty buttons. */
+  /* Hugs the board. Stretching it to the row left a third of every card empty, which is
+     the white space that had no business being there. */
+  /* The card carries the width and the board fills it. The other way round the two define
+     each other: a hugging card sizes itself from the board's contribution while the board
+     is clamped to the card's track, and the board lands short of the width it was given.
+     The max-width is a percentage of the post, which is the column, which is a real box,
+     so dragging the window narrow shrinks the board instead of overflowing it. */
   #ttt-feed .ttt__card {
-    flex: 1 1 auto; min-width: 0;
-    display: grid; gap: 7px; justify-items: start;
+    flex: 0 0 auto; width: 362px; max-width: calc(100% - 31px);
+    display: grid; gap: 7px; justify-items: stretch;
     padding: 10px; border-radius: 15px; border-top-left-radius: 5px;
     background: var(--os-card); border: 1px solid var(--os-line);
     animation: msg-in 240ms var(--ease);
@@ -239,7 +248,6 @@ import { SAY } from '../../data/game';
     border: 1px solid var(--os-accent); box-shadow: 0 8px 20px -14px rgba(0,0,0,.55);
   }
   #ttt-feed .ttt__post.is-past { opacity: .55; }
-  #ttt-feed .is-past .ttt__card { flex: 0 0 auto; }
   #ttt-feed .ttt__turn {
     font-size: 8.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
     color: var(--os-muted);
@@ -247,9 +255,11 @@ import { SAY } from '../../data/game';
   #ttt-feed .is-live .ttt__turn { color: var(--os-accent); }
 
   #ttt-feed .ttt__board {
-    width: min(294px, 100%); aspect-ratio: 1;
+    width: 100%; aspect-ratio: 1;
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
   }
+  /* Spent boards hug instead, so a small board never sits in a wide empty card. */
+  #ttt-feed .is-past .ttt__card { width: auto; justify-items: start; }
   #ttt-feed .is-past .ttt__board { width: 108px; gap: 3px; }
 
   #ttt-feed .ttt__cell {
