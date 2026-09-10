@@ -1,131 +1,153 @@
 ---
 /**
- * Tic tac toe against Yves, which you cannot win.
+ * Tic tac toe against Yves, played inside the conversation.
  *
- * Board on the left, Yves on the right saying what he has just done to you. Everything is
- * real HTML at build time, per rule 3: the marks are both drawn into every cell and shown
- * with a data attribute, so nothing is fetched or built when a square is played.
+ * The board is not a fixture beside the chat. Every turn posts a fresh board into the
+ * thread and the one before it shrinks and greys out, so the match reads back like a
+ * transcript. That is the whole reason for this layout: Yves cheats, and the scrollback
+ * is where the cheating becomes visible. The board that carried your line sits directly
+ * above the ruling that took it away.
  *
- * The board scales with the window without a line of JavaScript. .ttt is a size
- * container and one number, --round, sizes both the board and the grid row the side
- * card sits in, so the two always share a top and bottom. Dragging any grip resizes
- * it live.
+ * One column, capped at 520 and centred. The window is wider than that on purpose, so the
+ * margins either side are the layout rather than a crop.
+ *
+ * Per rule 3 nothing is fetched at runtime: the board below is a <template> in the built
+ * HTML, marks and all, and scripts/game.ts clones it. Same reason every cell ships both
+ * Pixelarticons and shows one with a data attribute.
  */
 import Icon from '../os/Icon.astro';
 import { site } from '../../data/site';
 import { SAY } from '../../data/game';
 ---
 <div class="ttt">
-  {/* Left column: the board, with the end-of-match buttons under it rather than buried in
-      the conversation. They act on the game, so they belong beside the game. */}
-  <div class="ttt__play">
-    <div class="ttt__stage">
-      <div class="ttt__board" id="ttt-board" role="grid" aria-label="Tic tac toe board">
+  {/* Who you are playing, and what it has cost you so far. */}
+  <header class="ttt__head">
+    <div class="ttt__col">
+      <span class="ttt__face"><img src={site.avatar} width="34" height="34" alt="" /></span>
+      <span class="ttt__who">
+        <b>Yves</b>
+        <span class="ttt__meta">Match <b id="ttt-match">#001</b>, <b id="ttt-viol">0</b> violations</span>
+      </span>
+      <span class="ttt__tally">
+        <span><b id="ttt-yves">0</b><i>Yves</i></span>
+        <span><b id="ttt-you">0</b><i>You</i></span>
+      </span>
+    </div>
+  </header>
+
+  {/* The match. game.ts writes messages and boards into .ttt__col below, newest last. */}
+  <div class="ttt__feed" id="ttt-feed" aria-live="polite" aria-label="Your match with Yves">
+    <div class="ttt__col" id="ttt-thread">
+      <div class="msg msg--in msg--typing" id="ttt-typing" aria-hidden="true" hidden>
+        <span class="msg__face"><img src={site.avatar} width="24" height="24" alt="" /></span>
+        <span class="msg__col"><span class="msg__bubble"><i></i><i></i><i></i></span></span>
+      </div>
+    </div>
+  </div>
+
+  <footer class="ttt__foot">
+    <div class="ttt__col">
+      <p class="ttt__status" id="ttt-status" role="status">{SAY.status.you}</p>
+      <div class="ttt__actions" id="ttt-actions" hidden>
+        <button class="btn" type="button" data-ttt="reset">
+          <Icon name="reload" size={13} /> Play again
+        </button>
+        {/* Two labels, one rule: the button says what became of the appeal instead of just
+            going grey, and swapping them in CSS keeps the state out of the script. */}
+        <button class="btn btn--secondary" type="button" data-ttt="appeal">
+          <span class="ttt__ask">Appeal the result</span>
+          <span class="ttt__denied">Appeal denied</span>
+        </button>
+      </div>
+    </div>
+  </footer>
+</div>
+
+{/* One board, built once, cloned per turn. A <template> is inert, so this costs nothing
+    until a match starts, and it keeps the marks as build-time SVG rather than something
+    the script has to construct nine at a time. */}
+<template id="ttt-board-tpl">
+  <div class="ttt__post">
+    <span class="msg__face"><img src={site.avatar} width="24" height="24" alt="" /></span>
+    <div class="ttt__card">
+      <span class="ttt__turn"></span>
+      <div class="ttt__board" role="grid" aria-label="Tic tac toe board">
         {Array.from({ length: 9 }, (_, i) => (
           <button class="ttt__cell" type="button" data-cell={i} aria-label={`Square ${i + 1}, empty`}>
-            {/* Both marks ship in every cell. data-mark decides which one shows, so playing
-                a square is one attribute and never a DOM build. */}
             <span class="ttt__x"><Icon name="close" size={64} /></span>
             <span class="ttt__o"><Icon name="circle" size={64} /></span>
           </button>
         ))}
       </div>
     </div>
-
-    <div class="ttt__actions" id="ttt-actions" hidden>
-      <button class="btn" type="button" data-ttt="reset">
-        <Icon name="reload" size={13} /> Play again
-      </button>
-      {/* Two labels, one rule: the button says what became of the appeal instead of just
-          going grey, and swapping them in CSS keeps the state out of the script. */}
-      <button class="btn btn--secondary" type="button" data-ttt="appeal">
-        <span class="ttt__ask">Appeal the result</span>
-        <span class="ttt__denied">Appeal denied</span>
-      </button>
-    </div>
   </div>
-
-  <aside class="ttt__side">
-    {/* The scoreboard. It sits where the chat header would be, because in a game the
-        thing you want at the top is the score, and the conversation says who is talking
-        by itself. */}
-    <header class="sb">
-      <div class="sb__team sb__team--yves">
-        <span class="sb__name">Yves · O</span>
-        <b class="sb__num sb__num--yves" id="ttt-yves">0</b>
-      </div>
-      <span class="sb__vs" aria-hidden="true">vs</span>
-      <div class="sb__team sb__team--you">
-        <span class="sb__name">You · X</span>
-        <b class="sb__num sb__num--you" id="ttt-you">0</b>
-      </div>
-    </header>
-    <p class="sb__meta">
-      <span>Match <b id="ttt-match">#001</b></span>
-      <span><Icon name="zap" size={10} /> <b id="ttt-viol">0</b> violations</span>
-      <span class="sb__note">Counted by Yves.</span>
-    </p>
-
-    {/* The conversation. His messages come in on the left with his face and his name on
-        them, yours go out on the right, and game.ts writes both. aria-live so a screen
-        reader hears the commentary; the typing dots are hidden from it, because three
-        animated dots announced every turn would be unbearable. */}
-    <div class="ttt__feed" id="ttt-feed" aria-live="polite" aria-label="Your conversation with Yves">
-      <div class="msg msg--in msg--typing" id="ttt-typing" aria-hidden="true" hidden>
-        <span class="msg__face"><img src={site.avatar} width="24" height="24" alt="" /></span>
-        <span class="msg__col"><span class="msg__bubble"><i></i><i></i><i></i></span></span>
-      </div>
-    </div>
-    <p class="ttt__status" id="ttt-status" role="status">{SAY.status.you}</p>
-  </aside>
-</div>
+</template>
 
 <style>
-  /* The window body has its own padding, which this layout has to escape so the two
-     columns reach the edges. Same trick ProjectsApp uses.
-
-     It is also the container the layout below measures itself against. Deliberately here
-     and not on .ttt: an element cannot answer its own container query, so making .ttt the
-     container would mean .ttt could never restyle itself and the two columns would just
-     squeeze until the board was a postage stamp. The parent has to be the container. */
-  :global(#win-game .window__body) {
-    padding: 0; overflow: hidden; container-type: size;
-  }
+  /* The window body has its own padding, which this layout escapes so the header and the
+     footer reach the edges. Same trick ProjectsApp uses. No container query any more:
+     one column needs no measuring, which is most of why this layout is simpler than the
+     two it replaces. */
+  :global(#win-game .window__body) { padding: 0; overflow: hidden; }
 
   .ttt {
-    display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-    /* One size drives the board and side card, so their top and bottom always align.
-       The second row is reserved even before the end buttons appear. */
-    --round: min(calc(100cqh - 72px), calc(66.666cqw - 20px));
-    grid-template-rows: calc(var(--round) + 20px) 52px;
-    grid-template-areas: 'stage side' 'actions empty';
-    align-content: center;
-    height: 100%; min-height: 0; background: var(--os-recess); container-type: size;
-    font: 12px var(--font-chrome);
+    display: flex; flex-direction: column; height: 100%; min-height: 0;
+    background: var(--os-surface); font: 12px var(--font-chrome);
   }
 
-  /* The board, and the buttons that act on it, in one column. The buttons row is `auto`,
-     so it takes no space at all while it is hidden and the board keeps the lot. */
-  .ttt__play {
-    display: contents;
+  /* Every band shares one capped column. The window is 860 and this is 520, so the space
+     either side is deliberate: a conversation has a reading width, and past about here you
+     are only adding margin. */
+  .ttt__col { width: 100%; max-width: 520px; margin-inline: auto; }
+
+  /* -------------------------------------------------------------- who and score */
+  .ttt__head {
+    flex: none; padding: var(--space-3); background: var(--os-card);
+    border-bottom: 1px solid var(--os-line);
   }
-  /* The end of a match, as one left aligned pair rather than two half-width slabs. Play
-     again is the solid one because it is the thing you actually want next, and the appeal
-     is bordered and quieter, which is the right weight for a button that only ever loses.
-     Both are sized to their own label, so neither pretends to be a page-level call to
-     action inside a 720px window. The row is 52px so they clear the board panel. */
-  .ttt__actions {
-    grid-area: actions;
-    /* Left aligned to the BOARD, not to the column. The board is --round wide and centred
-       in the stage, so the row takes the same width and the same centring and the two
-       share a left edge. Aligning to the column instead would leave the buttons hanging
-       about 18px outside the board on a wide window. */
-    width: var(--round); margin-inline: auto;
-    display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center;
-    gap: var(--space-2);
+  .ttt__head .ttt__col { display: flex; align-items: center; gap: var(--space-2); }
+  .ttt__face img { display: block; width: 34px; height: 34px; border-radius: 50%; }
+  .ttt__who { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+  .ttt__who > b { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+  .ttt__meta { font-size: 9px; color: var(--os-muted); }
+  .ttt__meta b { color: var(--os-ink); font-variant-numeric: tabular-nums; }
+  .ttt__tally { display: flex; gap: var(--space-3); }
+  .ttt__tally > span { display: grid; gap: 2px; justify-items: center; }
+  .ttt__tally b { font-size: 18px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .ttt__tally i {
+    font-style: normal; font-size: 8px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--os-muted);
   }
-  /* On a narrow phone the pair is wider than the column. Wrapping to a second line is
-     the right answer; squeezing both labels onto three lines each is not. */
+  /* One colour means one person, here and on every board below. */
+  #ttt-yves { color: var(--os-muted); }
+  #ttt-you { color: var(--os-accent); }
+
+  /* ---------------------------------------------------------------- the match */
+  .ttt__feed {
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    padding: var(--space-3); background: var(--os-recess);
+  }
+  /* Bottom aligned, so a short match sits on the floor of the window rather than floating
+     at the top with the newest board a long way from the status line. */
+  .ttt__feed .ttt__col {
+    display: flex; flex-direction: column; justify-content: flex-end;
+    gap: var(--space-2); min-height: 100%;
+  }
+
+  /* ------------------------------------------------------------------- footer */
+  .ttt__foot {
+    flex: none; padding: var(--space-2) var(--space-3); background: var(--os-card);
+    border-top: 1px solid var(--os-line);
+  }
+  .ttt__foot .ttt__col {
+    display: flex; align-items: center; gap: var(--space-2); min-height: 38px;
+  }
+  .ttt__status {
+    margin: 0; flex: 1 1 auto; min-width: 0; font-size: 10px; color: var(--os-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ttt__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .ttt__actions[hidden] { display: none; }
   .ttt__actions .btn { white-space: nowrap; }
   .ttt__denied { display: none; }
   .ttt__actions [disabled] .ttt__ask { display: none; }
@@ -134,168 +156,29 @@ import { SAY } from '../../data/game';
      it has been refused is the one thing this row must not do. */
   .ttt__actions [disabled] { opacity: .45; cursor: var(--cur-arrow); }
 
-  /* ---------------------------------------------------------------- board */
-  .ttt__stage {
-    grid-area: stage; display: grid; place-items: center; min-width: 0; min-height: 0;
-    padding: var(--work-inset);
-    background: var(--os-recess);
-    /* Not a container on purpose. cq units resolve against the nearest container of the
-       element that uses them, so a stage container would give the board a different
-       --round from the one the row above was sized with, and the two would drift. */
-  }
-  .ttt__board {
-    width: var(--round); height: var(--round); aspect-ratio: 1;
-    display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-    gap: clamp(3px, 2cqw, 9px);
-  }
-
-  .ttt__cell {
-    all: unset; position: relative; display: grid; place-items: center;
-    background: var(--os-surface); border: 1px solid var(--os-line);
-    border-radius: var(--r-window); cursor: var(--cur-hand);
-    transition: background var(--t-fast), transform var(--t-fast);
-  }
-  .ttt__cell:hover:not([data-mark]):not([disabled]) { background: var(--os-card); }
-  .ttt__cell[disabled] { cursor: var(--cur-arrow); }
-
-  /* Both marks are present; neither shows until the cell says which. Sized as a share of
-     the cell rather than in pixels, so they grow with the window like everything else. */
-  .ttt__x, .ttt__o {
-    display: none; width: 62%; height: 62%; place-items: center;
-  }
-  .ttt__x :global(svg), .ttt__o :global(svg) { width: 100%; height: 100%; }
-  /* The visitor's X is green, Yves's O is grey: the same two colours as the chat and
-     the scoreboard, so one colour means one person everywhere in the window. */
-  .ttt__cell[data-mark='X'] .ttt__x { display: grid; color: var(--os-accent); }
-  .ttt__cell[data-mark='O'] .ttt__o { display: grid; color: var(--os-muted); }
-
-  /* The line he wins with. */
-  .ttt__cell.is-win { background: var(--os-accent); border-color: var(--os-accent); }
-  .ttt__cell.is-win .ttt__o, .ttt__cell.is-win .ttt__x { color: #fff; }
-
-  /* A square being interfered with. Short, because it happens mid-turn and the feed is
-     what explains it. */
-  .ttt__cell.is-cheat { animation: ttt-shake 300ms var(--ease); }
-  @keyframes ttt-shake {
-    25% { transform: translateX(-4px); background: var(--os-accent); }
-    75% { transform: translateX(4px); }
-  }
-  .ttt__cell.is-gone { animation: ttt-gone 250ms var(--ease) forwards; }
-  @keyframes ttt-gone { to { opacity: .25; transform: scale(.82); } }
-  /* Closed for maintenance: hatched and not clickable. */
-  .ttt__cell.is-locked {
-    cursor: var(--cur-arrow);
-    background:
-      repeating-linear-gradient(45deg, var(--os-line) 0 5px, transparent 5px 10px),
-      var(--os-surface);
-  }
-
-  /* ----------------------------------------------------------------- side */
-  .ttt__side {
-    grid-area: side;
-    display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto;
-    gap: var(--space-2); min-height: 0; padding: var(--space-3);
-    background: var(--os-card); border: 1px solid var(--os-line);
-    border-radius: var(--panel-radius); margin: var(--work-inset) var(--work-inset) var(--work-inset) 0;
-    min-width: 0; overflow: hidden;
-  }
-  /* ------------------------------------------------------------ scoreboard */
-  /* The scores sit in their own recessed card, System Settings style, so the two numbers
-     read as one scoreboard and not as loose text at the top of the chat. */
-  .sb {
-    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-    gap: var(--space-2); padding: var(--space-2) var(--space-3);
-    background: var(--os-recess); border: 1px solid var(--os-line); border-radius: var(--r-window);
-  }
-  .sb__team { display: grid; gap: 1px; min-width: 0; }
-  .sb__team--you { justify-items: end; text-align: right; }
-  .sb__name {
-    font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--os-muted);
-  }
-  .sb__num {
-    font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--os-ink);
-  }
-  .sb__num--yves { color: var(--os-muted); }
-  .sb__num--you { color: var(--os-accent); }
-  .sb__vs { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--os-muted); }
-
-  .sb__meta {
-    margin: 0; display: flex; flex-wrap: wrap; gap: 2px var(--space-2);
-    font-size: 9px; letter-spacing: .03em; color: var(--os-muted);
-  }
-  .sb__meta b { color: var(--os-ink); font-variant-numeric: tabular-nums; }
-  .sb__note { opacity: .8; }
-
-  /* The running line, under the conversation rather than over it, because it is a status
-     and not something he said. */
-  .ttt__status {
-    margin: 0; padding-top: var(--space-2); border-top: 1px solid var(--os-line);
-    color: var(--os-muted); font-size: 10px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-
-  /* ------------------------------------------------------------------ chat */
-  .ttt__feed {
-    display: flex; flex-direction: column; gap: 8px; min-height: 0;
-    overflow-y: auto; padding: 2px 2px 0 0;
-  }
-  /* Stacked, once the window is too narrow for two columns. Driven by the window's own
-     width, not the viewport, so a small window on a big screen stacks too. */
-  @container (max-width: 560px) {
-    .ttt { display: block; height: 100%; overflow: auto; }
-    .ttt__play { display: grid; gap: var(--space-2); }
-    /* The named areas belong to the two-column grid. Left on, they would make this grid
-       grow implicit columns and hand the board the second one. */
-    .ttt__stage, .ttt__actions { grid-area: auto; }
-    .ttt__board { width: min(100%, 52dvh); height: auto; }
-    .ttt__actions { width: min(calc(100% - var(--work-inset) * 2), 52dvh); }
-    .ttt__actions { min-height: 44px; }
-    .ttt__side { min-height: 240px; margin: 0 var(--work-inset) var(--work-inset); }
-    .ttt__feed { max-height: 96px; }
-  }
-
-  /* On a phone the window is a bottom sheet with `height: auto`. That is the one case
-     where the container trick above cannot work: `container-type: size` needs a definite
-     height to measure, and an auto-height box under size containment is 0px tall, so the
-     whole game would collapse and spill out under the dock.
-
-     So on mobile the containment comes off both the body and .ttt, and with no container
-     left to query, the stacked layout is spelled out here rather than borrowed from the
-     block above. The board is bounded by the viewport instead: 44dvh leaves room for the
-     title bar above it, Yves's panel below, and the dock. The body scrolls, so a long
-     conversation is still reachable.
-
-     Short viewports take the same route. A phone in landscape leaves about 130px of body
-     between the menu bar and the dock, which is no height for two columns, so it stacks
-     and scrolls like a portrait phone. */
-  @media (max-width: 640px), (max-height: 480px) {
-    :global(#win-game .window__body) { overflow: auto; container-type: normal; }
-    .ttt { display: block; height: auto; container-type: normal; }
-    .ttt__play { display: grid; gap: var(--space-2); }
-    .ttt__stage, .ttt__actions { grid-area: auto; }
-    .ttt__stage { padding: var(--space-2); }
-    .ttt__board { width: min(100%, 44dvh); height: auto; }
-    .ttt__actions { width: min(calc(100% - var(--space-2) * 2), 44dvh); min-height: 44px; }
-    .ttt__side { min-height: 240px; margin: 0 var(--work-inset) var(--work-inset); }
-    .ttt__feed { max-height: 96px; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .ttt__cell, .ttt__cell.is-cheat, .ttt__cell.is-gone { animation: none; transition: none; }
-    .ttt__cell.is-gone { opacity: .25; }
+  /* On a phone the window is a bottom sheet with height: auto, and an auto height gives
+     the feed nothing to scroll inside. Pinning the sheet to the space it actually has
+     makes the thread scroll here exactly as it does on a desktop. */
+  @media (max-width: 640px) {
+    :global(#win-game) {
+      height: calc(100dvh - var(--menubar-h) - var(--window-top) - var(--window-bottom)) !important;
+    }
+    .ttt__head, .ttt__foot { padding: var(--space-2); }
+    .ttt__feed { padding: var(--space-2); }
+    .ttt__face img { width: 28px; height: 28px; }
+    .ttt__tally > b { font-size: 15px; }
   }
 </style>
 
-{/* The chat bubbles live in a global block on purpose.
-    game.ts creates these nodes at runtime, and Astro scopes component styles to elements
-    it can see in the markup, so a scoped rule here would match none of them: exactly the
-    bug that left the emoji reactions unstyled. Every selector is namespaced under
-    #ttt-feed, which is unique to this window, so nothing escapes into the rest of the OS. */}
+{/* Boards and bubbles live in a global block on purpose. game.ts clones and inserts these
+    at runtime, and Astro scopes component styles to the elements it can see in the markup,
+    so a scoped rule would be a coin toss on cloned nodes. Every selector is namespaced
+    under #ttt-feed, which is unique to this window, so nothing escapes into the OS. */}
 <style is:global>
   #ttt-feed .msg { display: flex; align-items: flex-start; gap: 7px; max-width: 100%; }
   #ttt-feed .msg--in { justify-content: flex-start; }
   #ttt-feed .msg--out { justify-content: flex-end; }
-  #ttt-feed .msg__col { display: grid; gap: 3px; min-width: 0; max-width: 84%; }
+  #ttt-feed .msg__col { display: grid; gap: 3px; min-width: 0; max-width: 78%; }
   #ttt-feed .msg--out .msg__col { justify-items: end; }
 
   /* Runs of messages from the same person sit close together, the way a burst of replies
@@ -303,40 +186,23 @@ import { SAY } from '../../data/game';
   #ttt-feed .msg--in + .msg--in:not([hidden]),
   #ttt-feed .msg--out + .msg--out:not([hidden]) { margin-top: -4px; }
 
-  /* His face and his name ride on the FIRST message of a run, together, so a message
-     plainly reads as Yves sending it. The rest of the run is just him continuing, so it
-     repeats neither: the space is kept so the bubbles stay in line. */
   #ttt-feed .msg__face { flex: none; width: 24px; height: 24px; }
   #ttt-feed .msg__face img { border-radius: 50%; display: block; }
-  #ttt-feed .msg__name {
-    font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-    color: var(--os-muted);
-  }
   #ttt-feed .msg--in + .msg--in .msg__face { visibility: hidden; }
-  #ttt-feed .msg--in + .msg--in .msg__name { display: none; }
 
   #ttt-feed .msg__bubble {
     display: block; width: fit-content; padding: 7px 11px; border-radius: 15px;
     font-size: 11px; line-height: 1.45; overflow-wrap: anywhere;
     animation: msg-in 220ms var(--ease);
   }
-  /* The tail. His points up at the face that sent it, so it goes on the first bubble of a
-     run. Yours has no face to point at, so it keeps the usual last-of-run corner. */
   #ttt-feed .msg--in .msg__bubble { border-top-left-radius: 5px; }
   #ttt-feed .msg--in + .msg--in .msg__bubble { border-top-left-radius: 15px; }
   #ttt-feed .msg--out:not(:has(+ .msg--out:not([hidden]))) .msg__bubble { border-bottom-right-radius: 5px; }
 
-  /* The visitor is green and stays on the right, like a sent message. Yves is grey and
-     stays on the left. The scoreboard and the X/O marks use the same two colours. */
-  #ttt-feed .msg--in .msg__name { color: var(--os-muted); }
-  #ttt-feed .msg--in .msg__bubble { background: var(--os-recess); color: var(--os-ink); }
+  /* The visitor is green and on the right. Yves is grey and on the left. */
+  #ttt-feed .msg--in .msg__bubble { background: var(--os-card); border: 1px solid var(--os-line); color: var(--os-ink); }
   #ttt-feed .msg--out .msg__bubble { background: var(--os-accent); color: #fff; }
 
-  @keyframes msg-in {
-    from { opacity: 0; transform: translateY(6px) scale(.96); }
-  }
-
-  /* The violation number, as a label on the message rather than a sentence in it. */
   #ttt-feed .msg__tag {
     display: block; margin-bottom: 2px;
     font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
@@ -351,13 +217,80 @@ import { SAY } from '../../data/game';
   }
   #ttt-feed .msg--typing i:nth-child(2) { animation-delay: .16s; }
   #ttt-feed .msg--typing i:nth-child(3) { animation-delay: .32s; }
+
+  /* --------------------------------------------------------- a posted board */
+  #ttt-feed .ttt__post { display: flex; align-items: flex-start; gap: 7px; }
+  /* The board is not something Yves said, so it takes his indent without his face. */
+  #ttt-feed .ttt__post .msg__face { visibility: hidden; }
+  /* The live card takes the width of the row, which is what gives the board a definite
+     box to be a percentage of. Left to hug its content the percentage is circular and the
+     board collapses to the intrinsic size of nine empty buttons. */
+  #ttt-feed .ttt__card {
+    flex: 1 1 auto; min-width: 0;
+    display: grid; gap: 7px; justify-items: start;
+    padding: 10px; border-radius: 15px; border-top-left-radius: 5px;
+    background: var(--os-card); border: 1px solid var(--os-line);
+    animation: msg-in 240ms var(--ease);
+  }
+  /* The live board is the one you can play. It is bigger, it is ringed, and it is the only
+     one at the bottom of the thread, so there is never a question which board is the game
+     and which are the record of it. */
+  #ttt-feed .is-live .ttt__card {
+    border: 1px solid var(--os-accent); box-shadow: 0 8px 20px -14px rgba(0,0,0,.55);
+  }
+  #ttt-feed .ttt__post.is-past { opacity: .55; }
+  #ttt-feed .is-past .ttt__card { flex: 0 0 auto; }
+  #ttt-feed .ttt__turn {
+    font-size: 8.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--os-muted);
+  }
+  #ttt-feed .is-live .ttt__turn { color: var(--os-accent); }
+
+  #ttt-feed .ttt__board {
+    width: min(294px, 100%); aspect-ratio: 1;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  }
+  #ttt-feed .is-past .ttt__board { width: 108px; gap: 3px; }
+
+  #ttt-feed .ttt__cell {
+    all: unset; box-sizing: border-box; position: relative;
+    display: grid; place-items: center; aspect-ratio: 1;
+    background: var(--os-surface); border: 1px solid var(--os-line);
+    border-radius: var(--r-inner); cursor: var(--cur-hand);
+    transition: background var(--t-fast);
+  }
+  #ttt-feed .is-past .ttt__cell { border-radius: 2px; }
+  #ttt-feed .ttt__cell:disabled { cursor: var(--cur-arrow); }
+  #ttt-feed .ttt__cell:hover:not([data-mark]):not(:disabled) { background: var(--os-card); }
+
+  /* Both marks ship in every cell; data-mark decides which one shows, so playing a square
+     is one attribute and never a DOM build. */
+  #ttt-feed .ttt__x, #ttt-feed .ttt__o { display: none; width: 62%; height: 62%; place-items: center; }
+  #ttt-feed .ttt__x svg, #ttt-feed .ttt__o svg { width: 100%; height: 100%; }
+  #ttt-feed .ttt__cell[data-mark='X'] .ttt__x { display: grid; color: var(--os-accent); }
+  #ttt-feed .ttt__cell[data-mark='O'] .ttt__o { display: grid; color: var(--os-muted); }
+
+  /* The line he wins with. Filled in ink, not in the accent: green is the visitor's
+     colour everywhere else in this window, and a green winning line would credit the
+     wrong player. */
+  #ttt-feed .ttt__cell.is-win { background: var(--os-ink); border-color: var(--os-ink); }
+  #ttt-feed .ttt__cell.is-win .ttt__x, #ttt-feed .ttt__cell.is-win .ttt__o { color: #fff; }
+  /* The square he took off you. It shakes once as it changes hands, which is the only
+     admission you get. */
+  #ttt-feed .ttt__cell.is-cheat { animation: ttt-shake 320ms var(--ease); }
+
+  @keyframes msg-in { from { opacity: 0; transform: translateY(6px) scale(.96); } }
   @keyframes msg-dot {
     0%, 60%, 100% { opacity: .3; transform: translateY(0); }
     30%           { opacity: 1;  transform: translateY(-3px); }
   }
+  @keyframes ttt-shake {
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
 
   @media (prefers-reduced-motion: reduce) {
-    #ttt-feed .msg__bubble { animation: none; }
+    #ttt-feed .msg__bubble, #ttt-feed .ttt__card, #ttt-feed .ttt__cell.is-cheat { animation: none; }
     #ttt-feed .msg--typing i { animation: none; opacity: .55; }
   }
 </style>

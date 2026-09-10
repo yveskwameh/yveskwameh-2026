@@ -22,10 +22,10 @@ import { desktopItems } from '../../data/desktop';
       a window that sizes to its content collapses to the height of the sidebar. */}
   <Window id="projects" title="Work" filename="work.folder" width={860} height={600}><ProjectsApp /></Window>
   <Window id="music" title="Music" filename="playlist.spotify" width={420}><MusicApp /></Window>
-  {/* Explicitly sized like the Work window, and for the same reason: the board sizes
-      itself against the space it is given, so it needs a real height to measure. Big
-      enough to play in, not so big it stops being a window on a desktop. */}
-  <Window id="game" title="Tic Tac Toe" filename="tictactoe.app" width={860} height={620}><GameApp /></Window>
+  {/* Explicitly sized, because the thread inside needs a real height to scroll within.
+      Wider than the 520 column it holds on purpose: the margins either side are the
+      layout. See the note at the top of GameApp.astro. */}
+  <Window id="game" title="Tic Tac Toe" filename="tictactoe.app" width={860} height={660}><GameApp /></Window>
   <Window id="colophon" title="About this site" filename="readme.txt" width={520}><ColophonApp /></Window>
   {/* Anchored bottom right and slides up, like Gmail compose. See the compose variant in
       Window.astro. Sized to the shorter, wider shape a compose panel wants. */}
