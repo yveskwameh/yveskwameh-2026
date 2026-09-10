@@ -109,15 +109,20 @@ import { SAY } from '../../data/game';
   .ttt__play {
     display: contents;
   }
-  /* The end of a match, as one centred pair rather than two half-width slabs. Play again
-     is the solid one because it is the thing you actually want next, and the appeal is
-     bordered and quieter, which is the right weight for a button that only ever loses.
+  /* The end of a match, as one left aligned pair rather than two half-width slabs. Play
+     again is the solid one because it is the thing you actually want next, and the appeal
+     is bordered and quieter, which is the right weight for a button that only ever loses.
      Both are sized to their own label, so neither pretends to be a page-level call to
      action inside a 720px window. The row is 52px so they clear the board panel. */
   .ttt__actions {
-    grid-area: actions; display: flex; flex-wrap: wrap;
-    justify-content: center; align-items: center;
-    gap: var(--space-2); padding: 0 var(--work-inset);
+    grid-area: actions;
+    /* Left aligned to the BOARD, not to the column. The board is --round wide and centred
+       in the stage, so the row takes the same width and the same centring and the two
+       share a left edge. Aligning to the column instead would leave the buttons hanging
+       about 18px outside the board on a wide window. */
+    width: var(--round); margin-inline: auto;
+    display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center;
+    gap: var(--space-2);
   }
   /* On a narrow phone the pair is wider than the column. Wrapping to a second line is
      the right answer; squeezing both labels onto three lines each is not. */
@@ -243,6 +248,7 @@ import { SAY } from '../../data/game';
        grow implicit columns and hand the board the second one. */
     .ttt__stage, .ttt__actions { grid-area: auto; }
     .ttt__board { width: min(100%, 52dvh); height: auto; }
+    .ttt__actions { width: min(calc(100% - var(--work-inset) * 2), 52dvh); }
     .ttt__actions { min-height: 44px; }
     .ttt__side { min-height: 240px; margin: 0 var(--work-inset) var(--work-inset); }
     .ttt__feed { max-height: 96px; }
@@ -269,7 +275,7 @@ import { SAY } from '../../data/game';
     .ttt__stage, .ttt__actions { grid-area: auto; }
     .ttt__stage { padding: var(--space-2); }
     .ttt__board { width: min(100%, 44dvh); height: auto; }
-    .ttt__actions { min-height: 44px; }
+    .ttt__actions { width: min(calc(100% - var(--space-2) * 2), 44dvh); min-height: 44px; }
     .ttt__side { min-height: 240px; margin: 0 var(--work-inset) var(--work-inset); }
     .ttt__feed { max-height: 96px; }
   }
