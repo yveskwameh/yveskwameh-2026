@@ -32,9 +32,9 @@ import { desktopItems } from '../../data/desktop';
   <Window id="contact" title="Send Yves a message" filename="new-message.eml" width={460} height={430} variant="compose"><MailApp /></Window>
   <!-- Add: services, testimonials, trash -->
 
-  {/* Pushes the desktop back behind whatever is open. Deliberately pointer-events: none,
-      so it dims and blurs without becoming a modal: the icons underneath stay clickable
-      and every window stays draggable. */}
+  {/* Pushes the desktop back behind whatever is open. Still pointer-events: none, even
+      though window-manager.ts now dismisses on a click outside: swallowing the click here
+      instead would cost the icons their double click to open, and windows their drag. */}
   <div class="scrim" aria-hidden="true"></div>
 </main>
 

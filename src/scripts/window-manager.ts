@@ -2,7 +2,8 @@
  * Open / close / minimise / zoom / focus.
  * [data-open=id] opens, [data-close=id] closes. Minimise and zoom are drawn on the window
  * but inactive, so there is nothing here for them.
- * Clicking a window focuses it. Clicking the desktop clears focus (undims the rest).
+ * One window is open at a time and a click anywhere outside it closes it, so the desktop
+ * behaves like a modal overlay rather than like a real stacking window manager.
  */
 import { launch } from './lazy';
 
@@ -33,10 +34,19 @@ function placeWindow(win: HTMLElement) {
 
 export function openWindow(id: string) {
   const win = q(id); if (!win) return;
+  closeOthers(win);     // one at a time: opening anything puts away whatever was already up
   win.classList.add('is-open');
   placeWindow(win);     // every open: centred across, --window-top below the menu bar
   focusWindow(win);
   launch(id);           // the app's own code, fetched the first time its window opens
+}
+/**
+ * Put away every open window, sparing one. The desktop behaves like a modal overlay: one
+ * window is open at a time, and a click that lands outside it dismisses it.
+ */
+function closeOthers(keep?: HTMLElement) {
+  openWindows().forEach((w) => { if (w !== keep) w.classList.remove('is-open', 'is-focused'); });
+  syncFocus();
 }
 export function closeWindow(id: string) {
   const win = q(id); if (!win) return;
@@ -112,26 +122,39 @@ export function initWindowManager() {
     if (icon?.dataset.open) openWindow(icon.dataset.open);
   });
 
+  /**
+   * Where the gesture STARTED, which is the half of the dismiss below that a click alone
+   * cannot answer. Selecting a paragraph and releasing past the window edge, or dragging a
+   * resize grip until the window hits its clamp and the pointer runs off it, both end in a
+   * click the document sees outside the window. Neither should throw the window away.
+   */
+  let fromWindow = false;
+  document.addEventListener('pointerdown', (e) => {
+    fromWindow = !!(e.target as HTMLElement).closest?.('.window');
+  }, true);
+
   document.addEventListener('click', (e) => {
     const el = e.target as HTMLElement;
     const t = el.closest<HTMLElement>('[data-open],[data-close],.window');
-    if (!t) {
-      // clicked the desktop itself
-      if (el.closest('#desktop') === el || el.id === 'desktop') {
-        document.querySelectorAll('.window').forEach((w) => w.classList.remove('is-focused'));
-        document.body.classList.remove('has-focus');
-        selectIcon(null);
-      }
-      return;
-    }
-    if (t.dataset.open) {
-      // detail 0 means the keyboard fired this, and Enter should open straight away
-      const needsDoubleClick = pointer && t.classList.contains('icon') && (e as MouseEvent).detail !== 0;
-      if (needsDoubleClick) { selectIcon(t); return; }
-      openWindow(t.dataset.open);
-    }
-    else if (t.dataset.close) closeWindow(t.dataset.close);
-    else if (t.classList.contains('window')) focusWindow(t);
+    // A single click on a desktop icon only selects it, and the dblclick above opens it.
+    // detail 0 means the keyboard fired this, and Enter should open straight away.
+    const select = pointer && !!t?.classList.contains('icon') && (e as MouseEvent).detail !== 0;
+    const opens = select ? undefined : t?.dataset.open;
+
+    /**
+     * The dismiss. Anything outside the open window puts it away, which is what makes the
+     * desktop read as a modal overlay and keeps the visitor to one window.
+     *
+     * A control that is about to open something is the exception: openWindow swaps the two
+     * on its own, and dismissing here first would flash the bare desktop between them.
+     */
+    if (!fromWindow && !el.closest('.window') && !opens) closeOthers();
+
+    if (opens) openWindow(opens);
+    else if (select) selectIcon(t);
+    else if (t?.dataset.close) closeWindow(t.dataset.close);
+    else if (t?.classList.contains('window')) focusWindow(t);
+    else if (el.id === 'desktop') selectIcon(null);
   });
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
