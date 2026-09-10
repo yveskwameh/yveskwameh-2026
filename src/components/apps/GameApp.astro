@@ -33,10 +33,15 @@ import { SAY } from '../../data/game';
     </div>
 
     <div class="ttt__actions" id="ttt-actions" hidden>
-      <button class="btn btn--lg" type="button" data-ttt="reset">
+      <button class="btn" type="button" data-ttt="reset">
         <Icon name="reload" size={13} /> Play again
       </button>
-      <button class="btn btn--secondary btn--lg" type="button" data-ttt="appeal">Appeal</button>
+      {/* Two labels, one rule: the button says what became of the appeal instead of just
+          going grey, and swapping them in CSS keeps the state out of the script. */}
+      <button class="btn btn--secondary" type="button" data-ttt="appeal">
+        <span class="ttt__ask">Appeal the result</span>
+        <span class="ttt__denied">Appeal denied</span>
+      </button>
     </div>
   </div>
 
@@ -91,8 +96,8 @@ import { SAY } from '../../data/game';
     display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     /* One size drives the board and side card, so their top and bottom always align.
        The second row is reserved even before the end buttons appear. */
-    --round: min(calc(100cqh - 64px), calc(66.666cqw - 20px));
-    grid-template-rows: calc(var(--round) + 20px) 44px;
+    --round: min(calc(100cqh - 72px), calc(66.666cqw - 20px));
+    grid-template-rows: calc(var(--round) + 20px) 52px;
     grid-template-areas: 'stage side' 'actions empty';
     align-content: center;
     height: 100%; min-height: 0; background: var(--os-recess); container-type: size;
@@ -104,8 +109,25 @@ import { SAY } from '../../data/game';
   .ttt__play {
     display: contents;
   }
-  .ttt__actions { grid-area: actions; display: flex; gap: 8px; padding: 0 var(--work-inset); }
-  .ttt__actions .btn { flex: 1; }
+  /* The end of a match, as one centred pair rather than two half-width slabs. Play again
+     is the solid one because it is the thing you actually want next, and the appeal is
+     bordered and quieter, which is the right weight for a button that only ever loses.
+     Both are sized to their own label, so neither pretends to be a page-level call to
+     action inside a 720px window. The row is 52px so they clear the board panel. */
+  .ttt__actions {
+    grid-area: actions; display: flex; flex-wrap: wrap;
+    justify-content: center; align-items: center;
+    gap: var(--space-2); padding: 0 var(--work-inset);
+  }
+  /* On a narrow phone the pair is wider than the column. Wrapping to a second line is
+     the right answer; squeezing both labels onto three lines each is not. */
+  .ttt__actions .btn { white-space: nowrap; }
+  .ttt__denied { display: none; }
+  .ttt__actions [disabled] .ttt__ask { display: none; }
+  .ttt__actions [disabled] .ttt__denied { display: inline; }
+  /* Nothing in the shared button styles says "spent", and an appeal that looks live after
+     it has been refused is the one thing this row must not do. */
+  .ttt__actions [disabled] { opacity: .45; cursor: var(--cur-arrow); }
 
   /* ---------------------------------------------------------------- board */
   .ttt__stage {
