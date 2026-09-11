@@ -89,9 +89,13 @@ const accents = [
         that can disagree with the first. */}
     <div class="anchor anchor--snd">
       <details class="menu menu--snd" data-menu>
+        {/* 18, not the 15 the social glyphs use. Pixelarticons draws the speaker with a
+            lot of empty margin inside its 24 unit box and the social marks with almost
+            none, so equal numbers do not read as equal size: at 15 the speaker looked a
+            size smaller than everything beside it. Matched by ink, not by number. */}
         <summary class="menubar__link menubar__snd" id="snd" aria-label="Sound">
-          <Icon name="volume-2" size={15} />
-          <Icon name="volume-x" size={15} />
+          <Icon name="volume-2" size={18} />
+          <Icon name="volume-x" size={18} />
         </summary>
       </details>
 
@@ -228,7 +232,7 @@ const accents = [
             window. The iframe is built on click and not before: opening Control Center
             is asking for Control Center, not for a third party embed, and rule 1 says
             nothing loads that the visitor did not ask for. */}
-        <div class="cc__tile cc__tile--tight" id="cc-spotify">
+        <div class="cc__tile cc__tile--tight cc__tile--spotify" id="cc-spotify">
           {/* Its own classes, not the now-playing ones. panel.ts writes every .np__title
               and .np__why on the page from one state, so borrowing them here meant the
               Spotify tile relabelled itself "Nothing playing" the moment the panel
@@ -286,7 +290,11 @@ const accents = [
     font-size: 13px;
   }
   .menubar__left { display: flex; align-items: center; gap: var(--space-3); }
-  .menubar__right { display: flex; align-items: center; gap: var(--space-1); }
+  /* Stretched to the full height of the bar so the anchors inside it can be too, which
+     is what lets a panel say "16px below the bar" as `top: calc(100% + --space-3)`.
+     Stretching the anchor alone was not enough: this group is itself a centred flex item,
+     so it stood 28px tall and the panel landed 9px below the bar instead of 16. */
+  .menubar__right { display: flex; align-items: center; gap: var(--space-1); align-self: stretch; }
   .menubar__avatar { border-radius: 50%; display: block; width: 22px; height: 22px; }
   .menubar__avatar--fallback {
     display: grid; place-items: center; font-size: 9px; font-weight: 700; letter-spacing: .02em;
@@ -305,7 +313,12 @@ const accents = [
      do. It also has to shed .menu summary's padding: inside a 26px border-box that left a
      10px cell for a 15px glyph, and the speaker came out visibly smaller than the social
      icons beside it. Same box as .menubar__link, exactly. */
-  .menubar__snd { list-style: none; cursor: var(--cur-hand); padding: 0; }
+  /* summary.menubar__snd, not .menubar__snd. `.menu summary { padding: 4px 8px }` is one
+     class plus one element and beats a bare class, so the padding stayed, the 26px box
+     had a 10px cell left inside it, and the global `svg { max-width: 100% }` then shrank
+     an 18px glyph down to 8px of ink. Measured, not guessed: the box read 10x18 while
+     every social mark beside it read 15x15. */
+  .menu summary.menubar__snd { list-style: none; cursor: var(--cur-hand); padding: 0; }
   .menubar__snd::-webkit-details-marker { display: none; }
   /* Both icons sit in the same grid cell and one is hidden, so switching state is a class
      rather than a DOM swap. It reads the same body flag the panel glyphs do, so no
@@ -446,7 +459,14 @@ const accents = [
      edge would sit diagonally away from the speaker, and hover would drop on the way.
      ================================================================== */
   .tray {
-    position: absolute; top: calc(100% + 6px); right: -8px; z-index: 10;
+    /* 16px below the bar, and 16px in from the screen edge, which are the same number on
+       purpose: the menu bar's own side padding is --space-3, so a panel whose right edge
+       lines up with its trigger already clears the edge by exactly that. Matching the top
+       gap to it is what stops the panel reading as part of the bar.
+
+       The measurement only works because .anchor stretches to the full height of the bar
+       below, so 100% here is 40px and not the height of whichever glyph opened it. */
+    position: absolute; top: calc(100% + var(--space-3)); right: 0; z-index: 10;
     background: var(--os-menu); border: 1px solid var(--os-edge);
     -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
     border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
@@ -454,9 +474,23 @@ const accents = [
   }
   /* Bridges the gap between the summary and the panel, so travelling from one to the
      other never leaves the hover area. Without it the panel closes mid-journey. */
-  .tray::before { content: ''; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+  .tray::before {
+    content: ''; position: absolute; left: 0; right: 0;
+    top: calc(var(--space-3) * -1); height: var(--space-3);
+  }
   .tray--snd { width: 278px; }
-  .tray--cc { width: 292px; padding: 10px; gap: 9px; background: var(--os-recess); }
+  /* 360 rather than 292 because of the Spotify embed. Spotify's compact player collapses
+     its own controls below about 320px: the title clips, the transport shrinks to a line,
+     and the rest of the frame goes blank. Measured at 298 and at 340 before landing here.
+     The tile it sits in is full bleed, so the iframe gets 340 of this. */
+  .tray--cc {
+    width: 360px; padding: 10px; gap: 9px; background: var(--os-recess);
+    /* The Spotify embed is 352 tall, which can push this past the bottom of a laptop
+       screen, so the panel scrolls rather than running off. The same gap it keeps from
+       the bar is kept from the bottom. */
+    max-height: calc(100vh - var(--menubar-h) - var(--space-3) * 2);
+    overflow: auto;
+  }
 
   /* Hover opens, and so does a click, and so does a track playing.
 
@@ -482,7 +516,10 @@ const accents = [
      inherited every bit of that silently: computed display was block, and they rendered
      163px above the viewport where nothing could be seen. Check global.css before naming
      anything here. */
-  .anchor { position: relative; display: flex; align-items: center; }
+  /* Stretched to the full height of the bar, so `top: 100%` on the panel is the bottom
+     of the menu bar rather than the bottom of a 22px glyph. Both panels then hang the
+     same distance below the bar whatever opened them. */
+  .anchor { position: relative; display: flex; align-items: center; align-self: stretch; }
   .anchor .tray { display: none; }
   .anchor--snd:hover .tray,
   .anchor--snd:has(.menu--snd[open]) .tray { display: block; }
@@ -652,7 +689,10 @@ const accents = [
     padding: 5px 9px; border-radius: var(--r-pill); background: var(--os-hover);
   }
   .sp:hover .sp__go { background: var(--os-accent); color: var(--os-on-accent); }
-  #cc-spotify iframe { display: block; border: 0; border-radius: var(--r-inner); }
+  /* Once the embed is in, the tile is only a frame around it: no padding, so Spotify gets
+     every pixel of the panel it can, and the corners are clipped rather than drawn. */
+  #cc-spotify:has(iframe) { padding: 0; overflow: hidden; }
+  #cc-spotify iframe { display: block; border: 0; width: 100%; }
 
   @media (prefers-reduced-motion: reduce) {
     .tip::after, .tip::before, .np__art, .np__toggle, .th__mini { transition: none; }

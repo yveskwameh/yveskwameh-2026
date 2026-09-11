@@ -12,10 +12,14 @@ export const site = {
   avatar: '/images/avatar.avif',    // made by tools/make-avatar.sh. Falls back to initials if absent.
 
   /** Round icon buttons on the lock screen. `glyph` is a Pixelarticons name. */
+  /* Ordered by what a client or a recruiter opens first, not by when each was added.
+     LinkedIn is the professional identity, GitHub is the proof that the build half of
+     "design and build" is real, Instagram is the visual work, and X is commentary. The
+     menu bar and the lock screen both read this list, so they cannot disagree. */
   socials: [
     { name: 'LinkedIn',  glyph: 'linkedin',     url: 'https://www.linkedin.com/in/yveskwameh/' },
+    { name: 'GitHub',    glyph: 'github',       url: 'https://github.com/yveskwameh' },
     { name: 'Instagram', glyph: 'instagram',    url: 'https://www.instagram.com/yveskwameh/' },
     { name: 'X',         glyph: 'twitter-bird', url: 'https://x.com/yveskwameh' },
-    { name: 'GitHub',    glyph: 'github',       url: 'https://github.com/yveskwameh' },
   ],
 } as const;

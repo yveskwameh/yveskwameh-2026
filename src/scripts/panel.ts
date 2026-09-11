@@ -223,8 +223,17 @@ export function init() {
   const spot = $('cc-spotify');
   spot?.addEventListener('click', (e) => {
     if (!(e.target as El).closest('[data-spotify]')) return;
-    spot.innerHTML = `<iframe title="Spotify playlist" width="100%" height="152" loading="lazy"
-      allow="clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+    /* Two things this got wrong before, both found by clicking it rather than by reading
+       it. autoplay has to be in the allow list: pressing play inside a cross origin iframe
+       starts playback programmatically in that frame, and without the permission delegated
+       the browser blocks it, so the player renders and the button does nothing.
+
+       And the height is 352, the full player, not Spotify's 152 compact one. The compact
+       player would not start at all here, twice, while the same playlist at 352 in the
+       Music window played on the first click. It also brings the track list, which is the
+       thing somebody opening this actually wants to see. Tall, so the panel scrolls. */
+    spot.innerHTML = `<iframe title="Spotify playlist" width="100%" height="352" loading="lazy"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
       src="https://open.spotify.com/embed/playlist/6vjBKgpH5qrt7DW06uJYgL?utm_source=generator&theme=0"></iframe>`;
   });
 }

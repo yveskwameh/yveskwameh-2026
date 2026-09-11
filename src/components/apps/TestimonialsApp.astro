@@ -157,15 +157,22 @@ const columns = [feedback.filter((_, i) => i % 2 === 0), feedback.filter((_, i) 
     padding: var(--space-3);
     background: var(--os-card); border-radius: var(--r-window);
     /* The ring is drawn transparent rather than added on hover, so the card never grows
-       by two pixels under the pointer and nudges the column it is drifting in. */
-    box-shadow: 0 0 0 2px transparent;
+       under the pointer and nudges the column it is drifting in. */
+    box-shadow: inset 0 0 0 1px transparent;
     transition: box-shadow var(--t-fast) var(--ease);
   }
   /* The wall pauses when you point at it, which is easy to miss when nothing under the
      pointer changes. The ring says which card you have hold of, and that pointing was
-     the thing that stopped everything. */
-  .fb__card:hover { box-shadow: 0 0 0 2px var(--os-accent); }
-  .fb__card:focus-within { box-shadow: 0 0 0 2px var(--os-accent); }
+     the thing that stopped everything.
+
+     Inset, and one pixel at half strength. An outset ring sat outside the card, and the
+     wall clips horizontally because it is a viewport with a mask, so the ring was sliced
+     off down both outer columns. Drawn inside the card there is nothing to clip, and the
+     card still does not change size. */
+  .fb__card:hover,
+  .fb__card:focus-within {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--os-accent) 55%, transparent);
+  }
   .fb__quote { margin: 0; font-size: 12px; line-height: 1.6; color: var(--os-ink); }
   .fb__who { display: flex; align-items: center; gap: 10px; padding-top: var(--space-3); border-top: 1px solid var(--os-hairline); }
   .fb__avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--os-recess) center / cover no-repeat; }
