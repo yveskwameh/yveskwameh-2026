@@ -8,12 +8,14 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro build && wrangler dev",
+    "preview": "astro build && wrangler dev --port 4321",
     "deploy:manual": "astro build && wrangler deploy",
     "check": "astro check",
-    "astro": "astro"
+    "astro": "astro",
+    "indexnow": "node tools/indexnow.mjs"
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
     "astro": "^7.3.1"
   },
   "devDependencies": {

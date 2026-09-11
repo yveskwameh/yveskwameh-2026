@@ -5,6 +5,7 @@
  */
 import '../styles/global.css';
 import { site } from '../data/site';
+import { graph } from '../data/schema';
 
 interface Props {
   title: string;
@@ -25,6 +26,12 @@ interface Props {
   type?: 'website' | 'article';
   /** Keeps a page out of search. Only the 404 wants this. */
   noindex?: boolean;
+  /**
+   * JSON-LD nodes for this page, built with src/data/schema.ts. Rendered as one @graph so
+   * the nodes can reference each other by @id. Pages that have nothing to declare pass
+   * nothing, and no script tag is emitted.
+   */
+  schema?: object[];
 }
 
 const {
@@ -36,6 +43,7 @@ const {
   imageAlt = 'Yves Kwameh, UX/UI designer and no-code developer.',
   type = 'website',
   noindex = false,
+  schema,
 } = Astro.props;
 
 /* Absolute, both of them. A canonical or an og:image given as a path is either ignored or
@@ -43,6 +51,13 @@ const {
    Astro.site is set in astro.config.mjs and is the only reason these can be built. */
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(image, Astro.site);
+
+/* Escaped before it reaches set:html. The only way to break out of a <script> block is a
+   literal "</script>" in the data, and escaping "<" closes that off without touching how
+   any parser reads the JSON. */
+const ld = schema?.length
+  ? JSON.stringify(graph(schema)).replace(/</g, '\\u003c')
+  : null;
 ---
 
 <!doctype html>
@@ -60,6 +75,10 @@ const ogImage = new URL(image, Astro.site);
       : <link rel="canonical" href={canonical} />}
     <link rel="icon" href="/favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
+    {/* robots.txt names it too. This is the second way a crawler finds it, and the one
+        that works when robots.txt is served by somebody else, which on Cloudflare it
+        partly is. */}
+    <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
     <meta name="generator" content={Astro.generator} />
 
     {/* Open Graph. Facebook, LinkedIn, WhatsApp, Slack and iMessage all read these.
@@ -90,6 +109,11 @@ const ogImage = new URL(image, Astro.site);
     <!-- Preloaded because every label above the fold is set in it, so discovering it late
          would mean a visible reflow. Only the 400 weight, 700 is rare enough to wait. -->
     <link rel="preload" href="/fonts/space-mono-400.woff2" as="font" type="font/woff2" crossorigin />
+
+    {/* Structured data. In the server-rendered HTML on purpose: a crawler that does not
+        run scripts still has to be able to read it, and this site has no runtime that
+        could inject it anyway. */}
+    {ld && <script type="application/ld+json" set:html={ld} />}
   </head>
   <body>
     <slot />

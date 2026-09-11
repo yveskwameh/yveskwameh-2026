@@ -3,9 +3,11 @@
  * One static page per case study. Also reachable inside the desktop as a window,
  * but having a real URL keeps it shareable and indexable.
  */
+import { existsSync } from 'node:fs';
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Window from '../../components/windows/Window.astro';
+import { caseStudy, breadcrumbs } from '../../data/schema';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
@@ -13,13 +15,32 @@ export async function getStaticPaths() {
 }
 const { p } = Astro.props;
 const { Content } = await render(p);
+
+/* Its own share card if tools/draw-og.py has drawn one, the generic card otherwise. The
+   check is a filesystem read at build time, which is the same trick MenuBar.astro uses for
+   the avatar: it means adding a case study and forgetting to run the script degrades to
+   the default card instead of a 404 in somebody's LinkedIn preview. */
+const cardPath = `/og/work/${p.id}.png`;
+const card = existsSync(`public${cardPath}`) ? cardPath : undefined;
+
+const schema = [
+  caseStudy(Astro.site!, p, card),
+  breadcrumbs(Astro.site!, [['Home', '/'], [p.data.title, `/work/${p.id}/`]]),
+];
 ---
 
-<Base title={`${p.data.title} · Yves Kwameh`} description={p.data.summary} type="article">
+<Base
+  title={`${p.data.title} · Yves Kwameh`}
+  description={p.data.summary}
+  type="article"
+  image={card}
+  imageAlt={card ? `${p.data.title}, a case study by Yves Kwameh.` : undefined}
+  schema={schema}
+>
   {/* closeHref rather than the usual close button: this page has no window manager, so
       the light goes back to the desktop instead of doing nothing. The hash opens the Work
       window on this same case study. */}
-  <Window id={p.id} title={p.data.title} filename={p.data.filename} open width={760}
+  <Window id={p.id} title={p.data.title} filename={p.data.filename} open main width={760}
           closeHref={`/#work-${p.id}`}>
     <p><strong>{p.data.client}</strong> · {p.data.year} · {p.data.role}</p>
     <Content />

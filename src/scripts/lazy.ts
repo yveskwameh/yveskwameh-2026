@@ -85,7 +85,13 @@ export function initWarm() {
      The two guards it used to carry, the ones that cancel native image dragging and the
      Save image as menu, now live in window-manager.ts: a cancelled default cannot wait. */
   const dragOnce = { once: true, passive: true } as const;
+  /* Two listeners, one guard: `once` only retires the listener that fired, and a mouse
+     moves before it presses, so without the guard both would run and every dock drag
+     would lift two ghosts. */
+  let pulled = false;
   const pullDrag = () => {
+    if (pulled) return;
+    pulled = true;
     import('./drag').then((m) => m.init('.icon, .window__titlebar'));
     import('./dock-drag').then((m) => m.init());
   };
@@ -106,4 +112,18 @@ export function initWarm() {
     addEventListener('pointermove', () => { import('./dock').then((m) => m.init()); },
       { once: true, passive: true });
   }
+
+  /* Sound, only for someone who asked for it. The flag is written by the gate and by the
+     menu bar speaker, both of which live in snd.ts.
+
+     Two triggers cover every route in. `pointerdown` is the returning visitor whose answer
+     is already stored, and it lands the player before their first click can need it. `snd`
+     is every change of mind: snd.ts fires it whenever the setting is written, which covers
+     both the gate on a first visit and the menu bar speaker later, so neither needs a
+     listener of its own here. */
+  const pullSfx = () => {
+    if (localStorage.snd === 'on') import('./sfx').then((m) => m.init());
+  };
+  addEventListener('pointerdown', pullSfx, { passive: true });
+  document.addEventListener('snd', pullSfx);
 }

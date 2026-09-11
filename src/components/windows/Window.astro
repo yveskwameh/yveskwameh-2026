@@ -16,8 +16,17 @@ interface Props {
    * button would be a control that visibly does nothing.
    */
   closeHref?: string;
+  /**
+   * Render the title as the page's h1 instead of an h2.
+   *
+   * On the desktop many windows are open at once, so each one is a section and h2 is
+   * right. On a standalone case-study page the single window IS the page, and a page
+   * whose subject has no h1 is missing the strongest heading signal there is, as well as
+   * the landmark a screen reader user navigates by.
+   */
+  main?: boolean;
 }
-const { id, title, filename, width = 560, height, open = false, variant, closeHref } = Astro.props;
+const { id, title, filename, width = 560, height, open = false, variant, closeHref, main = false } = Astro.props;
 ---
 <section
   class:list={['window', variant && `window--${variant}`, { 'is-open': open, 'is-focused': open }]}
@@ -40,7 +49,12 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
       <button class="light light--min" aria-label="Minimise (unavailable)" disabled></button>
       <button class="light light--zoom" aria-label="Zoom (unavailable)" disabled></button>
     </div>
-    <h2 class="window__title" id={`win-${id}-title`}>{title}</h2>
+    {/* Both tags written out rather than one dynamic tag name, so Astro can see them and
+        scope .window__title to them. A computed tag is not always visible to the scoper,
+        and a heading that quietly loses its styling is a hard thing to notice. */}
+    {main
+      ? <h1 class="window__title" id={`win-${id}-title`}>{title}</h1>
+      : <h2 class="window__title" id={`win-${id}-title`}>{title}</h2>}
   </div>
   <div class="window__body"><slot /></div>
   {/* Eight grips, one per edge and corner. data-resize holds the DIRECTION now, not the
@@ -53,12 +67,11 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
 
 <style>
   .window {
-    position: absolute; top: 10%; left: 18%; width: min(var(--w), calc(100vw - 32px)); height: var(--h, auto);
-    /* A window with no explicit height grows with its content, and a long one used to run
-       straight off the bottom of the screen and behind the dock. 80% of the desktop,
-       against a top of 10%, leaves the same 10% clear underneath. The body already
-       scrolls, so capping the window is all it takes. */
-    max-height: 80%;
+    position: absolute; top: var(--window-top); left: 18%; width: min(var(--w), calc(100vw - 32px)); height: var(--h, auto);
+    /* A window may ask for more height than the desktop has. The game asks for a lot on
+       purpose, so it opens tall enough to read the conversation in, and this is what
+       keeps that from running off the bottom on a short screen. Sits above the dock. */
+    max-height: calc(100% - var(--window-top) - var(--window-bottom));
     min-width: 280px; min-height: 160px; display: none; flex-direction: column; overflow: hidden;
     /* Deliberately no background. The title bar is glass, and glass needs something
        behind it, so the surface colour moved down onto .window__body. Same split macOS
@@ -74,7 +87,7 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
        glass round, but a see-through title bar over the wallpaper is the one part of it
        worth keeping. */
     background: var(--os-titlebar);
-    backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
     border-bottom: 1px solid rgba(0,0,0,.12);
     cursor: var(--cur-grab); touch-action: none; user-select: none;
   }
@@ -139,7 +152,7 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
      ------------------------------------------------------------------ */
   @media (min-width: 641px) {
     .window.window--compose {
-      max-height: calc(100dvh - var(--menubar-h) - var(--dock-clear) - var(--space-3));
+      max-height: calc(100% - var(--window-top) - var(--window-bottom));
     }
     /* An animation rather than a transition, because display: none to flex restarts an
        animation and cancels a transition outright. --t-base is already zeroed under
@@ -155,7 +168,12 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
   @keyframes compose-in { from { opacity: 0; transform: translateY(8px) scale(.98); } }
 
   @media (max-width: 640px) {
-    .window { top: auto !important; bottom: 0; left: 0 !important; width: 100vw !important; height: auto !important; max-height: 85dvh; border-radius: var(--r-window) var(--r-window) 0 0; }
+    .window {
+      top: auto !important; bottom: var(--window-bottom); left: 0 !important;
+      width: 100vw !important; height: auto !important;
+      max-height: calc(100dvh - var(--menubar-h) - var(--window-top) - var(--window-bottom));
+      border-radius: var(--r-window);
+    }
     .window__grip { display: none; }
   }
 </style>

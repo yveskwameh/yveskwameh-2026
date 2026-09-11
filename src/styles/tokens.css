@@ -17,6 +17,13 @@
   --os-ink: #16161a;
   --os-muted: #6b6b70;
   --os-line: rgba(22, 22, 26, 0.35);             /* 1px outline on windows */
+  /* Scrollbars. The thumb is a piece of window chrome, so it borrows --os-chrome and
+     --os-line rather than owning colours of its own. Only the groove and the pressed
+     state need naming. The groove is a wash, not a solid, because the things that scroll
+     sit on both --os-surface and --os-recess and a wash reads as a groove on either. */
+  --os-track: rgba(22, 22, 26, 0.06);
+  --os-track-line: rgba(22, 22, 26, 0.18);
+  --os-thumb-hover: #dcdcd8;
   /* Primary actions and every CTA. Yves's brand teal, carried over from the previous
      site. White on it scores 5.89 and it scores 5.3 as a link on the window surface,
      so it clears WCAG AA both ways. */
@@ -40,10 +47,17 @@
      their own dark wash and carry white type. The chrome fills sit with the other surface
      colours above, because each one is a different mix over a different thing.
      ---------------------------------------------------------------- */
-  --glass: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.08));
-  --glass-hover: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.16));
-  --glass-press: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
-  --glass-blur: blur(22px) saturate(180%) brightness(1.06);
+  --glass: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.12));
+  --glass-hover: linear-gradient(180deg, rgba(255,255,255,.40), rgba(255,255,255,.20));
+  --glass-press: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.06));
+  /* Strong enough that the clock behind the unlock button reads as light and not as
+     digits. Below about 24px the numerals stay legible through it, which is what made
+     the button look like a hole in the screen rather than a piece of glass on it. */
+  --unlock-fill: rgba(20, 34, 48, .72);
+  --work-side: 30%;
+  --work-inset: 10px;
+  --panel-radius: 20px;
+  --glass-blur: blur(28px) saturate(180%) brightness(1.06);
   --glass-line: 1px solid rgba(255,255,255,.28);
   --glass-sheen:
     inset 0 1px 0 rgba(255,255,255,.5),
@@ -75,6 +89,11 @@
      sits 24px up and stands 1.38x its icon size, which is capped at 48px on anything
      wider than a phone. Retune alongside the ratios in Dock.astro if those ever change. */
   --dock-clear: calc(24px + 48px * 1.38 + var(--space-2));
+  /* Desktop windows reserve the fully magnified dock, its 24px outer margin, and a
+     16px breathing gap. Mobile overrides this with the resting dock because touch has
+     no magnification. */
+  --window-top: 40px;
+  --window-bottom: 144px;
   --space-1: 4px; --space-2: 8px; --space-3: 16px; --space-4: 24px; --space-5: 40px;
 
   /* ----------------------------------------------------------------
@@ -111,6 +130,20 @@
   --t-slow: 620ms;   /* entrances. Zeroed below like the others, so delays collapse too */
 }
 
+@media (max-width: 640px) {
+  :root { --window-top: 24px; --window-bottom: calc(var(--dock-clear) + 16px); }
+}
+/* A phone in landscape, or a very short desktop window. The dock reserve is the tight
+   version here or there is no room left to work in. */
+@media (max-height: 480px) {
+  :root { --window-top: 16px; --window-bottom: calc(var(--dock-clear) + 16px); }
+}
+/* Registered so a calc() value computes down to plain pixels. window-manager.ts and
+   drag.ts read these two, which is what keeps opening, dragging and resizing on one
+   set of numbers with the CSS. */
+@property --window-top { syntax: '<length>'; inherits: true; initial-value: 40px; }
+@property --window-bottom { syntax: '<length>'; inherits: true; initial-value: 144px; }
+
 @media (prefers-reduced-motion: reduce) {
   :root { --t-fast: 0ms; --t-base: 0ms; --t-slow: 0ms; }
 }
@@ -119,12 +152,26 @@
    whole job on its own. Firefox had this behind a flag for years and some Android
    browsers still drop it, and on those the old values left the wallpaper showing through
    the menu bar. Going nearly opaque is not as pretty, but it is legible, which matters
-   more. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+   more.
+
+   The test names the standard property ONLY, on purpose, and that is load bearing. The
+   CSS minifier collapses `-webkit-backdrop-filter` and `backdrop-filter` into whichever
+   one is written last, so the build ships the standard property alone. Asking about the
+   prefixed one too would let Safari 17 answer "supported", skip this fallback, and then
+   get no blur either way, because the declaration it can read is not in the file. Asking
+   only what we actually ship keeps the answer true. */
+@supports not (backdrop-filter: blur(1px)) {
   :root {
     --os-bar:      rgba(236, 236, 234, .97);
     --os-dock:     rgba(240, 240, 238, .95);
     --os-menu:     rgba(246, 246, 244, .99);
     --os-titlebar: rgba(236, 236, 234, .97);
+    /* The lock screen and the sound gate sit on a photograph rather than on the desktop
+       colour, so their fill has to be darker to stay legible, not lighter. Without these
+       the gate is a sheet of clear glass over Yves's face, which is the whole complaint
+       this fallback exists to answer. */
+    --glass:       linear-gradient(180deg, rgba(28, 38, 56, .82), rgba(20, 28, 44, .78));
+    --glass-hover: linear-gradient(180deg, rgba(40, 52, 72, .88), rgba(30, 40, 58, .84));
+    --glass-press: linear-gradient(180deg, rgba(20, 28, 44, .90), rgba(14, 20, 34, .86));
   }
 }

@@ -20,18 +20,21 @@ import { desktopItems } from '../../data/desktop';
   {/* Explicitly sized, unlike the other windows. The browser inside it is a two column
       layout whose panes fill their side and scroll themselves, and `height: 100%` against
       a window that sizes to its content collapses to the height of the sidebar. */}
-  <Window id="projects" title="Work" filename="work.folder" width={720} height={530}><ProjectsApp /></Window>
+  <Window id="projects" title="Work" filename="work.folder" width={860} height={600}><ProjectsApp /></Window>
   <Window id="music" title="Music" filename="playlist.spotify" width={420}><MusicApp /></Window>
-  <Window id="game" title="Tic Tac Toe" filename="tictactoe.app" width={300}><GameApp /></Window>
+  {/* No height prop: GameApp.astro opens this one at the full height the desktop allows,
+      so the thread has the most room it can get. Wider than the 400 column it holds on
+      purpose: the margins either side are the layout. */}
+  <Window id="game" title="Tic Tac Toe" filename="tictactoe.app" width={860}><GameApp /></Window>
   <Window id="colophon" title="About this site" filename="readme.txt" width={520}><ColophonApp /></Window>
   {/* Anchored bottom right and slides up, like Gmail compose. See the compose variant in
       Window.astro. Sized to the shorter, wider shape a compose panel wants. */}
   <Window id="contact" title="Send Yves a message" filename="new-message.eml" width={460} height={430} variant="compose"><MailApp /></Window>
   <!-- Add: services, testimonials, trash -->
 
-  {/* Pushes the desktop back behind whatever is open. Deliberately pointer-events: none,
-      so it dims and blurs without becoming a modal: the icons underneath stay clickable
-      and every window stays draggable. */}
+  {/* Pushes the desktop back behind whatever is open. Still pointer-events: none, even
+      though window-manager.ts now dismisses on a click outside: swallowing the click here
+      instead would cost the icons their double click to open, and windows their drag. */}
   <div class="scrim" aria-hidden="true"></div>
 </main>
 
@@ -88,7 +91,7 @@ import { desktopItems } from '../../data/desktop';
   .scrim {
     position: absolute; inset: 0; z-index: 5; pointer-events: none;
     background: rgba(10, 14, 20, .22);
-    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
     opacity: 0; transition: opacity var(--t-base) var(--ease);
   }
   /* window-manager.ts puts has-window on the body whenever anything is open. */
@@ -97,7 +100,7 @@ import { desktopItems } from '../../data/desktop';
   .ctx {
     position: fixed; z-index: 950; min-width: 190px; padding: 6px;
     background: var(--os-menu);
-    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
     border: 1px solid rgba(0,0,0,.12); border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
   }
   .ctx[hidden] { display: none; }
@@ -123,8 +126,17 @@ import { desktopItems } from '../../data/desktop';
     /* translate3d keeps each cursor on its own layer, so a room full of them moves without
        relaying out the page. */
     will-change: transform;
+    /* Parked off screen until a script gives them a real position. Everything in this
+       layer is `fixed` at 0,0 by default, which is directly under the menu bar, so
+       without this any of them flashes there for a frame on the way to being placed.
+       The global `[hidden]` rule in global.css handles the hidden case; this handles
+       the shown-but-not-yet-positioned one. */
+    transform: translate3d(-200px, -200px, 0);
   }
   .me { z-index: 851; }
+  /* Repeated locally although global.css now covers every `hidden`, because the two rules
+     above set `display: flex` and a reader of this file needs to see why that is safe. */
+  .me[hidden], .chip--edit[hidden] { display: none; }
   /* Drawn rather than the cursor PNG, because each visitor needs their own colour and a
      bitmap cannot be tinted. */
   .peer__arrow {
@@ -139,22 +151,29 @@ import { desktopItems } from '../../data/desktop';
     font: 10px var(--font-chrome); letter-spacing: .02em; white-space: nowrap;
     box-shadow: 0 2px 6px rgba(0,0,0,.25);
   }
-  /* The chips are the one part that answers the pointer. */
-  .peer__chip, #me-chip { pointer-events: auto; cursor: var(--cur-hand); }
+  /* Only your own chip answers the pointer, and only so you can click it to rename
+     yourself. Everybody else's cursor is completely inert, which is stronger than it used
+     to be: their chip used to be hoverable, which meant a stranger parking on a button
+     could stop you pressing it. Hovering somebody to react to them no longer needs hit
+     testing at all. presence.ts knows where every cursor is, because it put them there,
+     so it compares your pointer against those positions instead. That also fixes the bug
+     this all started with: your own chip rides under your pointer, so whenever you point
+     at somebody it lands on top of them and swallowed the hover. */
+  #me-chip { pointer-events: auto; cursor: var(--cur-hand); }
   #me-chip { opacity: .75; }
   #me-chip:hover { opacity: 1; }
   .chip--edit {
-    position: fixed; z-index: 860; width: 130px; border: 0; text-align: center;
+    position: fixed; z-index: 860; left: -999px; width: 130px; border: 0; text-align: center;
     background: var(--os-accent); color: #fff; font: 10px var(--font-chrome);
     padding: 4px 9px; border-radius: var(--r-pill);
   }
   .chip--edit:focus { outline: 2px solid #fff; outline-offset: 1px; }
 
   .react {
-    position: fixed; z-index: 860; display: flex; gap: 2px; padding: 4px;
+    position: fixed; z-index: 860; left: -999px; display: flex; gap: 2px; padding: 4px;
     background: var(--os-menu); border: 1px solid rgba(0,0,0,.12);
     border-radius: var(--r-pill); box-shadow: var(--os-shadow-sm);
-    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
   }
   .react[hidden] { display: none; }
   .react button {
@@ -164,16 +183,11 @@ import { desktopItems } from '../../data/desktop';
   }
   .react button:hover { background: rgba(22,22,26,.08); transform: scale(1.25); }
 
-  /* A reaction, on its way up and out. Removed by the script when the animation ends. */
-  .pop {
-    position: fixed; z-index: 861; pointer-events: none; font-size: 22px;
-    animation: pop-up 1.1s var(--ease) forwards;
-  }
-  @keyframes pop-up {
-    from { opacity: 1; transform: translate(-50%, 0) scale(.6); }
-    35%  { opacity: 1; transform: translate(-50%, -26px) scale(1.15); }
-    to   { opacity: 0; transform: translate(-50%, -64px) scale(1); }
-  }
+  /* The reaction emoji are styled in global.css, not here. They are created by
+     presence.ts rather than written in this file's markup, and Astro scopes these styles
+     to the elements it can see, so a rule for them here matches nothing. That is not a
+     guess: the old .pop rule lived here and never applied, which is why a reaction was a
+     bare inline emoji stuck in the top corner instead of anything rising. */
 
   @media (prefers-reduced-motion: reduce) {
     .peer, .me { will-change: auto; }

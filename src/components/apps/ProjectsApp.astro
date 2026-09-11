@@ -26,6 +26,7 @@ const panes = await Promise.all(
 <fieldset class="settings">
   <legend class="sr-only">Case studies</legend>
 
+
   {projects.length === 0 && (
     /* Keeps the chrome rather than replacing it, so the window still reads as the two
        column thing it is. A real radio like any other, just disabled, so the DOM shape
@@ -92,25 +93,26 @@ const panes = await Promise.all(
 
   /* The browser fills the whole window and its panes do their own scrolling, so the
      window body's padding has to go. Matched by what is inside rather than by window id. */
-  :global(.window__body:has(> .settings)) { padding: 0; overflow: hidden; }
+  :global(#win-projects .window__body) { padding: 0; overflow: hidden; }
 
   .settings {
-    --side: 208px;
+    --side: var(--work-side);
     position: relative;
     display: grid; grid-template-columns: var(--side) minmax(0, 1fr); align-content: start;
-    height: 100%; min-width: 0; margin: 0; padding: 0; border: 0;
-    background: linear-gradient(to right, var(--os-chrome) 0 var(--side), var(--os-recess) var(--side));
+    height: 100%; min-width: 0; margin: 0; padding: var(--space-3) 0; border: 0; isolation: isolate;
+    background: var(--os-recess);
   }
 
   /* Out of flow so it takes no grid slot, but still focusable and still a real radio, so
      the browser's own arrow-key navigation through the group keeps working.
      display: none would take that away. */
+  .settings::before { content: ''; position: absolute; z-index: -1; inset: var(--work-inset) auto var(--work-inset) var(--work-inset); width: calc(var(--side) - var(--work-inset)); background: var(--os-chrome); border: 1px solid var(--os-line); border-radius: var(--panel-radius); }
   .settings__radio { position: absolute; width: 1px; height: 1px; opacity: 0; }
 
   .settings__row {
     grid-column: 1;
     display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 10px;
-    margin: 1px var(--space-2); padding: 6px var(--space-2);
+    margin: 2px calc(var(--work-inset) + var(--space-2)); padding: 9px var(--space-2);
     border-radius: var(--r-inner); cursor: var(--cur-hand);
     font: 12px var(--font-chrome); color: var(--os-ink);
   }
@@ -139,12 +141,12 @@ const panes = await Promise.all(
      whole of System Settings is built from. */
   .pane__hero {
     display: grid; justify-items: center; gap: 6px; text-align: center;
-    padding: var(--space-4) var(--space-3);
+    padding: var(--space-5) var(--space-4);
     background: var(--os-card); border-radius: var(--r-window);
   }
   .pane__hero-icon { width: 72px; height: 72px; border-radius: 18px; margin-bottom: 4px; }
   .pane__hero-icon--blank { display: block; background: rgba(22,22,26,.12); }
-  .pane__title { margin: 0; font: 700 17px var(--font-chrome); }
+  .pane__title { margin: 0; font: 700 23px var(--font-chrome); }
   .pane__blurb { margin: 0; max-width: 44ch; color: var(--os-muted); font-size: 12px; line-height: 1.55; }
 
   .pane__facts {
@@ -216,7 +218,9 @@ const panes = await Promise.all(
        unusable at 320px. So the pane drops in under its own row rather than beside it,
        which is what a phone settings list does. A hidden pane leaves the flow entirely,
        so the open one always lands directly beneath the row that opened it. */
-    .settings { grid-template-columns: minmax(0, 1fr); background: var(--os-recess); }
+    .settings { grid-template-columns: minmax(0, 1fr); background: var(--os-recess); height: auto; padding: 0; }
+    .settings::before { display: none; }
+    :global(#win-projects .window__body) { overflow: auto; padding-bottom: var(--dock-clear); }
     .settings__row { margin: 0; border-radius: 0; border-bottom: 1px solid rgba(22,22,26,.08); background: var(--os-chrome); }
     .settings__pane { position: static; grid-column: 1; padding: var(--space-3); overflow: visible; }
   }

@@ -1,30 +1,312 @@
 ---
-/** Tic tac toe. You are X, the computer is O. Board and status are real HTML; the
-    script only flips text and classes, so there is nothing to fetch or render. */
+/**
+ * Tic tac toe against Yves, played inside the conversation.
+ *
+ * The board is not a fixture beside the chat. Every turn posts a fresh board into the
+ * thread and the one before it shrinks and greys out, so the match reads back like a
+ * transcript. That is the whole reason for this layout: Yves cheats, and the scrollback
+ * is where the cheating becomes visible. The board that carried your line sits directly
+ * above the ruling that took it away.
+ *
+ * One column, capped at 520 and centred. The window is wider than that on purpose, so the
+ * margins either side are the layout rather than a crop.
+ *
+ * Per rule 3 nothing is fetched at runtime: the board below is a <template> in the built
+ * HTML, marks and all, and scripts/game.ts clones it. Same reason every cell ships both
+ * Pixelarticons and shows one with a data attribute.
+ */
+import Icon from '../os/Icon.astro';
+import { site } from '../../data/site';
+import { SAY } from '../../data/game';
 ---
 <div class="ttt">
-  <p class="ttt__status" id="ttt-status" role="status">Your move. You are X.</p>
-  <div class="ttt__board" id="ttt-board">
-    {Array.from({ length: 9 }, (_, i) => (
-      <button class="ttt__cell" type="button" data-cell={i} aria-label={`Square ${i + 1}`}></button>
-    ))}
+  {/* Who you are playing, and what it has cost you so far. */}
+  <header class="ttt__head">
+    <div class="ttt__col">
+      <span class="ttt__face"><img src={site.avatar} width="34" height="34" alt="" /></span>
+      <span class="ttt__who">
+        <b>Yves</b>
+        <span class="ttt__meta">Match <b id="ttt-match">#001</b>, <b id="ttt-viol">0</b> violations</span>
+      </span>
+      <span class="ttt__tally">
+        <span><b id="ttt-yves">0</b><i>Yves</i></span>
+        <span><b id="ttt-you">0</b><i>You</i></span>
+      </span>
+    </div>
+  </header>
+
+  {/* The match. game.ts writes messages and boards into .ttt__col below, newest last. */}
+  <div class="ttt__feed" id="ttt-feed" aria-live="polite" aria-label="Your match with Yves">
+    <div class="ttt__col" id="ttt-thread">
+      <div class="msg msg--in msg--typing" id="ttt-typing" aria-hidden="true" hidden>
+        <span class="msg__face"><img src={site.avatar} width="24" height="24" alt="" /></span>
+        <span class="msg__col"><span class="msg__bubble"><i></i><i></i><i></i></span></span>
+      </div>
+    </div>
   </div>
-  <button class="btn" type="button" data-ttt-reset>New game</button>
+
+  <footer class="ttt__foot">
+    <div class="ttt__col">
+      <p class="ttt__status" id="ttt-status" role="status">{SAY.status.you}</p>
+      <div class="ttt__actions" id="ttt-actions" hidden>
+        <button class="btn" type="button" data-ttt="reset">
+          <Icon name="reload" size={13} /> Play again
+        </button>
+        {/* Two labels, one rule: the button says what became of the appeal instead of just
+            going grey, and swapping them in CSS keeps the state out of the script. */}
+        <button class="btn btn--secondary" type="button" data-ttt="appeal">
+          <span class="ttt__ask">Appeal the result</span>
+          <span class="ttt__denied">Appeal denied</span>
+        </button>
+      </div>
+    </div>
+  </footer>
 </div>
 
+{/* One board, built once, cloned per turn. A <template> is inert, so this costs nothing
+    until a match starts, and it keeps the marks as build-time SVG rather than something
+    the script has to construct nine at a time. */}
+<template id="ttt-board-tpl">
+  <div class="ttt__post">
+    <span class="msg__face"><img src={site.avatar} width="24" height="24" alt="" /></span>
+    <div class="ttt__card">
+      <span class="ttt__turn"></span>
+      <div class="ttt__board" role="grid" aria-label="Tic tac toe board">
+        {Array.from({ length: 9 }, (_, i) => (
+          <button class="ttt__cell" type="button" data-cell={i} aria-label={`Square ${i + 1}, empty`}>
+            <span class="ttt__x"><Icon name="close" size={64} /></span>
+            <span class="ttt__o"><Icon name="circle" size={64} /></span>
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+</template>
+
 <style>
-  .ttt { display: grid; justify-items: center; gap: var(--space-3); }
-  .ttt__status { margin: 0; font: 12px var(--font-chrome); color: var(--os-muted); min-height: 1.2em; }
-  .ttt__board {
-    display: grid; grid-template-columns: repeat(3, 62px); gap: 4px;
-    background: var(--os-line); padding: 4px; border-radius: var(--r-inner);
+  /* The window body has its own padding, which this layout escapes so the header and the
+     footer reach the edges. Same trick ProjectsApp uses. No container query any more:
+     one column needs no measuring, which is most of why this layout is simpler than the
+     two it replaces. */
+  :global(#win-game .window__body) { padding: 0; overflow: hidden; }
+
+  .ttt {
+    display: flex; flex-direction: column; height: 100%; min-height: 0;
+    background: var(--os-surface); font: 12px var(--font-chrome);
   }
-  .ttt__cell {
-    all: unset; width: 62px; height: 62px; display: grid; place-items: center; cursor: var(--cur-hand);
-    background: var(--os-surface); border-radius: 3px;
-    font: 700 30px var(--font-chrome); color: var(--os-ink); line-height: 1;
+
+  /* Every band shares one capped column, and the cap is set to what the widest thing in
+     the thread actually needs, which is a board plus its card and Yves's avatar gutter.
+     Any wider and the column runs on past the content, which reads as a ragged right edge
+     rather than as margin. The margin is the space outside this, and it stays even. */
+  .ttt__col { width: 100%; max-width: 400px; margin-inline: auto; }
+
+  /* -------------------------------------------------------------- who and score */
+  .ttt__head {
+    flex: none; padding: var(--space-3); background: var(--os-card);
+    border-bottom: 1px solid var(--os-line);
   }
-  .ttt__cell:hover:empty { background: #fff; }
-  .ttt__cell[disabled] { cursor: var(--cur-arrow); }
-  .ttt__cell.is-win { background: var(--os-accent); color: #fff; }
+  .ttt__head .ttt__col { display: flex; align-items: center; gap: var(--space-2); }
+  .ttt__face img { display: block; width: 34px; height: 34px; border-radius: 50%; }
+  .ttt__who { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+  .ttt__who > b { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+  .ttt__meta { font-size: 9px; color: var(--os-muted); }
+  .ttt__meta b { color: var(--os-ink); font-variant-numeric: tabular-nums; }
+  .ttt__tally { display: flex; gap: var(--space-3); }
+  .ttt__tally > span { display: grid; gap: 2px; justify-items: center; }
+  .ttt__tally b { font-size: 18px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .ttt__tally i {
+    font-style: normal; font-size: 8px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--os-muted);
+  }
+  /* One colour means one person, here and on every board below. */
+  #ttt-yves { color: var(--os-muted); }
+  #ttt-you { color: var(--os-accent); }
+
+  /* ---------------------------------------------------------------- the match */
+  .ttt__feed {
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    padding: var(--space-3); background: var(--os-recess);
+  }
+  /* Bottom aligned, so a short match sits on the floor of the window rather than floating
+     at the top with the newest board a long way from the status line. */
+  .ttt__feed .ttt__col {
+    display: flex; flex-direction: column; justify-content: flex-end;
+    gap: var(--space-2); min-height: 100%;
+  }
+  /* Flex items shrink by default once the column overflows, and a board carries
+     aspect-ratio, so a squashed height was quietly taking pixels off its width too. The
+     thread scrolls; nothing in it should be compressed to avoid that. */
+  .ttt__feed .ttt__col > * { flex: none; }
+
+  /* ------------------------------------------------------------------- footer */
+  .ttt__foot {
+    flex: none; padding: var(--space-2) var(--space-3); background: var(--os-card);
+    border-top: 1px solid var(--os-line);
+  }
+  .ttt__foot .ttt__col {
+    display: flex; align-items: center; gap: var(--space-2); min-height: 38px;
+  }
+  .ttt__status {
+    margin: 0; flex: 1 1 auto; min-width: 0; font-size: 10px; color: var(--os-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ttt__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .ttt__actions[hidden] { display: none; }
+  .ttt__actions .btn { white-space: nowrap; }
+  .ttt__denied { display: none; }
+  .ttt__actions [disabled] .ttt__ask { display: none; }
+  .ttt__actions [disabled] .ttt__denied { display: inline; }
+  /* Nothing in the shared button styles says "spent", and an appeal that looks live after
+     it has been refused is the one thing this row must not do. */
+  .ttt__actions [disabled] { opacity: .45; cursor: var(--cur-arrow); }
+
+  /* On a desktop the window opens at the full height the desktop allows, which is the
+     same calc Window.astro already uses as every window's cap. Deliberately NOT important:
+     the resize grips write a pixel height inline, and an important rule here would
+     silently defeat them. The id already outranks .window, and --h is only a variable. */
+  @media (min-width: 641px) {
+    :global(#win-game) { height: calc(100% - var(--window-top) - var(--window-bottom)); }
+  }
+
+  /* On a phone the window is a bottom sheet with height: auto, and an auto height gives
+     the feed nothing to scroll inside. Pinning the sheet to the space it actually has
+     makes the thread scroll here exactly as it does on a desktop. */
+  @media (max-width: 640px) {
+    :global(#win-game) {
+      height: calc(100dvh - var(--menubar-h) - var(--window-top) - var(--window-bottom)) !important;
+    }
+    .ttt__head, .ttt__foot { padding: var(--space-2); }
+    .ttt__feed { padding: var(--space-2); }
+    .ttt__face img { width: 28px; height: 28px; }
+    .ttt__tally > b { font-size: 15px; }
+  }
+</style>
+
+{/* Boards and bubbles live in a global block on purpose. game.ts clones and inserts these
+    at runtime, and Astro scopes component styles to the elements it can see in the markup,
+    so a scoped rule would be a coin toss on cloned nodes. Every selector is namespaced
+    under #ttt-feed, which is unique to this window, so nothing escapes into the OS. */}
+<style is:global>
+  #ttt-feed .msg { display: flex; align-items: flex-start; gap: 7px; max-width: 100%; }
+  #ttt-feed .msg--in { justify-content: flex-start; }
+  #ttt-feed .msg--out { justify-content: flex-end; }
+  #ttt-feed .msg__col { display: grid; gap: 3px; min-width: 0; max-width: 78%; }
+  #ttt-feed .msg--out .msg__col { justify-items: end; }
+
+  /* Runs of messages from the same person sit close together, the way a burst of replies
+     does in a real thread, so you can see at a glance where one person stopped. */
+  #ttt-feed .msg--in + .msg--in:not([hidden]),
+  #ttt-feed .msg--out + .msg--out:not([hidden]) { margin-top: -4px; }
+
+  #ttt-feed .msg__face { flex: none; width: 24px; height: 24px; }
+  #ttt-feed .msg__face img { border-radius: 50%; display: block; }
+  #ttt-feed .msg--in + .msg--in .msg__face { visibility: hidden; }
+
+  #ttt-feed .msg__bubble {
+    display: block; width: fit-content; padding: 7px 11px; border-radius: 15px;
+    font-size: 11px; line-height: 1.45; overflow-wrap: anywhere;
+    animation: msg-in 220ms var(--ease);
+  }
+  #ttt-feed .msg--in .msg__bubble { border-top-left-radius: 5px; }
+  #ttt-feed .msg--in + .msg--in .msg__bubble { border-top-left-radius: 15px; }
+  #ttt-feed .msg--out:not(:has(+ .msg--out:not([hidden]))) .msg__bubble { border-bottom-right-radius: 5px; }
+
+  /* The visitor is green and on the right. Yves is grey and on the left. */
+  #ttt-feed .msg--in .msg__bubble { background: var(--os-card); border: 1px solid var(--os-line); color: var(--os-ink); }
+  #ttt-feed .msg--out .msg__bubble { background: var(--os-accent); color: #fff; }
+
+  #ttt-feed .msg__tag {
+    display: block; margin-bottom: 2px;
+    font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: currentColor; opacity: .72;
+  }
+
+  /* Three dots while he decides what to do to you. */
+  #ttt-feed .msg--typing .msg__bubble { display: flex; gap: 3px; padding: 9px 11px; }
+  #ttt-feed .msg--typing i {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--os-muted);
+    animation: msg-dot 1.2s var(--ease) infinite;
+  }
+  #ttt-feed .msg--typing i:nth-child(2) { animation-delay: .16s; }
+  #ttt-feed .msg--typing i:nth-child(3) { animation-delay: .32s; }
+
+  /* --------------------------------------------------------- a posted board */
+  #ttt-feed .ttt__post { display: flex; align-items: flex-start; gap: 7px; }
+  /* The board is not something Yves said, so it takes his indent without his face. */
+  #ttt-feed .ttt__post .msg__face { visibility: hidden; }
+  /* Hugs the board. Stretching it to the row left a third of every card empty, which is
+     the white space that had no business being there. */
+  /* The card carries the width and the board fills it. The other way round the two define
+     each other: a hugging card sizes itself from the board's contribution while the board
+     is clamped to the card's track, and the board lands short of the width it was given.
+     The max-width is a percentage of the post, which is the column, which is a real box,
+     so dragging the window narrow shrinks the board instead of overflowing it. */
+  #ttt-feed .ttt__card {
+    flex: 0 0 auto; width: 362px; max-width: calc(100% - 31px);
+    display: grid; gap: 7px; justify-items: stretch;
+    padding: 10px; border-radius: 15px; border-top-left-radius: 5px;
+    background: var(--os-card); border: 1px solid var(--os-line);
+    animation: msg-in 240ms var(--ease);
+  }
+  /* The live board is the one you can play. It is bigger, it is ringed, and it is the only
+     one at the bottom of the thread, so there is never a question which board is the game
+     and which are the record of it. */
+  #ttt-feed .is-live .ttt__card {
+    border: 1px solid var(--os-accent); box-shadow: 0 8px 20px -14px rgba(0,0,0,.55);
+  }
+  #ttt-feed .ttt__post.is-past { opacity: .55; }
+  #ttt-feed .ttt__turn {
+    font-size: 8.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--os-muted);
+  }
+  #ttt-feed .is-live .ttt__turn { color: var(--os-accent); }
+
+  #ttt-feed .ttt__board {
+    width: 100%; aspect-ratio: 1;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  }
+  /* Spent boards hug instead, so a small board never sits in a wide empty card. */
+  #ttt-feed .is-past .ttt__card { width: auto; justify-items: start; }
+  #ttt-feed .is-past .ttt__board { width: 108px; gap: 3px; }
+
+  #ttt-feed .ttt__cell {
+    all: unset; box-sizing: border-box; position: relative;
+    display: grid; place-items: center; aspect-ratio: 1;
+    background: var(--os-surface); border: 1px solid var(--os-line);
+    border-radius: var(--r-inner); cursor: var(--cur-hand);
+    transition: background var(--t-fast);
+  }
+  #ttt-feed .is-past .ttt__cell { border-radius: 2px; }
+  #ttt-feed .ttt__cell:disabled { cursor: var(--cur-arrow); }
+  #ttt-feed .ttt__cell:hover:not([data-mark]):not(:disabled) { background: var(--os-card); }
+
+  /* Both marks ship in every cell; data-mark decides which one shows, so playing a square
+     is one attribute and never a DOM build. */
+  #ttt-feed .ttt__x, #ttt-feed .ttt__o { display: none; width: 62%; height: 62%; place-items: center; }
+  #ttt-feed .ttt__x svg, #ttt-feed .ttt__o svg { width: 100%; height: 100%; }
+  #ttt-feed .ttt__cell[data-mark='X'] .ttt__x { display: grid; color: var(--os-accent); }
+  #ttt-feed .ttt__cell[data-mark='O'] .ttt__o { display: grid; color: var(--os-muted); }
+
+  /* The line he wins with. */
+  #ttt-feed .ttt__cell.is-win { background: var(--os-accent); border-color: var(--os-accent); }
+  #ttt-feed .ttt__cell.is-win .ttt__x, #ttt-feed .ttt__cell.is-win .ttt__o { color: #fff; }
+  /* The square he took off you. It shakes once as it changes hands, which is the only
+     admission you get. */
+  #ttt-feed .ttt__cell.is-cheat { animation: ttt-shake 320ms var(--ease); }
+
+  @keyframes msg-in { from { opacity: 0; transform: translateY(6px) scale(.96); } }
+  @keyframes msg-dot {
+    0%, 60%, 100% { opacity: .3; transform: translateY(0); }
+    30%           { opacity: 1;  transform: translateY(-3px); }
+  }
+  @keyframes ttt-shake {
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #ttt-feed .msg__bubble, #ttt-feed .ttt__card, #ttt-feed .ttt__cell.is-cheat { animation: none; }
+    #ttt-feed .msg--typing i { animation: none; opacity: .55; }
+  }
 </style>

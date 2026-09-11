@@ -92,7 +92,7 @@ export function init() {
 
   let raf = 0;
   dock.addEventListener('pointermove', (e) => {
-    if (e.pointerType === 'touch') return;
+    if (e.pointerType === 'touch' || dock.classList.contains('is-dragging')) return;
     const x = e.clientX;
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(() => draw(x));

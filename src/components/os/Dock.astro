@@ -57,7 +57,7 @@ import Icon from './Icon.astro';
     /* The most see-through surface in the OS, and meant to be. It carries artwork rather
        than text, so the wallpaper coming through it costs nothing in legibility. */
     background: var(--os-dock);
-    backdrop-filter: blur(20px) saturate(1.4); -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
     border: 1px solid rgba(255,255,255,.5);
     border-radius: calc(var(--dock-icon) * .375); box-shadow: var(--os-shadow-sm);
   }

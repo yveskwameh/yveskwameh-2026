@@ -7,8 +7,20 @@
  * browser defaults and a cancellation cannot wait for a fetch, so they moved to
  * window-manager.ts.
  */
+import { px } from './window-manager';
+
 export function init(selector: string) {
   if (window.matchMedia('(max-width: 640px)').matches) return;
+
+  // A window dragged to the right edge must not be stranded there when the viewport
+  // shrinks. Same bounds as the drag, so it lands exactly where a drag would have.
+  addEventListener('resize', () => {
+    document.querySelectorAll<HTMLElement>('.window.is-open').forEach((win) => {
+      const b = windowBounds(win);
+      win.style.left = `${clamp(win.offsetLeft, 0, b.right)}px`;
+      win.style.top = `${clamp(win.offsetTop, b.top, b.bottom)}px`;
+    });
+  });
 
   document.querySelectorAll<HTMLElement>(selector).forEach((handle) => {
     const target = handle.classList.contains('window__titlebar')
@@ -75,8 +87,9 @@ export function init(selector: string) {
       const parent = target.offsetParent as HTMLElement;
       // Clamp by the icon's own height, not a fixed 40, so it can roam the whole desktop
       // but never ends up half tucked under the dock.
-      target.style.left = `${clamp(ox + dx, 0, parent.clientWidth - target.offsetWidth)}px`;
-      target.style.top = `${clamp(oy + dy, 0, parent.clientHeight - target.offsetHeight)}px`;
+      const b = target.classList.contains('window') ? windowBounds(target) : null;
+      target.style.left = `${clamp(ox + dx, 0, b?.right ?? parent.clientWidth - target.offsetWidth)}px`;
+      target.style.top = `${clamp(oy + dy, b?.top ?? 0, b?.bottom ?? parent.clientHeight - target.offsetHeight)}px`;
     });
     handle.addEventListener('pointerup', (e) => end(e, true));
     /* Without this, a drag that ends off the edge of the window never runs `end`, so the
@@ -106,15 +119,19 @@ export function init(selector: string) {
     grip.addEventListener('pointermove', (e) => {
       if (!grip.hasPointerCapture(e.pointerId)) return;
       const dx = e.clientX - sx, dy = e.clientY - sy;
-      if (dir.includes('e')) win.style.width = `${Math.max(MIN_W, w + dx)}px`;
-      if (dir.includes('s')) win.style.height = `${Math.max(MIN_H, h + dy)}px`;
+      const b = windowBounds(win);
+      const maxW = b ? b.p.clientWidth - l : innerWidth;
+      const maxH = b ? b.bottom + win.offsetHeight - b.top : innerHeight;
+      if (dir.includes('e')) win.style.width = `${Math.min(maxW, Math.max(MIN_W, w + dx))}px`;
+      if (dir.includes('s')) win.style.height = `${Math.min(maxH, Math.max(MIN_H, h + dy))}px`;
       if (dir.includes('w')) {
-        const nw = Math.max(MIN_W, w - dx);
+        const nw = Math.min(l + w, Math.max(MIN_W, w - dx));
         win.style.width = `${nw}px`;
         win.style.left = `${l + w - nw}px`;
       }
       if (dir.includes('n')) {
-        const nh = Math.max(MIN_H, h - dy);
+        const minTop = b?.top ?? 0;
+        const nh = Math.min(t + h - minTop, Math.max(MIN_H, h - dy));
         win.style.height = `${nh}px`;
         win.style.top = `${t + h - nh}px`;
       }
@@ -128,5 +145,11 @@ export function init(selector: string) {
 }
 
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
+const windowBounds = (win: HTMLElement) => {
+  const p = win.offsetParent as HTMLElement;
+  const top = px(p, '--window-top');
+  return { p, top, right: Math.max(0, p.clientWidth - win.offsetWidth),
+    bottom: Math.max(top, p.clientHeight - px(p, '--window-bottom') - win.offsetHeight) };
+};
 /** Matches min-width / min-height in Window.astro. */
 const MIN_W = 280, MIN_H = 160;

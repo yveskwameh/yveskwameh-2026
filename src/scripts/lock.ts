@@ -10,6 +10,10 @@ const set = (id: string, v: string) => {
   if (el) el.textContent = v;
 };
 
+/** Ask for a sound. Whether anything is listening is scripts/sfx.ts's problem, not ours,
+ *  which is what keeps the player out of this file and off the page load. */
+const sfx = (name: string) => document.dispatchEvent(new CustomEvent('sfx', { detail: name }));
+
 function tick() {
   const now = new Date();
   set('lock-time', now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
@@ -17,8 +21,11 @@ function tick() {
 }
 
 export function unlock() {
-  $('lock')?.classList.add('is-open');
+  const el = $('lock');
+  if (!el || el.classList.contains('is-open')) return;
+  el.classList.add('is-open');
   sessionStorage.u = '1';
+  sfx('unlock');
 }
 
 export function lock() {
@@ -42,16 +49,14 @@ export function initLock() {
   // The button is taken out of hit testing by CSS while the game is on, so reaching this
   // at all means it has been won. See the pointer-events note in LockScreen.astro.
   el.addEventListener('click', (e) => {
-    arm();
     if ((e.target as HTMLElement).closest('[data-unlock]')) unlock();
   });
   // Always available, and the way past for anyone who does not want to play
   document.addEventListener('keydown', (e) => {
-    arm();
-    if (!el.classList.contains('is-open') && (e.key === 'Enter' || e.key === ' ')) unlock();
+    if ($('lock-gate') || el.classList.contains('is-open')) return;
+    if (e.key === 'Enter' || e.key === ' ') unlock();
   });
 
-  initSound();
   initRunaway(el);
 }
 
@@ -81,7 +86,6 @@ let ox = 0, oy = 0;
 let bx = 0, by = 0, bw = 0, bh = 0;   // untransformed layout box, measured once
 let last = 0, began = 0, said = '', n = 0;
 let won = false, armed = false, shouted = false, pins = 0;
-let snd: HTMLAudioElement | null = null;
 let mq: MediaQueryList;
 
 const say = (t: string) => cta && (cta.dataset.say = said = t);
@@ -90,6 +94,7 @@ const win = (line: string) => {
   cta!.classList.add('is-caught');
   say(line);
   set('lock-label', L[4]);
+  sfx('stuck');       // it gives up. Deliberately not the same blip as a dodge.
 };
 
 /** Back to a full round. Called on every re-lock. */
@@ -136,6 +141,7 @@ function flee(px: number, py: number, ts: number, forced = false) {
   ox = nx < x0 ? x0 : nx > x1 ? x1 : nx;
   oy = ny < y0 ? y0 : ny > y1 ? y1 : ny;
   cta.style.transform = `translate(${ox}px,${oy}px)`;
+  sfx('flee');        // one blip per dodge. The 40ms guard above already rate limits it.
 
   if (!began) { began = ts; say(L[0]); return; }
 
@@ -174,38 +180,7 @@ function shout(ts: number) {
   if (shouted || ts - began < 10_000) return;
   shouted = true;
   $('lock-shout')?.classList.add('is-on');
-  if (snd) { snd.currentTime = 0; snd.play().catch(() => {}); }
-}
-
-/**
- * The sound gate. It covers the screen because the answer has to be given before anything
- * else, and because the click that answers it is also the gesture browsers demand before
- * audio may ever play. Remembered in localStorage, so it is asked exactly once.
- */
-/**
- * Hand the clip its permission to play. Browsers grant that per page load, from a real
- * click, and they do not care what we stored last week. So a remembered yes has to be
- * re-armed by the first click of every visit, and play-then-pause inside that click is
- * what marks the element allowed for later.
- */
-function arm() {
-  if (snd || localStorage.snd !== 'on') return;
-  snd = $('lock-audio') as HTMLAudioElement | null;
-  snd?.play().then(() => snd?.pause(), () => {});
-}
-
-function initSound() {
-  const g = $('lock-gate');
-  if (!g) return;
-  if (localStorage.snd) return g.remove();
-  g.hidden = false;
-  g.addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-snd]');
-    if (!b) return;
-    localStorage.snd = b.dataset.snd;
-    arm();            // this very click is the gesture, so use it
-    g.remove();
-  });
+  sfx('menu');
 }
 
 function initRunaway(root: HTMLElement) {

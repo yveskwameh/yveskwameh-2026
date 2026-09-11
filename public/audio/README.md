@@ -8,7 +8,7 @@ What to drop here:
 Then list it in src/data/tracks.ts and it appears in the Music window. Nothing is
 fetched until the visitor presses play, because the <audio> element has preload="none".
 
-The lock screen taunt lives here too, as too-slow.mp3. **It is Yves, recorded by Yves.**
+The lock-screen hint uses the short Kenney menu cue from `sfx/menu.m4a`.
 Saying so here because the file carries no metadata that would tell you, and the next
 person to look at an untagged voice clip in a public repo would reasonably wonder.
 

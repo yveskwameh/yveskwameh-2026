@@ -20,8 +20,25 @@ STATIC = re.compile(r'\bfrom\s*["\']([^"\']+)["\']|\bimport\s*["\']([^"\']+)["\'
 DYNAMIC = re.compile(r'\bimport\s*\(\s*["\']([^"\']+)["\']')
 
 html = page.read_text()
-inline = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, re.S)
-entries = re.findall(r'<script[^>]*\bsrc="([^"]+)"', html)
+
+# Only scripts the browser actually executes. A <script> carrying a type that is not a
+# JavaScript MIME type is a data block: the JSON-LD in Base.astro is the one here, and
+# import maps and speculation rules are the same shape. They are bytes in the HTML, and
+# they gzip with it, but they are not the client JavaScript the budget is about, and
+# counting them made the structured data look like 1.7KB of code.
+JS_TYPES = {'', 'module', 'text/javascript', 'application/javascript', 'module/javascript'}
+
+
+def is_js(tag: str) -> bool:
+    m = re.search(r'\btype\s*=\s*["\']([^"\']*)["\']', tag)
+    return (m.group(1).strip().lower() if m else '') in JS_TYPES
+
+
+inline = [body for tag, body in
+          re.findall(r'<script((?![^>]*\bsrc=)[^>]*)>(.*?)</script>', html, re.S)
+          if is_js(tag)]
+entries = [src for tag, src in re.findall(r'<script([^>]*\bsrc="([^"]+)"[^>]*)>', html)
+           if is_js(tag)]
 
 eager, lazy, seen = {}, {}, set()
 
