@@ -1,0 +1,93 @@
+---
+/**
+ * Feedback, as quote cards. Direction C from the Figma board, closest to the way Oyster
+ * and Midday set out testimonials: the quote first, a hairline, then who said it.
+ *
+ * Quote first on purpose. A card that opens with a name and a job title asks the reader to
+ * care who this is before telling them why they should, and nobody reads the sixth name.
+ *
+ * The avatars are initials, not photographs. There are no photographs of these people and
+ * inventing one, or dropping in a stock face, would be a lie told in a section whose whole
+ * job is being believed. The initials chip is the same fallback the menu bar already uses.
+ *
+ * No script: two columns of build-time HTML that become one column on a phone.
+ */
+import { feedback, record } from '../../data/feedback';
+
+/** First letter of the first two words. "Matthew Haimm" gives MH. */
+const initials = (name: string) =>
+  name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+---
+<div class="fb">
+  <div class="fb__record">
+    {record.map(([figure, label]) => (
+      <div class="fb__stat">
+        <span class="fb__figure">{figure}</span>
+        <span class="fb__label">{label}</span>
+      </div>
+    ))}
+  </div>
+
+  <ul class="fb__grid">
+    {feedback.map((f) => (
+      <li class="fb__card">
+        {/* A blockquote because that is what it is, and the citation is the footer. */}
+        <blockquote class="fb__quote">{f.quote}</blockquote>
+        <footer class="fb__who">
+          <span class="fb__avatar" aria-hidden="true">{initials(f.name)}</span>
+          <span class="fb__names">
+            <span class="fb__name">{f.name}</span>
+            <span class="fb__role">{f.role}</span>
+          </span>
+        </footer>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<style>
+  .fb { display: grid; gap: var(--space-3); }
+
+  /* The two measured numbers, at the top, the way a reviews screen opens. Both come from
+     the Upwork profile and neither is rounded. */
+  .fb__record {
+    display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-5);
+    padding: var(--space-3) var(--space-4);
+    background: var(--os-card); border-radius: var(--r-window);
+  }
+  .fb__stat { display: grid; gap: 2px; }
+  .fb__figure { font: 700 24px var(--font-chrome); color: var(--os-ink); line-height: 1.1; }
+  .fb__label { font-size: 11px; color: var(--os-muted); }
+
+  .fb__grid {
+    margin: 0; padding: 0; list-style: none;
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+    /* Cards in a row end where their own content ends rather than stretching to match the
+       tallest one, which is what stops a short quote sitting in a half empty box. */
+    align-items: start;
+  }
+  .fb__card {
+    display: grid; gap: var(--space-3);
+    padding: var(--space-3);
+    background: var(--os-card); border-radius: var(--r-window);
+  }
+  .fb__quote { margin: 0; font-size: 12px; line-height: 1.6; color: var(--os-ink); }
+
+  .fb__who { display: flex; align-items: center; gap: 10px; padding-top: var(--space-3); border-top: 1px solid rgba(22,22,26,.09); }
+  .fb__avatar {
+    flex: none; display: grid; place-items: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--os-recess); color: var(--os-muted);
+    font: 700 10px var(--font-chrome); letter-spacing: .02em;
+  }
+  .fb__names { display: grid; min-width: 0; }
+  .fb__name { font: 700 11px var(--font-chrome); color: var(--os-ink); }
+  .fb__role { font-size: 10px; color: var(--os-muted); }
+
+  @media (max-width: 640px) {
+    /* Two columns of a 12px quote at 390 is four words a line. */
+    .fb__grid { grid-template-columns: minmax(0, 1fr); }
+    .fb__record { gap: var(--space-3) var(--space-4); }
+  }
+</style>

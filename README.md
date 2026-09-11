@@ -190,7 +190,7 @@ cache the card they first saw.
 - [ ] Draw the real Open Graph cards, replacing `public/og/default.png` and `public/og/work/*.png`
 - [ ] Draw the 7 desktop icons (docs/ICON-SPEC.md)
 - [ ] Decide whether the 5 bare stack marks get their own rounded tiles, like higgsfield already has
-- [ ] Remaining apps: Services, Feedback, Contact, Trash (MusicApp exists, add it to Desktop.astro)
+- [ ] Remaining apps: Trash, and Images in the dock (About Yves, Work, Services, Feedback, Music, Mail and Tic Tac Toe are built)
 - [ ] Theme switcher (desktop colour) in View menu
 - [ ] Mobile: icon grid + bottom-sheet windows (CSS is stubbed in Window.astro)
 - [ ] Hover-dim effect: when a window is focused, dim the rest (heyclicky style)

@@ -1,0 +1,99 @@
+---
+/**
+ * Services, as a disclosure list. Direction A from the Figma board, taken from the way a
+ * spa or a salon sets out treatments: every service is one line, and the one you open
+ * shows what you walk away with.
+ *
+ * Six closed rows fit one phone screen, which is the whole reason for this direction. The
+ * same content with every row open runs to 1081px on a desktop and about two and a half
+ * screens on a phone, and nobody scrolls that to find out whether you build in Webflow.
+ *
+ * The opening is CSS, not script, and it costs nothing on load. Each service is a radio,
+ * its row is the label, and its panel is the element right after, so
+ * `radio:checked + label + panel` picks exactly one. That adjacency is why nothing here is
+ * wrapped: the triples are direct children of the fieldset, and the fieldset is the card.
+ * A wrapper around each service would break the selector.
+ *
+ * One is always open, because a radio group cannot be emptied by clicking the checked one.
+ * That is the behaviour this pattern wants anyway: an accordion where everything can be
+ * shut is an accordion that can show a visitor nothing.
+ */
+import { services, howIWork } from '../../data/services';
+import Icon from '../os/Icon.astro';
+---
+<div class="svcs">
+  <p class="svcs__intro">What I do, and what you walk away with.</p>
+
+  <fieldset class="svc">
+    <legend class="sr-only">Services</legend>
+    {services.map((s, i) => (
+      <>
+        {/* Visually hidden rather than display:none, so it stays a real radio and the
+            arrow keys still move through the group. */}
+        <input class="svc__radio" type="radio" name="svc" id={`s-${s.id}`} checked={i === 0} />
+        <label class="svc__row" for={`s-${s.id}`}>
+          <span class="svc__name">{s.name}</span>
+          <Icon name="chevron-down" size={14} />
+        </label>
+        <div class="svc__panel">
+          <p class="svc__what">{s.what}</p>
+          <p class="svc__label">You get</p>
+          <ul class="svc__gets">
+            {s.gets.map((g) => <li>{g}</li>)}
+          </ul>
+        </div>
+      </>
+    ))}
+  </fieldset>
+
+  <p class="svcs__foot">{howIWork}</p>
+</div>
+
+<style>
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  .svcs { display: grid; gap: var(--space-3); font-size: 13px; line-height: 1.6; }
+  .svcs__intro { margin: 0; color: var(--os-ink); }
+  .svcs__foot { margin: 0; color: var(--os-muted); font-size: 11px; line-height: 1.55; }
+
+  /* The card. A fieldset because this is a radio group, and the browser's own grouping
+     element is the honest one to use. Its default border and padding go. */
+  .svc {
+    margin: 0; padding: 0; border: 0; overflow: hidden;
+    background: var(--os-card); border-radius: var(--r-window);
+  }
+  .svc__radio { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+  .svc__row {
+    display: flex; align-items: center; gap: var(--space-2);
+    padding: 11px var(--space-3); cursor: var(--cur-hand);
+    font: 700 12px var(--font-chrome); color: var(--os-ink);
+  }
+  .svc__name { flex: 1; min-width: 0; }
+  .svc__row :global(svg) { flex: none; color: var(--os-muted); transition: transform var(--t-fast) var(--ease); }
+
+  /* Every row after the first gets a line above it. Written as "a row that follows a
+     panel" so the first row never gets one, whichever row happens to be open. */
+  .svc__panel + .svc__radio + .svc__row { border-top: 1px solid rgba(22,22,26,.09); }
+  .svc__row:hover { background: rgba(22,22,26,.04); }
+  .svc__radio:focus-visible + .svc__row { box-shadow: inset 0 0 0 2px var(--os-accent); }
+
+  .svc__panel { display: none; padding: 0 var(--space-3) var(--space-3); }
+  .svc__radio:checked + .svc__row + .svc__panel { display: block; }
+  .svc__radio:checked + .svc__row :global(svg) { transform: rotate(180deg); }
+
+  .svc__what { margin: 0 0 var(--space-3); color: var(--os-muted); font-size: 12px; line-height: 1.55; }
+  .svc__label {
+    margin: 0 0 6px; font: 700 9px var(--font-chrome);
+    letter-spacing: .16em; text-transform: uppercase; color: var(--os-muted);
+  }
+  .svc__gets { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 12px; }
+  /* A dash rather than a bullet or a tick. A tick implies a checklist someone is working
+     through, and these are things that already come with the job. */
+  .svc__gets li { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 6px; color: var(--os-ink); }
+  .svc__gets li::before { content: '\2013'; color: var(--os-muted); }
+
+  @media (max-width: 640px) {
+    .svc__row { padding: 12px var(--space-3); }
+  }
+</style>

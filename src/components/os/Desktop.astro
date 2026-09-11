@@ -11,6 +11,8 @@ import MusicApp from '../apps/MusicApp.astro';
 import GameApp from '../apps/GameApp.astro';
 import ColophonApp from '../apps/ColophonApp.astro';
 import MailApp from '../apps/MailApp.astro';
+import ServicesApp from '../apps/ServicesApp.astro';
+import TestimonialsApp from '../apps/TestimonialsApp.astro';
 import { desktopItems } from '../../data/desktop';
 ---
 <main class="desktop" id="desktop">
@@ -30,7 +32,13 @@ import { desktopItems } from '../../data/desktop';
   {/* Anchored bottom right and slides up, like Gmail compose. See the compose variant in
       Window.astro. Sized to the shorter, wider shape a compose panel wants. */}
   <Window id="contact" title="Send Yves a message" filename="new-message.eml" width={460} height={430} variant="compose"><MailApp /></Window>
-  <!-- Add: services, testimonials, trash -->
+  {/* 640 because the disclosure list is one column of prose and six rows, and wider than
+      this just makes the lines harder to read. */}
+  <Window id="services" title="Services" filename="services.prefs" width={640}><ServicesApp /></Window>
+  {/* 760 to fit two quote cards across. One column below 640, handled in the app. The id
+      is testimonials rather than feedback because that is what data/desktop.ts opens. */}
+  <Window id="testimonials" title="Feedback" filename="feedback.txt" width={760}><TestimonialsApp /></Window>
+  <!-- Add: trash -->
 
   {/* Pushes the desktop back behind whatever is open. Still pointer-events: none, even
       though window-manager.ts now dismisses on a click outside: swallowing the click here
