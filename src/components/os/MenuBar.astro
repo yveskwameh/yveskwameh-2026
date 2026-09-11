@@ -245,8 +245,15 @@ const accents = [
             scripts/panel.ts builds it the first time this panel opens and not before,
             because rule 1 says nothing loads that the visitor did not ask for. After that
             it stays in the DOM, so it keeps its place in the playlist. */}
-        <div class="cc__tile cc__tile--tight cc__tile--spotify" id="cc-spotify">
-          <p class="sp__wait">Loading the playlist from Spotify&hellip;</p>
+        <div class="cc__tile cc__tile--tight cc__tile--spotify">
+          <div class="sp__frame" id="cc-spotify">
+            <p class="sp__wait">Loading the playlist from Spotify&hellip;</p>
+          </div>
+          {/* For anyone who wants more than a panel can give: the whole playlist, their
+              own account, and a volume this page cannot reach. */}
+          <a class="sp__link" href="https://open.spotify.com/playlist/6vjBKgpH5qrt7DW06uJYgL" target="_blank" rel="noopener noreferrer">
+            Open in Spotify <span aria-hidden="true">&rarr;</span>
+          </a>
         </div>
 
         <div class="cc__pair">
@@ -710,19 +717,24 @@ const accents = [
      fills its 152 properly, list on top and transport under it, where the raw embed drew
      a short player over its own empty background. Clipping to that shorter player, which
      is what used to be here, now cuts the transport off. */
-  .cc__tile--spotify:has(iframe) {
-    padding: 0; overflow: hidden;
-    /* No card fill. The player is the surface here, and --os-card is a near white: any
-       sliver of tile left uncovered by the iframe, at the rounded corners or on a
-       fractional pixel down each edge, read as a white stroke drawn around the card. */
-    background: none;
-  }
-  /* Wider than the tile by a pixel on each side, pulled back by the same, so there is no
-     edge left for anything to show through. The tile clips the overhang. */
-  #cc-spotify iframe {
+  /* No card fill on the tile. The player is the surface here, and --os-card is a near
+     white: any sliver of tile left uncovered by the player, at the rounded corners or on
+     a fractional pixel down each edge, read as a white stroke drawn around the card. */
+  .cc__tile--spotify { padding: 0; background: none; }
+  .sp__frame { border-radius: var(--r-inner); overflow: hidden; }
+  /* Wider than its frame by a pixel each side, pulled back by the same, so there is no
+     edge left for anything to show through. The frame clips the overhang. */
+  .sp__frame iframe {
     display: block; border: 0;
     width: calc(100% + 2px); margin: 0 -1px;
   }
+  .sp__link {
+    display: block; padding: 9px 2px 1px;
+    font: 10.5px var(--font-chrome); color: var(--os-muted); text-decoration: none;
+    transition: color var(--t-fast);
+  }
+  .sp__link:hover { color: var(--os-accent); }
+  .sp__link:focus-visible { outline: 2px solid var(--os-accent); outline-offset: 2px; border-radius: 3px; }
 
   @media (prefers-reduced-motion: reduce) {
     .tip::after, .tip::before, .np__art, .np__toggle, .th__mini { transition: none; }

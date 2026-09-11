@@ -33,6 +33,8 @@ let beforeMute = 60;
 let spotify: { pause(): void; resume(): void } | null = null;
 /** Whether Spotify is making noise right now, straight from its playback_update. */
 let spotifyOn = false;
+/** Set when the mute is what stopped Spotify, so unmuting can start it again. */
+let spotifyMuted = false;
 
 const stored = () => {
   const n = Number(localStorage.vol);
@@ -93,6 +95,15 @@ function applyVolume(fromUser: boolean) {
     if ((localStorage.snd === 'on') !== on) setSound(on);
     if (!on) stop();
     else if (current && current.paused) start(current);
+
+    /* Spotify gets the two ends of the slider and nothing in between. Its embed API has
+       no setVolume, so a page cannot turn a cross origin player down; only the full Web
+       Playback SDK can, and that wants a Premium account and a login from every visitor.
+       Zero is still worth acting on, because sound off while something is audible is
+       simply wrong, so mute pauses it and unmute starts it again, but only if the mute is
+       what stopped it. */
+    if (!on && spotifyOn) { spotifyMuted = true; spotify?.pause(); }
+    else if (on && spotifyMuted) { spotifyMuted = false; spotify?.resume(); }
   }
   paint();
 }
@@ -243,6 +254,7 @@ export function init() {
     if (!b || b.disabled) return;
     // Whatever the row is naming is what this button controls.
     if (spotifyOn || (spotify && !current)) {
+      spotifyMuted = false;   // a deliberate press owns the state from here
       if (spotifyOn) spotify?.pause(); else spotify?.resume();
       return;
     }
