@@ -39,8 +39,8 @@ export const feedback: Quote[] = [
     quote: 'I have worked with Yves for over three years, and his skill, dedication, and problem-solving consistently stand out.',
   },
   {
-    // No photograph yet. Falls back to initials until Yves sends one.
     name: 'Sid Jain',
+    avatar: 'sid.avif',
     role: 'via Upwork',
     quote: 'Working with Yves was effortless. He delivered everything assigned on schedule, communicated clearly, and ensured the final result exceeded expectations.',
   },
@@ -71,4 +71,20 @@ export const feedback: Quote[] = [
 export const record = [
   ['100%', 'Job Success Score on Upwork'],
   ['30', 'jobs delivered'],
+] as const;
+
+/**
+ * Platform badges, exported from the Figma file as SVG with their text already converted
+ * to paths, so they carry no font dependency and stay crisp at any size.
+ *
+ * They live with the record above rather than among the quotes, because they are the same
+ * kind of thing: a number someone else awarded, not an opinion someone offered.
+ *
+ * These are other people's trademarks. They are here to show what Yves earned on those
+ * platforms, which is what the badges exist for, and nothing about the layout should imply
+ * Upwork or Behance endorse the site itself.
+ */
+export const badges = [
+  { src: '/images/badges/upwork-top-rated.svg', alt: 'Upwork Top Rated', width: 141, height: 25 },
+  { src: '/images/badges/behance.svg', alt: 'Behance, AI and Graphic Design', width: 140, height: 31 },
 ] as const;
