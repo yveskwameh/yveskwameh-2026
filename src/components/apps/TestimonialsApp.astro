@@ -33,9 +33,16 @@ const initials = (name: string) =>
 
 /**
  * Two columns, alternating rather than split down the middle, so neighbours are never the
- * same length and the wall does not read as two separate lists. Each column renders its
- * cards twice: the second pass is the copy that comes up behind the first, which is the
- * whole trick behind a loop with no seam.
+ * same length and the wall does not read as two separate lists. Each quote stays in exactly
+ * one column, so a reader never sees the same one twice at once.
+ *
+ * Each column renders its three cards FOUR times, and that number is arithmetic rather than
+ * taste. The drift travels exactly one cycle, three cards, about 420px. Everything above
+ * that cycle is what keeps the bottom of the viewport covered while the loop runs, so the
+ * rule is (copies - 1) * cycle >= the visible height of the wall. Two copies gives 420px of
+ * cover against a wall about 582px tall, so the end of the track came into view and left a
+ * gap before it restarted. Four gives 1260px, which covers the wall even on a tall monitor
+ * with the window dragged to full height.
  */
 const columns = [feedback.filter((_, i) => i % 2 === 0), feedback.filter((_, i) => i % 2 === 1)];
 ---
@@ -62,9 +69,9 @@ const columns = [feedback.filter((_, i) => i % 2 === 0), feedback.filter((_, i) 
   <div class="fb__wall">
     {columns.map((col, c) => (
       <div class:list={['fb__col', c === 1 && 'fb__col--b']}>
-        {[0, 1].map((pass) => col.map((f, i) => (
-          <figure class:list={['fb__card', pass === 1 && 'fb__card--clone']}
-                  aria-hidden={pass === 1 ? 'true' : undefined}
+        {[0, 1, 2, 3].map((pass) => col.map((f, i) => (
+          <figure class:list={['fb__card', pass > 0 && 'fb__card--clone']}
+                  aria-hidden={pass > 0 ? 'true' : undefined}
                   style={`--i:${c + i * 2}`}>
             <blockquote class="fb__quote">&ldquo;{f.quote}&rdquo;</blockquote>
             <figcaption class="fb__who">
@@ -116,13 +123,21 @@ const columns = [feedback.filter((_, i) => i % 2 === 0), feedback.filter((_, i) 
      did not scroll, nothing would. */
   .fb__wall {
     flex: 1; min-height: 0; overflow: auto;
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2);
-    align-content: start;
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-2);
+    /* start, not the default stretch. A stretched column is as tall as the taller of the
+       two, and the drift moves by a percentage of the column's own height, so a stretched
+       column travels the wrong distance and the seam shows. */
+    align-content: start; align-items: start;
   }
-  .fb__col { display: grid; gap: var(--space-2); align-content: start; }
+  /* No gap here on purpose. The spacing lives on the card as a bottom margin instead, so
+     the track is exactly four identical blocks tall and the travel is an exact quarter.
+     With a gap there are only (n - 1) of them between n cards, so a clean fraction of the
+     height always lands half a gap out and the join is visible. */
+  .fb__col { display: grid; align-content: start; }
 
   .fb__card {
-    margin: 0; display: grid; gap: var(--space-3);
+    margin: 0 0 var(--space-2); display: grid; gap: var(--space-3);
     padding: var(--space-3);
     background: var(--os-card); border-radius: var(--r-window);
   }
@@ -139,9 +154,10 @@ const columns = [feedback.filter((_, i) => i % 2 === 0), feedback.filter((_, i) 
   .fb__card--clone { display: none; }
 
   @keyframes fb-rise { from { opacity: 0; transform: translateY(12px); } }
-  /* Half the track, less half a gap. The track holds the cards twice with a gap between
-     every pair, so an exact -50% lands half a gap early and the seam shows. */
-  @keyframes fb-drift { to { transform: translateY(calc(-50% - var(--space-1))); } }
+  /* Exactly one quarter of the track, which is exactly one cycle of three cards, because
+     the track is four identical copies and the spacing is inside each card. No correction
+     term, no fractional percentage, nothing to round. */
+  @keyframes fb-drift { to { transform: translateY(-25%); } }
 
   @media (prefers-reduced-motion: no-preference) {
     /* The entrance. Once, on both layouts. */
