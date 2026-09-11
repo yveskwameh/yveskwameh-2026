@@ -6,6 +6,7 @@ summary: "A product catalog rebuilt, and an audit that found the products missin
 role: "Design and build"
 stack: ["Figma", "Webflow"]
 cover: "/images/projects/path.png"
+banner: "/images/projects/path-1.png"
 filename: "path-catalog.webflow"
 featured: false
 ---
@@ -18,8 +19,6 @@ featured: false
 A product catalog is only as good as the list behind it. This one had drifted: there were
 products in the catalog that were not in the product list at all, so anything generated
 from that list came out incomplete.
-
-<img src="/images/projects/path-1.png" alt="The rebuilt catalog listing" width="720" height="450" loading="lazy" decoding="async" />
 
 ## What I did
 

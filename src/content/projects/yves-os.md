@@ -7,6 +7,7 @@ role: "Design and build"
 stack: ["Astro", "TypeScript", "Cloudflare"]
 url: "https://yveskwameh.2026-portfolio.workers.dev"
 cover: "/images/projects/yves-os.png"
+banner: "/images/projects/yves-os-1.png"
 filename: "yves-os.astro"
 featured: false
 ---
@@ -15,8 +16,6 @@ featured: false
 
 A design portfolio that describes how someone thinks about interfaces, in paragraphs, is
 asking to be taken on trust. I would rather the site be the argument.
-
-<img src="/images/projects/yves-os-1.png" alt="The desktop, with a window open" width="720" height="450" loading="lazy" decoding="async" />
 
 ## What I did
 

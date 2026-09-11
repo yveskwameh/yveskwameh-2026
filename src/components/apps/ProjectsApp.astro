@@ -15,6 +15,7 @@
  * Every pane is rendered at build time, per rule 3. Nothing is fetched when you switch.
  */
 import { getCollection, render } from 'astro:content';
+import CaseStudy from './CaseStudy.astro';
 
 const projects = (await getCollection('projects')).sort(
   (a, b) => Number(b.data.featured) - Number(a.data.featured) || b.data.year - a.data.year,
@@ -60,29 +61,9 @@ const panes = await Promise.all(
       </label>
 
       <article class="settings__pane">
-        <header class="pane__hero">
-          <img class="pane__hero-icon" src={p.data.cover} alt="" width="72" height="72" loading="lazy" decoding="async" />
-          <h3 class="pane__title">{p.data.title}</h3>
-          <p class="pane__blurb">{p.data.summary}</p>
-        </header>
-
-        <dl class="pane__facts">
-          <div class="pane__fact"><dt>Client</dt><dd>{p.data.client}</dd></div>
-          <div class="pane__fact"><dt>Year</dt><dd>{p.data.year}</dd></div>
-          <div class="pane__fact"><dt>Role</dt><dd>{p.data.role}</dd></div>
-          <div class="pane__fact"><dt>Built with</dt><dd>{p.data.stack.join(', ')}</dd></div>
-        </dl>
-
-        <div class="pane__body"><Content /></div>
-
-        {/* The "open as its own page" link is gone: this window already IS the case study,
-            and sending someone out of it was the odd move. /work/<id> still exists as a
-            real, indexable URL and still links back here. */}
-        {p.data.url && (
-          <p class="pane__links">
-            <a href={p.data.url} target="_blank" rel="noopener noreferrer">Visit the live site</a>
-          </p>
-        )}
+        {/* Everything inside the pane is CaseStudy.astro, which the standalone
+            /work/<id> page renders too, so a shared link shows what the window shows. */}
+        <CaseStudy p={p}><Content /></CaseStudy>
       </article>
     </Fragment>
   ))}
@@ -131,79 +112,13 @@ const panes = await Promise.all(
   /* Absolutely positioned rather than spanning grid rows, so the pane never has to know
      how many case studies there are. It fills the whole right side whatever the sidebar
      is doing, and it scrolls itself, the way the real thing does. */
+  /* No padding: CaseStudy.astro owns its own, because the banner across its top has to
+     reach the edges of this box. */
   .settings__pane {
     position: absolute; inset: 0; left: var(--side);
-    display: none; overflow: auto; padding: var(--space-4);
+    display: none; overflow: auto;
   }
   .settings__radio:checked + .settings__row + .settings__pane { display: block; }
-
-  /* The header and the facts are cards on a recessed background, which is the pattern the
-     whole of System Settings is built from. */
-  .pane__hero {
-    display: grid; justify-items: center; gap: 6px; text-align: center;
-    padding: var(--space-5) var(--space-4);
-    background: var(--os-card); border-radius: var(--r-window);
-  }
-  .pane__hero-icon { width: 72px; height: 72px; border-radius: 18px; margin-bottom: 4px; }
-  .pane__hero-icon--blank { display: block; background: rgba(22,22,26,.12); }
-  .pane__title { margin: 0; font: 700 23px var(--font-chrome); }
-  .pane__blurb { margin: 0; max-width: 44ch; color: var(--os-muted); font-size: 12px; line-height: 1.55; }
-
-  .pane__facts {
-    margin: var(--space-3) 0 0; padding: 0 var(--space-3);
-    background: var(--os-card); border-radius: var(--r-window);
-  }
-  .pane__fact {
-    display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: var(--space-3);
-    padding: 9px 0; font-size: 12px;
-  }
-  /* Divider between rows but not under the last one, same as a Settings group. */
-  .pane__fact + .pane__fact { border-top: 1px solid rgba(22,22,26,.08); }
-  .pane__facts dt { color: var(--os-muted); }
-  .pane__facts dd { margin: 0; }
-
-  /* One card per section, the way Settings stacks separate groups down a page.
-     Done in CSS rather than by cutting the markdown up at build time: a heading opens a
-     card and whatever sits before the next heading closes it, so it works for any case
-     study without changing how case studies are written. */
-  .pane__body { margin-top: var(--space-3); font-size: 13px; line-height: 1.65; }
-  .pane__body :global(> *) {
-    margin: 0; padding: 0 var(--space-4);
-    background: var(--os-card);
-  }
-  .pane__body :global(> h2) {
-    margin-top: var(--space-3); padding-top: var(--space-3);
-    border-radius: var(--r-window) var(--r-window) 0 0;
-    font: 700 10px var(--font-chrome); letter-spacing: .16em; text-transform: uppercase;
-    color: var(--os-muted);
-  }
-  .pane__body :global(> h2:first-child) { margin-top: 0; }
-  .pane__body :global(> h2 + *) { padding-top: var(--space-2); }
-  /* The last element of a section, and the last of the whole body, close their card. */
-  .pane__body :global(> :has(+ h2)),
-  .pane__body :global(> :last-child) {
-    padding-bottom: var(--space-3);
-    border-radius: 0 0 var(--r-window) var(--r-window);
-  }
-  /* Space between paragraphs inside a card, without breaking the card open. */
-  .pane__body :global(> p + p) { padding-top: var(--space-2); }
-
-  /* Case study screenshots. A raw <img> in the markdown is a direct child of the body, so
-     it is a card in its own right, which is exactly right: the picture gets its own panel
-     the way a Settings group does. */
-  .pane__body :global(> img) {
-    width: 100%; height: auto; padding: 0;
-    border-radius: var(--r-window);
-  }
-  .pane__body :global(> img + *) { margin-top: var(--space-3); }
-
-  /* A card too, so it stops reading as text floating under the stack. */
-  .pane__links {
-    display: flex; flex-wrap: wrap; gap: var(--space-3);
-    margin: var(--space-3) 0 0; padding: 12px var(--space-4);
-    background: var(--os-card); border-radius: var(--r-window);
-    font-size: 12px;
-  }
 
   /* Before anything is picked, show the first one, the way Settings opens on General.
      Doing this in CSS rather than with a checked attribute in the markup is what lets the
@@ -211,6 +126,13 @@ const panes = await Promise.all(
   @media (min-width: 641px) {
     .settings:not(:has(:checked)) > .settings__pane:first-of-type { display: block; }
     .settings:not(:has(:checked)) > .settings__row:first-of-type { background: var(--os-accent); color: #fff; }
+  }
+
+  /* Same height as the Tic Tac Toe window: the full space the desktop allows. Not
+     important, because the resize grips write a pixel height inline and an important rule
+     would silently defeat them. The id already outranks .window. */
+  @media (min-width: 641px) {
+    :global(#win-projects) { height: calc(100% - var(--window-top) - var(--window-bottom)); }
   }
 
   @media (max-width: 640px) {
@@ -222,6 +144,6 @@ const panes = await Promise.all(
     .settings::before { display: none; }
     :global(#win-projects .window__body) { overflow: auto; padding-bottom: var(--dock-clear); }
     .settings__row { margin: 0; border-radius: 0; border-bottom: 1px solid rgba(22,22,26,.08); background: var(--os-chrome); }
-    .settings__pane { position: static; grid-column: 1; padding: var(--space-3); overflow: visible; }
+    .settings__pane { position: static; grid-column: 1; overflow: visible; }
   }
 </style>

@@ -6,6 +6,7 @@ summary: "A marketing site designed in Figma and built in Webflow, handed over r
 role: "Design and build"
 stack: ["Figma", "Webflow"]
 cover: "/images/projects/compass.png"
+banner: "/images/projects/compass-1.png"
 filename: "compass.webflow"
 featured: false
 ---
@@ -16,8 +17,6 @@ featured: false
 
 The site had to explain what the company does to people who had never heard of them, and
 it had to do it before anyone scrolled.
-
-<img src="/images/projects/compass-1.png" alt="The home page, built from the shared section types" width="720" height="450" loading="lazy" decoding="async" />
 
 ## What I did
 

@@ -7,6 +7,7 @@ role: "Design and build"
 stack: ["Figma", "Webflow"]
 url: "https://thecarguysinc.com/"
 cover: "/images/projects/car-guys.png"
+banner: "/images/projects/car-guys-1.png"
 filename: "car-guys.webflow"
 featured: true
 ---
@@ -19,8 +20,6 @@ featured: true
 People arriving at a car service site are there for one of two reasons: they want to know
 if you handle their problem, and they want to book. Everything else on the page is in the
 way of those two things.
-
-<img src="/images/projects/car-guys-1.png" alt="A rebuilt page with the enquiry form near the top" width="720" height="450" loading="lazy" decoding="async" />
 
 ## What I did
 

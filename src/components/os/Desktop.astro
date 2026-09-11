@@ -20,7 +20,7 @@ import { desktopItems } from '../../data/desktop';
   {/* Explicitly sized, unlike the other windows. The browser inside it is a two column
       layout whose panes fill their side and scroll themselves, and `height: 100%` against
       a window that sizes to its content collapses to the height of the sidebar. */}
-  <Window id="projects" title="Work" filename="work.folder" width={860} height={600}><ProjectsApp /></Window>
+  <Window id="projects" title="Work" filename="work.folder" width={860}><ProjectsApp /></Window>
   <Window id="music" title="Music" filename="playlist.spotify" width={420}><MusicApp /></Window>
   {/* No height prop: GameApp.astro opens this one at the full height the desktop allows,
       so the thread has the most room it can get. Wider than the 400 column it holds on
