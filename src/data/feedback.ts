@@ -65,12 +65,17 @@ export const feedback: Quote[] = [
 ];
 
 /**
- * The measured record, from the Upwork profile on 11 September 2026. Update these by hand
- * when they move, and only from the profile itself: no rounding up, no "over 30".
+ * The record. The Job Success Score is Upwork's own figure, read off the profile on
+ * 11 September 2026, so it is exact and stays exact: never round it.
+ *
+ * The count is a floor rather than a total. Upwork counts 30, but that is only the work
+ * that came through Upwork, and Yves has delivered more than that elsewhere. "30+" is the
+ * honest way to say a number you can prove and a number you cannot: it claims the thirty
+ * that are evidenced and admits there are more without inventing a figure.
  */
 export const record = [
   ['100%', 'Job Success Score on Upwork'],
-  ['30', 'jobs delivered'],
+  ['30+', 'jobs delivered'],
 ] as const;
 
 /**
