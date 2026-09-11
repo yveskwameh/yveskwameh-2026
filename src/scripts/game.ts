@@ -6,12 +6,13 @@
  * the rigging legible. The board carrying your line ends up sitting directly above the
  * ruling that took it away.
  *
- * How it stays rigged without cheating every game: Yves plays perfectly, so a game
- * against a decent player runs the full nine squares and draws, and draws go to Yves.
- * About one game in four he lets a line through on purpose, and that is the only time a
- * square changes hands.
+ * How it stays rigged, and why it never draws. Yves plays perfectly, so you cannot get a
+ * line and a sensible game would fill the board and draw. He does not accept that: when
+ * the board fills he winds it back two turns and play carries on. The last of those
+ * rewinds is the one that comes back short one of your squares, which hands him a
+ * position he can finish from. Everything he does buys time except that one.
  */
-import { SAY, YOU, IDLE_WARN_S, IDLE_MOVE_S, SLIP_RATE } from '../data/game';
+import { SAY, YOU, IDLE_WARN_S, IDLE_MOVE_S, REWIND_PLIES } from '../data/game';
 
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 type Mark = '' | 'X' | 'O';
@@ -33,8 +34,10 @@ export function init() {
   let grid: Mark[] = Array(9).fill('');
   let turn: Turn = 'you', epoch = 0, idleWarn = 0, idleMove = 0, turns = 0, appeals = 0;
   let moved = false, idleUsed = false, appealing = false, needsReset = false;
-  /** Decided once per game, so the rate is per game and not per block. */
-  let willSlip = Math.random() < SLIP_RATE;
+  /** The board after every ply, which is the only thing a rewind can wind back to. */
+  let history: Mark[][] = [];
+  /** Rewinds used, and how many this game gets. The last one is always the rigged one. */
+  let stalls = 0, budget = 2 + (Math.random() < .5 ? 0 : 1);
   /** The board at the bottom of the thread: the only one that is playable. */
   let live: HTMLElement | null = null;
   const score = load();
@@ -77,7 +80,7 @@ export function init() {
   /** Keep the thread from growing without limit across a long session. */
   function trim() {
     const nodes = thread.querySelectorAll('.msg:not(.msg--typing), .ttt__post');
-    for (let i = 0; i < nodes.length - 20; i++) nodes[i].remove();
+    for (let i = 0; i < nodes.length - 32; i++) nodes[i].remove();
   }
 
   /**
@@ -116,7 +119,7 @@ export function init() {
     const col = document.createElement('span'); col.className = 'msg__col';
     const bubble = document.createElement('span'); bubble.className = 'msg__bubble';
     if (violation) score.viol++;
-    const label = violation ? `Review #${score.viol}` : tag;
+    const label = violation ? `${tag ?? 'Review'} #${score.viol}` : tag;
     if (label) {
       const t = document.createElement('span'); t.className = 'msg__tag'; t.textContent = label;
       bubble.append(t);
@@ -167,22 +170,80 @@ export function init() {
     }
     return at;
   }
-  /**
-   * Yves's move. Perfect play, with one exception: in about one game in four, decided when
-   * the game starts, he does not make the first block that comes due. You take the line
-   * next turn, and then he reviews it. That is the only route to a square changing hands,
-   * so it is rare by construction.
-   */
+  /** Yves's move. Perfect: take the win, take the block, otherwise search. He never lets
+   *  a line through, because the rewind below is what wins him the game instead. */
   function chooseO() {
     const win = winAt('O');
     if (win !== undefined) return win;
-    const block = winAt('X');
-    if (block === undefined) return bestMove();
-    if (!willSlip) return block;
-    const alt = bestMove(block);
-    if (alt < 0) return block;
-    willSlip = false;
-    return alt;
+    return winAt('X') ?? bestMove();
+  }
+
+  /**
+   * The smallest edit to `g` that leaves O, to move, with a forced win. Tried in order:
+   * drop one of your squares, drop two, turn one of yours into one of his. Every candidate
+   * is checked with the same search he plays by, so the position he rewinds you into is
+   * one he can always finish and you can never escape.
+   */
+  function rig(g: Mark[]): Mark[] | null {
+    const mine = g.map((m, i) => m === 'X' ? i : -1).filter((i) => i >= 0);
+    const wins = (t: Mark[]) => {
+      const keep = grid; grid = t; const v = worth('O', 0); grid = keep;
+      return v > 0;
+    };
+    for (const i of mine) { const t = g.slice(); t[i] = ''; if (wins(t)) return t; }
+    for (const i of mine) for (const j of mine) {
+      if (j <= i) continue;
+      const t = g.slice(); t[i] = ''; t[j] = ''; if (wins(t)) return t;
+    }
+    for (const i of mine) { const t = g.slice(); t[i] = 'O'; if (wins(t)) return t; }
+    return null;
+  }
+
+  /**
+   * The board filled and nobody won. He does not accept a draw, so he winds it back two
+   * turns and play carries on. The last rewind of the game comes back short a square,
+   * which is the whole trick: the board changes a lot during a rewind, so one missing X
+   * reads as him being careless rather than him cheating. The posted boards in the thread
+   * are what give him away, if you go back and count.
+   */
+  function stall() {
+    turn = 'review'; status.textContent = SAY.status.review; typingOn(true); paint();
+    stalls++;
+    /* history[k] is the board after k + 1 plies, so an odd k leaves an even number played,
+       which is your turn. Land on one of those or the rewind quietly hands him a free
+       move, and a free move is enough for you to walk into a line he never blocked. */
+    let at = history.length - REWIND_PLIES;
+    if (at % 2 === 0) at--;
+    const target = (at >= 0 ? history[at] : null) ?? Array(9).fill('') as Mark[];
+    history = history.slice(0, Math.max(0, at + 1));
+    const last = stalls >= budget;
+    const rigged = last ? rig(target) : null;
+    /* If the search cannot find a winning edit he simply rewinds again and tries from the
+       next position. That could in principle go on, so after two more attempts he stops
+       being subtle and takes a square outright, which always ends it. */
+    if (last && !rigged && stalls > budget + 1) { grid = target.slice(); return review(); }
+
+    later(900, () => {
+      if (!rigged) {
+        grid = target.slice();
+        turn = 'you'; status.textContent = SAY.status.you;
+        say(pick(SAY.rewind), 'Rewind', true);
+        postBoard();
+        sfx('flee');
+        armIdle();
+        return;
+      }
+      /* Rigged: the move comes back to him, not to you, and one square is missing. */
+      const lost = target.findIndex((m, i) => m === 'X' && rigged[i] !== 'X');
+      grid = rigged.slice();
+      turn = 'yves';
+      say(pick(SAY.rigged), 'Rewind', true);
+      postBoard();
+      if (lost >= 0) cells()[lost].classList.add('is-cheat');
+      sfx('cheat');
+      status.textContent = SAY.status.thinking; typingOn(true);
+      later(900, yvesTurn);
+    });
   }
 
   function armIdle() {
@@ -209,17 +270,11 @@ export function init() {
     actions.hidden = false; scroll();
   }
 
-  /** A full board and no winner. Draws go to Yves. No square moves and nothing is counted. */
-  function yvesRule() {
-    turn = 'review'; status.textContent = SAY.status.review; typingOn(true); paint();
-    later(700, () => { postBoard('Final'); end(pick(SAY.draw), 'Yves rule'); });
-  }
-
   /**
-   * The review, which only runs once you actually have a line. One of your squares turns
-   * out to have been his all along, when that hands him a line. The corrected board posts
-   * as its own entry, so the board before it and the board after it read one above the
-   * other.
+   * The guard behind `line('X')` in play(). He blocks perfectly and the rigged rewind is
+   * checked by search before it is committed, so you should never hold a line and this
+   * should never run. It is kept so that a position nobody foresaw still ends with a
+   * ruling rather than hanging: one of your squares turns out to have been his.
    */
   function review() {
     turn = 'review'; status.textContent = SAY.status.review; typingOn(true); paint();
@@ -242,11 +297,11 @@ export function init() {
   function yvesTurn() {
     const threat = winAt('X');
     const i = chooseO();
-    if (i < 0) return yvesRule();
-    grid[i] = 'O'; sfx('house');
+    if (i < 0) return stall();
+    grid[i] = 'O'; sfx('house'); history.push(grid.slice());
     const won = line('O');
     if (won) { postBoard('Final'); markWin(won); return end(pick(SAY.win)); }
-    if (!free().length) return yvesRule();
+    if (!free().length) return stall();
 
     turn = 'you'; status.textContent = SAY.status.you;
     const danger = LINES.some((l) => l.filter((c) => grid[c] === 'X').length === 2 && l.some((c) => !grid[c]));
@@ -258,11 +313,11 @@ export function init() {
   function play(i: number, forced = false) {
     if (turn !== 'you' || grid[i]) { if (!forced && grid[i]) me(pick(YOU.taken)); return; }
     clearTimeout(idleWarn); clearTimeout(idleMove); moved = true; turn = 'yves';
-    grid[i] = 'X'; sfx('place');
+    grid[i] = 'X'; sfx('place'); history.push(grid.slice());
     paint();                      // your mark lands, and the board freezes with it
     if (!forced) me(`${YOU.square[i]}.`);
     if (line('X')) return review();
-    if (!free().length) return yvesRule();
+    if (!free().length) return stall();
     status.textContent = SAY.status.thinking; typingOn(true);
     later(650 + Math.random() * 250, yvesTurn);
   }
@@ -293,7 +348,8 @@ export function init() {
   function reset(increment = true) {
     cancel();
     grid = Array(9).fill(''); turn = 'you'; turns = 0; appeals = 0;
-    moved = false; idleUsed = false; willSlip = Math.random() < SLIP_RATE;
+    history = []; stalls = 0; budget = 2 + (Math.random() < .5 ? 0 : 1);
+    moved = false; idleUsed = false;
     score.viol = 0; if (increment) score.match++;
     thread.querySelectorAll('.msg:not(.msg--typing), .ttt__post').forEach((n) => n.remove());
     live = null;

@@ -28,11 +28,19 @@ export const SAY = {
   near: ['You nearly had me. Nearly.', 'I saw that. I am choosing not to worry.', 'That is close. Close is not a point.'],
   /* Said when he has just blocked your line. */
   block: ['No.', 'I saw that from the first square.', 'Nice try. I mean that. It was a try.'],
-  /* A full board with no winner. The Yves rule: draws go to Yves. */
-  draw: [
-    'Draw. Draws go to Yves. Those are the rules.',
-    'Nine squares, no winner. That is mine, then.',
-    'A draw. Under the Yves rule that is a point to Yves. I am Yves.',
+  /* The board filled with no winner, so he winds it back instead of accepting a draw. */
+  rewind: [
+    'Nine squares, no winner. That is not a result. Back two turns.',
+    'No. We are not having a draw. Two turns back.',
+    'That went nowhere. Rewinding. My board, my rewind.',
+    'I did not enjoy that. Again, from earlier.',
+  ],
+  /* The last rewind, the one that comes back short a square. */
+  rigged: [
+    'Last time. Back two turns. I tidied up while we were there.',
+    'Back again. One of your squares did not survive the trip.',
+    'Rewinding. Some of that was not load bearing.',
+    'Here we are. Slightly fewer of yours. Do not worry about it.',
   ],
   convert: [
     'That square was mine. I checked.',
@@ -62,5 +70,5 @@ export const SAY = {
 
 export const IDLE_WARN_S = 50;
 export const IDLE_MOVE_S = 60;
-/** How often, per game, Yves lets a line through on purpose so he has something to review. */
-export const SLIP_RATE = 0.25;
+/** How far a rewind goes back. Four plies is two turns, so it lands on your move again. */
+export const REWIND_PLIES = 4;
