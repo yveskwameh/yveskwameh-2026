@@ -142,8 +142,14 @@ const rules = panes.map(({ p }) => `
   /* The rail. A light sheet floating in a recessed gutter, with no line around it.
      It used to be --os-chrome with a 1px --os-line border, and the border was doing the
      separating. Now the gutter does it, so the rail can be the same paper as the pane and
-     the only thing the eye has to read is the gap. Out of flow so it takes no grid slot. */
-  .settings::before { content: ''; position: absolute; z-index: -1; inset: var(--work-inset) auto var(--work-inset) var(--work-inset); width: calc(var(--side) - var(--work-inset)); background: var(--os-card); border-radius: var(--panel-radius); }
+     the only thing the eye has to read is the gap. Out of flow so it takes no grid slot.
+
+     The gutter is the same ten on all four sides, which is what makes it read as a gutter
+     rather than as an edge. Subtracting one inset instead of two put the rail's right edge
+     exactly on the column line the pane starts at, so the two sheets touched and the gap
+     the whole direction rests on was not there. It also left the rows sitting 8px from the
+     rail on the left and 18px on the right. */
+  .settings::before { content: ''; position: absolute; z-index: -1; inset: var(--work-inset) auto var(--work-inset) var(--work-inset); width: calc(var(--side) - var(--work-inset) * 2); background: var(--os-card); border-radius: var(--panel-radius); }
 
   .settings__radio { position: absolute; width: 1px; height: 1px; opacity: 0; }
   .settings__toggle { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
