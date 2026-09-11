@@ -1,46 +1,47 @@
 ---
 /**
- * Feedback, as quote cards. Direction C from the Figma board, closest to the way Oyster
- * and Midday set out testimonials: the quote first, a hairline, then who said it.
+ * Feedback, as quote cards on a slowly drifting wall. Direction C from the Figma board for
+ * the cards, and the motion Yves picked out of the four in the artifact: the cards arrive in
+ * sequence when the window opens, then two columns drift in opposite directions for as long
+ * as it stays open, pausing the moment you point at them.
  *
  * Quote first on purpose. A card that opens with a name and a job title asks the reader to
  * care who this is before telling them why they should, and nobody reads the sixth name.
  *
- * The avatars are the real people, supplied by Yves and cropped square in
- * tools/../jobs (ffmpeg to crop, sips to encode avif). 96px source shown at 40, 15.7KB for
- * all of them, and lazy, so none of it is fetched until the window opens.
- *
- * A quote without a photograph falls back to initials rather than to a stock face. That
- * fallback is the point: a section whose whole job is being believed cannot carry an
- * invented face, so `avatar` stays optional and the fallback stays in the markup.
+ * All of the motion is CSS. GSAP was considered and priced: its core is about 23KB gzipped
+ * against a 10,240 byte on-load budget for the entire desktop, which is more than twice the
+ * whole site to move six cards. It earns its keep for scrubbing, branching and physics, and
+ * none of that is this.
  *
  * Every picture in here is a CSS background rather than an <img>, and that is deliberate.
  * A lazy <img> inside a window that was display:none at parse time is at the mercy of the
- * browser's lazy-loading heuristics: sometimes it loads when the window opens, sometimes
- * it waits for a scroll or a resize that may never come, and a badge that never appears is
- * worse than one that costs a few bytes. A background image has no such heuristic. It is
- * fetched the first time the element is actually rendered, which is exactly when the window
- * opens, so it is still nothing on page load and it is reliable.
+ * browser's lazy-loading heuristics: measured across fresh loads it fetched all eight
+ * sometimes and none other times, leaving the badges invisible until a scroll that may never
+ * come. A background image has no such heuristic. It is fetched the first time the element
+ * is rendered, which is when the window opens, so it is still nothing on page load and it is
+ * reliable.
  *
- * The Work window solves the same problem the other way, by flipping its images to eager
- * from scripts/work.ts when the window opens. That option is not open here, because this
- * window has no script and is not getting one for six pictures.
- *
- * Accessibility survives it: the avatars are decorative, since the person's name sits in
- * text beside them, and the badges carry role="img" with a real label.
- *
- * No script: two columns of build-time HTML that become one column on a phone.
+ * Accessibility: the avatars are decorative, because the person's name sits in text beside
+ * them; the badges carry role="img" with a real label; and the duplicated cards that make
+ * the loop seamless are aria-hidden, so nobody hears all six quotes twice.
  */
 import { feedback, record, badges } from '../../data/feedback';
 
 /** First letter of the first two words. "Matthew Haimm" gives MH. */
 const initials = (name: string) =>
   name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+/**
+ * Two columns, alternating rather than split down the middle, so neighbours are never the
+ * same length and the wall does not read as two separate lists. Each column renders its
+ * cards twice: the second pass is the copy that comes up behind the first, which is the
+ * whole trick behind a loop with no seam.
+ */
+const columns = [feedback.filter((_, i) => i % 2 === 0), feedback.filter((_, i) => i % 2 === 1)];
 ---
 <div class="fb">
-  {/* Numbers and badges together, because they are the same kind of evidence: something
-      a platform measured or awarded, as opposed to an opinion someone offered. The quotes
-      below are the opinions. */}
+  {/* Numbers and badges together, because they are the same kind of evidence: something a
+      platform measured or awarded, as opposed to an opinion someone offered. */}
   <div class="fb__record">
     <div class="fb__stats">
       {record.map(([figure, label]) => (
@@ -58,33 +59,42 @@ const initials = (name: string) =>
     </div>
   </div>
 
-  <ul class="fb__grid">
-    {feedback.map((f) => (
-      <li class="fb__card">
-        {/* A blockquote because that is what it is, and the citation is the footer. */}
-        {/* The quotation marks are real characters rather than CSS content, so they
-            survive being copied out of the page along with the words they belong to. */}
-        <blockquote class="fb__quote">&ldquo;{f.quote}&rdquo;</blockquote>
-        <footer class="fb__who">
-          {f.avatar
-            ? <span class="fb__avatar" aria-hidden="true" style={`background-image:url('/images/feedback/${f.avatar}')`}></span>
-            : <span class="fb__avatar fb__avatar--initials" aria-hidden="true">{initials(f.name)}</span>}
-          <span class="fb__names">
-            <span class="fb__name">{f.name}</span>
-            <span class="fb__role">{f.role}</span>
-          </span>
-        </footer>
-      </li>
+  <div class="fb__wall">
+    {columns.map((col, c) => (
+      <div class:list={['fb__col', c === 1 && 'fb__col--b']}>
+        {[0, 1].map((pass) => col.map((f, i) => (
+          <figure class:list={['fb__card', pass === 1 && 'fb__card--clone']}
+                  aria-hidden={pass === 1 ? 'true' : undefined}
+                  style={`--i:${c + i * 2}`}>
+            <blockquote class="fb__quote">&ldquo;{f.quote}&rdquo;</blockquote>
+            <figcaption class="fb__who">
+              {f.avatar
+                ? <span class="fb__avatar" style={`background-image:url('/images/feedback/${f.avatar}')`}></span>
+                : <span class="fb__avatar fb__avatar--initials">{initials(f.name)}</span>}
+              <span class="fb__names">
+                <span class="fb__name">{f.name}</span>
+                <span class="fb__role">{f.role}</span>
+              </span>
+            </figcaption>
+          </figure>
+        )))}
+      </div>
     ))}
-  </ul>
+  </div>
 </div>
 
 <style>
-  .fb { display: grid; gap: var(--space-3); }
+  /* Full height like the Work and Tic Tac Toe windows, because a wall that drifts needs a
+     viewport to drift inside. Not important, so the resize grips still win. */
+  @media (min-width: 641px) {
+    :global(#win-testimonials) { height: calc(100% - var(--window-top) - var(--window-bottom)); }
+    :global(#win-testimonials .window__body) { overflow: hidden; }
+  }
 
-  /* The two measured numbers, at the top, the way a reviews screen opens. Both come from
-     the Upwork profile and neither is rounded. */
+  .fb { display: flex; flex-direction: column; gap: var(--space-3); height: 100%; }
+
   .fb__record {
+    flex: none;
     display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
     gap: var(--space-3) var(--space-4);
     padding: var(--space-3) var(--space-4);
@@ -92,45 +102,80 @@ const initials = (name: string) =>
   }
   .fb__stats { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); }
   .fb__stat { display: grid; gap: 2px; }
-  /* Stacked the way they are drawn in the Figma file, and left aligned with each other so
-     the two wordmarks start on the same line. */
-  .fb__badges { display: grid; gap: 10px; justify-items: start; }
-  .fb__badge { display: block; max-width: 100%; background: center left / contain no-repeat; }
   .fb__figure { font: 700 24px var(--font-chrome); color: var(--os-ink); line-height: 1.1; }
   .fb__label { font-size: 11px; color: var(--os-muted); }
+  /* Stacked the way they are drawn in the Figma file, left aligned so the two wordmarks
+     start on the same line. */
+  .fb__badges { display: grid; gap: 10px; justify-items: start; }
+  .fb__badge { display: block; max-width: 100%; background: center left / contain no-repeat; }
 
-  .fb__grid {
-    margin: 0; padding: 0; list-style: none;
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-2);
-    /* Cards in a row end where their own content ends rather than stretching to match the
-       tallest one, which is what stops a short quote sitting in a half empty box. */
-    align-items: start;
+  /* Scrolls by default. Only the drifting version clips, because only the drifting version
+     brings the content back round by itself. Someone who has asked for reduced motion gets
+     six still cards and a scrollbar, rather than six still cards with the last two cut off
+     and no way to reach them: the window body's overflow is hidden on desktop, so if this
+     did not scroll, nothing would. */
+  .fb__wall {
+    flex: 1; min-height: 0; overflow: auto;
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2);
+    align-content: start;
   }
+  .fb__col { display: grid; gap: var(--space-2); align-content: start; }
+
   .fb__card {
-    display: grid; gap: var(--space-3);
+    margin: 0; display: grid; gap: var(--space-3);
     padding: var(--space-3);
     background: var(--os-card); border-radius: var(--r-window);
   }
   .fb__quote { margin: 0; font-size: 12px; line-height: 1.6; color: var(--os-ink); }
-
   .fb__who { display: flex; align-items: center; gap: 10px; padding-top: var(--space-3); border-top: 1px solid rgba(22,22,26,.09); }
-  .fb__avatar {
-    flex: none; width: 40px; height: 40px; border-radius: 50%;
-    background: var(--os-recess) center / cover no-repeat;
-  }
-  .fb__avatar--initials {
-    display: grid; place-items: center;
-    color: var(--os-muted); font: 700 12px var(--font-chrome); letter-spacing: .02em;
-  }
+  .fb__avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--os-recess) center / cover no-repeat; }
+  .fb__avatar--initials { display: grid; place-items: center; color: var(--os-muted); font: 700 12px var(--font-chrome); }
   .fb__names { display: grid; min-width: 0; }
   .fb__name { font: 700 12px var(--font-chrome); color: var(--os-ink); }
   .fb__role { font-size: 10px; color: var(--os-muted); line-height: 1.4; }
 
+  /* The copies exist only to make the loop seamless, so they are not rendered anywhere the
+     loop does not run: on a phone, or for anyone who has asked for less movement. */
+  .fb__card--clone { display: none; }
+
+  @keyframes fb-rise { from { opacity: 0; transform: translateY(12px); } }
+  /* Half the track, less half a gap. The track holds the cards twice with a gap between
+     every pair, so an exact -50% lands half a gap early and the seam shows. */
+  @keyframes fb-drift { to { transform: translateY(calc(-50% - var(--space-1))); } }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* The entrance. Once, on both layouts. */
+    .fb__record { animation: fb-rise .5s cubic-bezier(.2,.7,.3,1) both; }
+    .fb__card:not(.fb__card--clone) {
+      animation: fb-rise .5s cubic-bezier(.2,.7,.3,1) both;
+      animation-delay: calc(var(--i) * 70ms);
+    }
+  }
+
+  @media (min-width: 641px) and (prefers-reduced-motion: no-preference) {
+    .fb__card--clone { display: grid; }
+    /* Now it is a viewport rather than a scroller, and the edges fade so a card leaving
+       the wall dissolves instead of being sliced off by the window. */
+    .fb__wall {
+      overflow: hidden;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+      mask-image: linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+    }
+    /* Delayed a second so the cards have landed before the wall starts moving. The two
+       never fight over the same pixels: the entrance transforms the card, the drift
+       transforms the column it sits in. */
+    .fb__col { animation: fb-drift 40s linear 1s infinite; }
+    .fb__col--b { animation-direction: reverse; }
+    /* Pointing at it is a request to read it. focus-within covers the keyboard. */
+    .fb__wall:hover .fb__col,
+    .fb__wall:focus-within .fb__col { animation-play-state: paused; }
+  }
+
   @media (max-width: 640px) {
-    /* Two columns of a 12px quote at 390 is four words a line. */
-    .fb__grid { grid-template-columns: minmax(0, 1fr); }
-    /* The badges drop under the numbers rather than beside them. */
+    /* One column, no drift, and the sheet scrolls the way every other window does. Watching
+       text move on a phone you are holding is worse than scrolling it yourself. */
+    .fb { height: auto; }
+    .fb__wall { grid-template-columns: minmax(0, 1fr); overflow: visible; }
     .fb__record { justify-content: flex-start; gap: var(--space-3) var(--space-4); }
   }
 </style>
