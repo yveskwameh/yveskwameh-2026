@@ -2,7 +2,7 @@
 title: "YvesOS"
 client: "Personal"
 year: 2026
-summary: "This site. A portfolio that behaves like an operating system, and still loads under 10KB of JavaScript."
+summary: "This site. A portfolio built as a desktop, with a lock screen, a dock, and windows you open yourself."
 role: "Design and build"
 stack: ["Astro", "TypeScript", "Cloudflare"]
 url: "https://yveskwameh.2026-portfolio.workers.dev"
@@ -31,5 +31,5 @@ Music builds its Spotify player on click and never before.
 
 ## Result
 
-Under 10KB of JavaScript on arrival, for the whole thing, measured on every build rather
-than guessed at. Everything else is fetched when it is opened.
+It is the argument rather than a description of one. Someone can drag the icons, open the
+windows, lose at the game, and judge the work by using it instead of reading about it.
