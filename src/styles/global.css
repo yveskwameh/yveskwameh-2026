@@ -32,6 +32,19 @@ body {
 
 img, svg, video { display: block; max-width: 100%; }
 
+/* One scrollbar for the whole site. Chrome and Firefox take the two standard properties,
+   which on a Mac also turns the overlay bar into a thin one that is always there, which
+   is the point. Safari still reads the webkit rules. Applied to everything, so the window
+   bodies, the game thread, the compose field and the work panels all match. */
+* { scrollbar-width: thin; scrollbar-color: var(--os-scroll) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--os-scroll); border-radius: var(--r-pill);
+  border: 2px solid transparent; background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--os-scroll-hover); }
+
 /* ----------------------------------------------------------------
    The retro cursor set, drawn by tools/draw-cursors.py.
 

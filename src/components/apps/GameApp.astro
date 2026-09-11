@@ -161,6 +161,14 @@ import { SAY } from '../../data/game';
      it has been refused is the one thing this row must not do. */
   .ttt__actions [disabled] { opacity: .45; cursor: var(--cur-arrow); }
 
+  /* On a desktop the window opens at the full height the desktop allows, which is the
+     same calc Window.astro already uses as every window's cap. Deliberately NOT important:
+     the resize grips write a pixel height inline, and an important rule here would
+     silently defeat them. The id already outranks .window, and --h is only a variable. */
+  @media (min-width: 641px) {
+    :global(#win-game) { height: calc(100% - var(--window-top) - var(--window-bottom)); }
+  }
+
   /* On a phone the window is a bottom sheet with height: auto, and an auto height gives
      the feed nothing to scroll inside. Pinning the sheet to the space it actually has
      makes the thread scroll here exactly as it does on a desktop. */
@@ -280,10 +288,8 @@ import { SAY } from '../../data/game';
   #ttt-feed .ttt__cell[data-mark='X'] .ttt__x { display: grid; color: var(--os-accent); }
   #ttt-feed .ttt__cell[data-mark='O'] .ttt__o { display: grid; color: var(--os-muted); }
 
-  /* The line he wins with. Filled in ink, not in the accent: green is the visitor's
-     colour everywhere else in this window, and a green winning line would credit the
-     wrong player. */
-  #ttt-feed .ttt__cell.is-win { background: var(--os-ink); border-color: var(--os-ink); }
+  /* The line he wins with. */
+  #ttt-feed .ttt__cell.is-win { background: var(--os-accent); border-color: var(--os-accent); }
   #ttt-feed .ttt__cell.is-win .ttt__x, #ttt-feed .ttt__cell.is-win .ttt__o { color: #fff; }
   /* The square he took off you. It shakes once as it changes hands, which is the only
      admission you get. */

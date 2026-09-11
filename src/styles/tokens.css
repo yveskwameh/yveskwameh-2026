@@ -17,6 +17,8 @@
   --os-ink: #16161a;
   --os-muted: #6b6b70;
   --os-line: rgba(22, 22, 26, 0.35);             /* 1px outline on windows */
+  --os-scroll: rgba(22, 22, 26, 0.28);           /* scrollbar thumb, everywhere */
+  --os-scroll-hover: rgba(22, 22, 26, 0.45);
   /* Primary actions and every CTA. Yves's brand teal, carried over from the previous
      site. White on it scores 5.89 and it scores 5.3 as a link on the window surface,
      so it clears WCAG AA both ways. */

@@ -5,8 +5,13 @@
  * decoration: the match is rigged, and a thread you can scroll back through is what makes
  * the rigging legible. The board carrying your line ends up sitting directly above the
  * ruling that took it away.
+ *
+ * How it stays rigged without cheating every game: Yves plays perfectly, so a game
+ * against a decent player runs the full nine squares and draws, and draws go to Yves.
+ * About one game in four he lets a line through on purpose, and that is the only time a
+ * square changes hands.
  */
-import { SAY, YOU, IDLE_WARN_S, IDLE_MOVE_S } from '../data/game';
+import { SAY, YOU, IDLE_WARN_S, IDLE_MOVE_S, SLIP_RATE } from '../data/game';
 
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 type Mark = '' | 'X' | 'O';
@@ -26,8 +31,10 @@ export function init() {
   const avatar = typing.querySelector('img')!.src;
 
   let grid: Mark[] = Array(9).fill('');
-  let turn: Turn = 'you', epoch = 0, idleWarn = 0, idleMove = 0, turns = 0;
-  let moved = false, idleUsed = false, appealed = false, needsReset = false;
+  let turn: Turn = 'you', epoch = 0, idleWarn = 0, idleMove = 0, turns = 0, appeals = 0;
+  let moved = false, idleUsed = false, appealing = false, needsReset = false;
+  /** Decided once per game, so the rate is per game and not per block. */
+  let willSlip = Math.random() < SLIP_RATE;
   /** The board at the bottom of the thread: the only one that is playable. */
   let live: HTMLElement | null = null;
   const score = load();
@@ -94,7 +101,12 @@ export function init() {
   }
   const markWin = (l: number[]) => l.forEach((i) => cells()[i].classList.add('is-win'));
 
-  function post(text: string, visitor: boolean, violation = false) {
+  /**
+   * A message. `violation` numbers it as a review and counts it. `tag` is any other label,
+   * the Yves rule or an appeal number, which is shown but not counted: only a square
+   * changing hands is a violation.
+   */
+  function post(text: string, visitor: boolean, tag?: string, violation = false) {
     const row = document.createElement('div'); row.className = `msg msg--${visitor ? 'out' : 'in'}`;
     if (!visitor) {
       const face = document.createElement('span'); face.className = 'msg__face';
@@ -103,35 +115,74 @@ export function init() {
     }
     const col = document.createElement('span'); col.className = 'msg__col';
     const bubble = document.createElement('span'); bubble.className = 'msg__bubble';
-    if (violation) {
-      score.viol++;
-      const tag = document.createElement('span'); tag.className = 'msg__tag'; tag.textContent = `Review #${score.viol}`;
-      bubble.append(tag); paintScore();
+    if (violation) score.viol++;
+    const label = violation ? `Review #${score.viol}` : tag;
+    if (label) {
+      const t = document.createElement('span'); t.className = 'msg__tag'; t.textContent = label;
+      bubble.append(t);
     }
+    if (violation) paintScore();
     bubble.append(text); col.append(bubble); row.append(col);
     thread.insertBefore(row, typing);
     trim(); scroll();
   }
-  const say = (text: string, violation = false) => { typingOn(false); post(text, false, violation); };
+  const say = (text: string, tag?: string, violation = false) => { typingOn(false); post(text, false, tag, violation); };
   const me = (text: string) => post(text, true);
 
-  function cancel() { epoch++; clearTimeout(idleWarn); clearTimeout(idleMove); typingOn(false); }
+  function cancel() { epoch++; appealing = false; clearTimeout(idleWarn); clearTimeout(idleMove); typingOn(false); }
   function later(ms: number, fn: () => void) {
     const current = epoch;
     setTimeout(() => { if (current === epoch && active()) fn(); }, ms);
   }
 
-  /** Normal priorities: win, block, centre, corners, then edges. */
-  function chooseO() {
+  /* ----------------------------------------------------------------- play */
+
+  /** A square that completes a line for `m` right now, if there is one. */
+  const winAt = (m: Mark) => free().find((i) => { grid[i] = m; const w = !!line(m); grid[i] = ''; return w; });
+
+  /**
+   * Negamax. The value of the position for `mover`, who is about to play: 10 for a win,
+   * 0 for a draw, less for a loss, nudged by depth so a quick win beats a slow one. Nine
+   * squares, so the whole tree is small enough to search every turn.
+   */
+  function worth(mover: Mark, depth: number): number {
+    const other: Mark = mover === 'O' ? 'X' : 'O';
+    if (line(other)) return depth - 10;
     const open = free();
-    for (const mark of ['O', 'X'] as Mark[]) {
-      const square = open.find((i) => {
-        grid[i] = mark; const wins = !!line(mark); grid[i] = ''; return wins;
-      });
-      if (square !== undefined) return square;
+    if (!open.length) return 0;
+    let best = -Infinity;
+    for (const i of open) {
+      grid[i] = mover; const v = -worth(other, depth + 1); grid[i] = '';
+      if (v > best) best = v;
     }
-    const order = [4, ...[0,2,6,8].sort(() => Math.random() - .5), ...[1,3,5,7].sort(() => Math.random() - .5)];
-    return order.find((i) => !grid[i]) ?? -1;
+    return best;
+  }
+  /** The strongest O move, optionally refusing one square. -1 if there is nothing to play. */
+  function bestMove(exclude = -1) {
+    let best = -Infinity, at = -1;
+    for (const i of free()) {
+      if (i === exclude) continue;
+      grid[i] = 'O'; const v = -worth('X', 1); grid[i] = '';
+      if (v > best) { best = v; at = i; }
+    }
+    return at;
+  }
+  /**
+   * Yves's move. Perfect play, with one exception: in about one game in four, decided when
+   * the game starts, he does not make the first block that comes due. You take the line
+   * next turn, and then he reviews it. That is the only route to a square changing hands,
+   * so it is rare by construction.
+   */
+  function chooseO() {
+    const win = winAt('O');
+    if (win !== undefined) return win;
+    const block = winAt('X');
+    if (block === undefined) return bestMove();
+    if (!willSlip) return block;
+    const alt = bestMove(block);
+    if (alt < 0) return block;
+    willSlip = false;
+    return alt;
   }
 
   function armIdle() {
@@ -149,20 +200,26 @@ export function init() {
     }, IDLE_MOVE_S * 1000);
   }
 
-  /** Close the match. `violation` numbers the ruling, which a conversion has already
-   *  done for itself. */
-  function end(text: string, violation: boolean) {
+  /** Close the match. */
+  function end(text: string, tag?: string, violation = false) {
     turn = 'over'; clearTimeout(idleWarn); clearTimeout(idleMove); typingOn(false);
     score.yves++;
-    say(text, violation); sfx('win');
+    say(text, tag, violation); sfx('win');
     status.textContent = SAY.status.over; paintScore(); save();
     actions.hidden = false; scroll();
   }
 
+  /** A full board and no winner. Draws go to Yves. No square moves and nothing is counted. */
+  function yvesRule() {
+    turn = 'review'; status.textContent = SAY.status.review; typingOn(true); paint();
+    later(700, () => { postBoard('Final'); end(pick(SAY.draw), 'Yves rule'); });
+  }
+
   /**
-   * The House review. One of your squares turns out to have been his all along, but only
-   * when that hands him a line. The corrected board posts as its own entry, so the board
-   * before it and the board after it can be read one above the other.
+   * The review, which only runs once you actually have a line. One of your squares turns
+   * out to have been his all along, when that hands him a line. The corrected board posts
+   * as its own entry, so the board before it and the board after it read one above the
+   * other.
    */
   function review() {
     turn = 'review'; status.textContent = SAY.status.review; typingOn(true); paint();
@@ -170,29 +227,30 @@ export function init() {
       const flip = grid.map((m, i) => m === 'X' ? i : -1).filter((i) => i >= 0).find((i) => {
         grid[i] = 'O'; const wins = !!line('O'); grid[i] = 'X'; return wins;
       });
-      if (flip === undefined) { postBoard('Final'); return end(pick(SAY.review), true); }
+      if (flip === undefined) { postBoard('Final'); return end(pick(SAY.review), undefined, true); }
 
       grid[flip] = 'O';
-      say(pick(SAY.convert), true);
+      say(pick(SAY.convert), undefined, true);
       postBoard('Final');
       cells()[flip].classList.add('is-cheat');
       markWin(line('O')!);
       sfx('cheat');
-      later(600, () => end(pick(SAY.review), false));
+      later(600, () => end(pick(SAY.review)));
     });
   }
 
-  function houseTurn() {
+  function yvesTurn() {
+    const threat = winAt('X');
     const i = chooseO();
-    if (i < 0) return review();
+    if (i < 0) return yvesRule();
     grid[i] = 'O'; sfx('house');
     const won = line('O');
-    if (won) { postBoard('Final'); markWin(won); return end(pick(SAY.win), false); }
-    if (!free().length) return review();
+    if (won) { postBoard('Final'); markWin(won); return end(pick(SAY.win)); }
+    if (!free().length) return yvesRule();
 
     turn = 'you'; status.textContent = SAY.status.you;
     const danger = LINES.some((l) => l.filter((c) => grid[c] === 'X').length === 2 && l.some((c) => !grid[c]));
-    say(pick(danger ? SAY.near : SAY.move));
+    say(pick(threat === i ? SAY.block : danger ? SAY.near : SAY.move));
     postBoard();
     armIdle();
   }
@@ -203,19 +261,43 @@ export function init() {
     grid[i] = 'X'; sfx('place');
     paint();                      // your mark lands, and the board freezes with it
     if (!forced) me(`${YOU.square[i]}.`);
-    if (line('X') || !free().length) return review();
+    if (line('X')) return review();
+    if (!free().length) return yvesRule();
     status.textContent = SAY.status.thinking; typingOn(true);
-    later(650 + Math.random() * 250, houseTurn);
+    later(650 + Math.random() * 250, yvesTurn);
+  }
+
+  /**
+   * An appeal. Never refused on the spot: he answers in a few messages, thinking it over
+   * out loud, and then refuses it. Every one costs a point. The sequences get shorter as
+   * they pile up, and the button is never disabled, a second click mid sequence is simply
+   * not heard.
+   */
+  function appeal() {
+    if (appealing || turn !== 'over') return;
+    appealing = true; appeals++;
+    me(YOU.appeal);
+    const lines = SAY.appeal[Math.min(appeals, SAY.appeal.length) - 1];
+    const step = (k: number) => {
+      typingOn(true);
+      later(700 + Math.random() * 400, () => {
+        const last = k === lines.length - 1;
+        say(lines[k], last ? `Appeal #${appeals}` : undefined);
+        if (!last) return step(k + 1);
+        score.yves++; paintScore(); save(); sfx('deny'); appealing = false;
+      });
+    };
+    step(0);
   }
 
   function reset(increment = true) {
     cancel();
-    grid = Array(9).fill(''); turn = 'you'; turns = 0;
-    moved = false; idleUsed = false; appealed = false;
+    grid = Array(9).fill(''); turn = 'you'; turns = 0; appeals = 0;
+    moved = false; idleUsed = false; willSlip = Math.random() < SLIP_RATE;
     score.viol = 0; if (increment) score.match++;
     thread.querySelectorAll('.msg:not(.msg--typing), .ttt__post').forEach((n) => n.remove());
     live = null;
-    actions.hidden = true; actions.querySelector<HTMLButtonElement>('[data-ttt="appeal"]')!.disabled = false;
+    actions.hidden = true;
     status.textContent = SAY.status.you; paintScore(); save();
     say(pick(increment ? SAY.reset : SAY.opener));
     postBoard();
@@ -232,9 +314,7 @@ export function init() {
     const button = (e.target as HTMLElement).closest<HTMLElement>('[data-ttt]');
     if (!button) return;
     if (button.dataset.ttt === 'reset') { me(YOU.again); return reset(); }
-    if (appealed) return;
-    appealed = true; (button as HTMLButtonElement).disabled = true; score.yves++;
-    me(YOU.appeal); say(pick(SAY.appeal), true); paintScore(); save(); sfx('deny');
+    appeal();
   });
 
   let wasActive = active();
