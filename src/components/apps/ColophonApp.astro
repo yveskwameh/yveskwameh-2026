@@ -86,10 +86,14 @@ const credits = [
           </li>
         ))}
       </ul>
-      <p class="colo__note">The desktop icons and the wallpaper are mine. The tool logos in
-      the dock are trademarks of their owners, here to name what I use, nothing more.</p>
     </div>
   </section>
+
+  {/* Fine print, and deliberately not inside the block above. It is a note about other
+      people's trademarks, not a credit, and sitting in the same parent as Pixelarticons,
+      Sounds and Astro made it read as a fourth one. */}
+  <p class="colo__fine">The tool logos in the dock are trademarks of their owners, here to
+  name what I use, nothing more.</p>
 
   {/* Outside the gutter grid on purpose. See the note on .colo__cta. */}
   <div class="colo__cta">
@@ -140,7 +144,14 @@ const credits = [
   /* Pushed right so the names line up on the left and the licences on the right, which is
      what makes it scan as a table rather than as a sentence per line. */
   .colo__who { margin-left: auto; color: var(--os-muted); text-align: right; }
-  .colo__note { margin: var(--space-3) 0 0; color: var(--os-muted); font-size: 12px; }
+
+  /* Full width, under everything, smaller than the credits and separated by the lighter of
+     the two hairlines. The section rule would promote it to a section, and it is not one. */
+  .colo__fine {
+    margin: var(--space-4) 0 0; padding-top: var(--space-3);
+    border-top: 1px solid rgba(22, 22, 26, .07);
+    color: var(--os-muted); font-size: 11px; line-height: 1.55;
+  }
 
   /* The footer. Negative margins cancel the window body's padding so the band reaches all
      three edges, which is what makes the eye read it as the end of the page rather than as
