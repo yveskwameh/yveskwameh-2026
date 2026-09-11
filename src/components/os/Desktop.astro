@@ -120,6 +120,12 @@ import { desktopItems } from '../../data/desktop';
   }
   /* window-manager.ts puts has-window on the body whenever anything is open. */
   :global(body.has-window) .scrim { opacity: 1; }
+  /* And the icons stop answering the pointer while it is up. The scrim itself stays
+     pointer-events: none on purpose, so a click still reaches the desktop and dismisses
+     the window, but an icon underneath a blur has no business lighting up and playing a
+     sound when the pointer passes over it. Taking the icons out of hit testing rather
+     than the whole desktop is what keeps the dismiss working. */
+  :global(body.has-window) :global(.icon) { pointer-events: none; }
 
   .ctx {
     position: fixed; z-index: 950; min-width: 190px; padding: 6px;

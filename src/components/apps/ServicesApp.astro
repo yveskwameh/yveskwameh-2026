@@ -35,12 +35,18 @@ import Icon from '../os/Icon.astro';
           <span class="svc__name">{s.name}</span>
           <Icon name="chevron-down" size={14} />
         </label>
+        {/* The inner wrapper is what makes the open animate. A grid row can go from 0fr
+            to 1fr, which is the one way CSS can animate to a height nobody measured, and
+            that needs exactly one child to clip. It sits INSIDE the panel, so the
+            radio + row + panel adjacency the whole pattern rests on is untouched. */}
         <div class="svc__panel">
-          <p class="svc__what">{s.what}</p>
-          <p class="svc__label">You get</p>
-          <ul class="svc__gets">
-            {s.gets.map((g) => <li>{g}</li>)}
-          </ul>
+          <div class="svc__inner">
+            <p class="svc__what">{s.what}</p>
+            <p class="svc__label">You get</p>
+            <ul class="svc__gets">
+              {s.gets.map((g) => <li>{g}</li>)}
+            </ul>
+          </div>
         </div>
       </>
     ))}
@@ -61,6 +67,7 @@ import Icon from '../os/Icon.astro';
   .svc {
     margin: 0; padding: 0; border: 0; overflow: hidden;
     background: var(--os-card); border-radius: var(--r-window);
+    counter-reset: svc;
   }
   .svc__radio { position: absolute; width: 1px; height: 1px; opacity: 0; }
 
@@ -68,9 +75,21 @@ import Icon from '../os/Icon.astro';
     display: flex; align-items: center; gap: var(--space-2);
     padding: 11px var(--space-3); cursor: var(--cur-hand);
     font: 700 12px var(--font-chrome); color: var(--os-ink);
+    transition: background var(--t-fast), box-shadow var(--t-fast);
+  }
+  /* Numbered, because a list of six unnumbered lines in one weight reads as six lines
+     that happen to be there, and a numbered one reads as a set somebody decided on. The
+     order is real: the two build services come first. */
+  .svc__row::before {
+    counter-increment: svc;
+    content: counter(svc, decimal-leading-zero);
+    flex: none; width: 18px;
+    font: 700 10px var(--font-chrome); color: var(--os-muted);
+    font-variant-numeric: tabular-nums;
+    transition: color var(--t-fast);
   }
   .svc__name { flex: 1; min-width: 0; }
-  .svc__row :global(svg) { flex: none; color: var(--os-muted); transition: transform var(--t-fast) var(--ease); }
+  .svc__row :global(svg) { flex: none; color: var(--os-muted); transition: transform var(--t-base) var(--ease); }
 
   /* Every row after the first gets a line above it. Written as "a row that follows a
      panel" so the first row never gets one, whichever row happens to be open. */
@@ -78,20 +97,69 @@ import Icon from '../os/Icon.astro';
   .svc__row:hover { background: var(--os-hover); }
   .svc__radio:focus-visible + .svc__row { box-shadow: inset 0 0 0 2px var(--os-accent); }
 
-  .svc__panel { display: none; padding: 0 var(--space-3) var(--space-3); }
-  .svc__radio:checked + .svc__row + .svc__panel { display: block; }
-  .svc__radio:checked + .svc__row :global(svg) { transform: rotate(180deg); }
+  /* ------------------------------------------------------------------
+     Open has to look open. It used to be a rotated chevron and the fact that words had
+     appeared underneath, which is no signal at all in a card where every row is the same
+     weight on the same fill. Now the open service carries a rail down its edge and a wash
+     of the accent, across the row and its panel both, so the pair reads as one block that
+     opened rather than as a paragraph that turned up.
+     ------------------------------------------------------------------ */
+  .svc__radio:checked + .svc__row,
+  .svc__radio:checked + .svc__row + .svc__panel {
+    background: color-mix(in srgb, var(--os-accent) 7%, transparent);
+    box-shadow: inset 3px 0 0 var(--os-accent);
+  }
+  .svc__radio:checked + .svc__row::before { color: var(--os-accent); }
+  .svc__radio:checked + .svc__row :global(svg) { transform: rotate(180deg); color: var(--os-accent); }
+  /* The focus ring has to beat the rail, or a keyboard user loses it on the open row. */
+  .svc__radio:focus-visible + .svc__row { box-shadow: inset 0 0 0 2px var(--os-accent); }
+
+  /* It grows rather than appears. display cannot be animated and a height nobody measured
+     cannot be transitioned, but a grid row from 0fr to 1fr can, which is why there is an
+     inner wrapper to clip. All the padding lives on the inner one: padding on a zero
+     height row still takes up space. */
+  .svc__panel {
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows var(--t-base) var(--ease), background var(--t-fast);
+  }
+  .svc__inner { overflow: hidden; min-height: 0; }
+  .svc__radio:checked + .svc__row + .svc__panel { grid-template-rows: 1fr; }
+  /* Lined up under the name, past the number, rather than under the number. */
+  .svc__radio:checked + .svc__row + .svc__panel .svc__inner {
+    padding: 2px var(--space-3) var(--space-3) calc(var(--space-3) + 26px);
+  }
 
   .svc__what { margin: 0 0 var(--space-3); color: var(--os-muted); font-size: 12px; line-height: 1.55; }
   .svc__label {
     margin: 0 0 6px; font: 700 9px var(--font-chrome);
     letter-spacing: .16em; text-transform: uppercase; color: var(--os-muted);
   }
-  .svc__gets { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 12px; }
+  .svc__gets { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; font-size: 12px; }
   /* A dash rather than a bullet or a tick. A tick implies a checklist someone is working
-     through, and these are things that already come with the job. */
+     through, and these are things that already come with the job. In the accent now, so
+     the deliverables read as a block rather than as more of the same prose. */
   .svc__gets li { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 6px; color: var(--os-ink); }
-  .svc__gets li::before { content: '\2013'; color: var(--os-muted); }
+  .svc__gets li::before { content: '\2013'; color: var(--os-accent); }
+
+  /* The contents arrive after the panel has finished making room for them, one behind the
+     other, so opening a service reads as one movement rather than a block appearing at
+     full size. Delays are small on purpose: this is a list somebody is scanning. */
+  @media (prefers-reduced-motion: no-preference) {
+    .svc__radio:checked + .svc__row + .svc__panel .svc__inner > * {
+      animation: svc-in var(--t-base) var(--ease) both;
+    }
+    .svc__radio:checked + .svc__row + .svc__panel .svc__label { animation-delay: 60ms; }
+    .svc__radio:checked + .svc__row + .svc__panel .svc__gets { animation-delay: 90ms; }
+    .svc__radio:checked + .svc__row + .svc__panel .svc__gets li {
+      animation: svc-in var(--t-base) var(--ease) both;
+    }
+    .svc__gets li:nth-child(1) { animation-delay: 110ms; }
+    .svc__gets li:nth-child(2) { animation-delay: 150ms; }
+    .svc__gets li:nth-child(3) { animation-delay: 190ms; }
+    .svc__gets li:nth-child(4) { animation-delay: 230ms; }
+    .svc__gets li:nth-child(5) { animation-delay: 270ms; }
+  }
+  @keyframes svc-in { from { opacity: 0; transform: translateY(4px); } }
 
   @media (max-width: 640px) {
     .svc__row { padding: 12px var(--space-3); }

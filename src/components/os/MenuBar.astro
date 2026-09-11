@@ -377,7 +377,9 @@ const accents = [
   }
   .menu { position: relative; }
   .menu summary {
-    list-style: none; cursor: var(--cur-arrow); padding: 4px 8px; border-radius: var(--r-inner);
+    /* The hand, not the arrow. Every one of these opens something when clicked, the
+       clock and the avatar included, and the arrow said otherwise. */
+    list-style: none; cursor: var(--cur-hand); padding: 4px 8px; border-radius: var(--r-inner);
     transition: background var(--t-fast);
   }
   .menu summary::-webkit-details-marker { display: none; }

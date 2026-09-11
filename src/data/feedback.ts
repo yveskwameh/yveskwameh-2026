@@ -59,7 +59,7 @@ export const feedback: Quote[] = [
   {
     name: 'Samuel Sabastine',
     avatar: 'samuel.avif',
-    role: 'Creative Director, Sab Logo',
+    role: 'Creative Director',
     quote: 'Yves communicates clearly, brings fresh ideas, and stays patient under pressure.',
   },
 ];
