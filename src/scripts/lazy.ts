@@ -94,6 +94,11 @@ export function initWarm() {
     pulled = true;
     import('./drag').then((m) => m.init('.icon, .window__titlebar'));
     import('./dock-drag').then((m) => m.init());
+    /* The menu bar panels ride the same trigger. A pointer has to travel to the bar
+       before it can hover the speaker, and a window has to be opened before a soundtrack
+       can start, so this always lands first. It is not gated on the sound answer the way
+       sfx is, because the slider inside the panel is how somebody turns sound back on. */
+    import('./panel').then((m) => m.init());
   };
   addEventListener('pointermove', pullDrag, dragOnce);
   addEventListener('pointerdown', pullDrag, dragOnce);

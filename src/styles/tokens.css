@@ -5,6 +5,10 @@
 :root {
   /* Surfaces */
   --wallpaper: url('/images/wallpaper.avif');    /* 33KB, source jpeg is in src/images */
+  /* Painted over the wallpaper, under everything else. Transparent on the light themes,
+     so they carry no cost for the dark ones existing. A filter cannot do this job: the
+     wallpaper is a background on <body>, and filtering body would dim the windows too. */
+  --wallpaper-wash: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
   --os-desktop: #3b5a72;                         /* shows while it loads, and if avif is unsupported */
   --os-surface: #f3f3f1;                         /* window body */
   --os-recess: #eaeae8;                          /* behind grouped cards, System Settings style */
@@ -30,6 +34,11 @@
   --os-accent: #077167;
   /* Lighter teal for hover and active states */
   --os-accent-bright: #0e9c8d;
+  /* What text sits on a filled accent. A token rather than a hardcoded #fff, because on
+     the dark themes the accent has to get brighter to stay readable as a link on a dark
+     surface, and white on a bright accent is unreadable. One of the two has to move, so
+     the text colour moves with the theme. */
+  --os-on-accent: #fff;
 
   /* macOS traffic lights, exact */
   --light-close: #ff5f57;  --light-close-line: #e0443e;
@@ -129,6 +138,55 @@
   --t-base: 220ms;
   --t-slow: 620ms;   /* entrances. Zeroed below like the others, so delays collapse too */
 }
+
+/* ==========================================================
+   Themes. Four of them, picked from the swatch strip in Control Center.
+
+   A theme is nothing but a set of overrides on one attribute, so there is no theme
+   engine and no second stylesheet: every value below already exists above, and the
+   only job here is to say what it becomes.
+
+       Day    light surfaces, teal accent   (the default, no attribute)
+       Dusk   dark surfaces,  teal accent
+       Paper  light surfaces, amber accent
+       Night  dark surfaces,  amber accent
+
+   Surfaces and accent are deliberately two independent axes written as two blocks
+   rather than four, so a fifth theme is one selector on an existing list.
+
+   The attribute is written on <html> by the inline script in Base.astro, before first
+   paint, because a theme applied after paint is a white flash on the way to dark.
+   ========================================================== */
+
+/* --- dark surfaces --- */
+html[data-theme='dusk'], html[data-theme='night'] {
+  --os-desktop: #16202a;
+  --os-surface: #1e1e22;
+  --os-recess: #17171a;
+  --os-card: #26262b;
+  --os-chrome: #2b2b31;
+  --os-bar: rgba(28, 28, 33, 0.74);
+  --os-dock: rgba(32, 32, 37, 0.55);
+  --os-menu: rgba(32, 32, 37, 0.93);
+  --os-titlebar: rgba(28, 28, 33, 0.74);
+  --os-ink: #f2f2ef;
+  --os-muted: #a0a0a6;
+  --os-line: rgba(255, 255, 255, 0.2);
+  --os-track: rgba(255, 255, 255, 0.08);
+  --os-track-line: rgba(255, 255, 255, 0.16);
+  --os-thumb-hover: #3a3a42;
+  /* The wallpaper is one file, washed here rather than swapped for a second one. A dark
+     crop would be a second 33KB download for a visitor who already has this one. */
+  --wallpaper-wash: linear-gradient(rgba(8, 12, 18, 0.62), rgba(8, 12, 18, 0.62));
+  /* Near black on the accent, because the accent below is bright. */
+  --os-on-accent: #0d1412;
+}
+
+/* --- amber accent --- */
+html[data-theme='paper'] { --os-accent: #8a5410; --os-accent-bright: #a96a1c; }
+html[data-theme='night'] { --os-accent: #d09232; --os-accent-bright: #e0a951; }
+/* --- teal accent on dark. Brighter than Day's, to read as a link on a dark surface. --- */
+html[data-theme='dusk'] { --os-accent: #2cc0af; --os-accent-bright: #48d3c3; }
 
 @media (max-width: 640px) {
   :root { --window-top: 24px; --window-bottom: calc(var(--dock-clear) + 16px); }

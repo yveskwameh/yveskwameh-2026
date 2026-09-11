@@ -1,15 +1,41 @@
 ---
 /**
- * Menu bar. Left: avatar + name + menus. Centre: notch. Right: status glyphs, full date + time.
- * Menus close when you click anywhere else (scripts/menus.ts).
+ * Menu bar. Left: avatar + name + menus. Centre: notch. Right: status glyphs, the speaker
+ * panel, the battery, and the clock, which opens Control Center.
+ *
+ * Two of the right hand items are <details data-menu>, which is the same thing File and
+ * View already are, so scripts/menus.ts gives them one-open-at-a-time, close on an outside
+ * click and close on Escape for free. Nothing new was written to manage them.
+ *
+ * The speaker panel also opens on hover, which is pure CSS: an author rule beats the user
+ * agent's `details:not([open]) > *:not(summary) { display: none }`, so `:hover > .tray`
+ * shows the panel without touching the open attribute. That matters, because the panel has
+ * a third state beyond open and closed. While a window soundtrack is playing it is the
+ * resting state of this corner, so the pause control is always one glance away. Opening
+ * any other menu takes the corner, and closing that one hands it back. All three of those
+ * are the CSS at the bottom of this file. No script decides where the panel is.
+ *
+ * Everything here is build-time HTML, per rule 3. The only thing scripts touch is text and
+ * attributes: the track title, the slider position, the theme attribute on <html>.
  */
 import { existsSync } from 'node:fs';
 import { site } from '../../data/site';
+import { tracks } from '../../data/tracks';
 import Icon from './Icon.astro';
 
 // Same fallback as the lock screen: initials until the photo is in place
 const hasAvatar = existsSync('public' + site.avatar);
 const initials = site.name.split(' ').map((w) => w[0]).join('');
+
+/* The four themes, in the order the swatch strip reads. Day is the default and carries no
+   attribute, so a visitor who never opens Control Center is served exactly what they were
+   served before any of this existed. The `dark` flag only drives the swatch drawing. */
+const themes = [
+  { id: 'day',   label: 'Day',   dark: false },
+  { id: 'dusk',  label: 'Dusk',  dark: true },
+  { id: 'paper', label: 'Paper', dark: false },
+  { id: 'night', label: 'Night', dark: true },
+];
 ---
 <header class="menubar">
   <div class="menubar__left">
@@ -35,6 +61,8 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     <details class="menu" data-menu><summary>View</summary>
       <ul>
         <li><button data-action="tidy">Clean up desktop</button></li>
+        {/* Change theme has no panel of its own. It opens Control Center, where the
+            swatches already live, because two places to pick a theme is one too many. */}
         <li><button data-action="theme">Change theme</button></li>
       </ul>
     </details>
@@ -43,28 +71,152 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   <div class="notch" aria-hidden="true"></div>
 
   <div class="menubar__right">
-    {/* "Continue muted" is not a life sentence. Both icons ship and CSS shows whichever
-        matches aria-pressed, so the state is carried by the attribute a screen reader
-        already reads instead of by a class only the eye can see. scripts/snd.ts owns it. */}
-    <button class="menubar__link menubar__snd" id="snd" type="button"
-            aria-pressed="false" aria-label="Sound" title="Sound off">
-      <Icon name="volume-2" size={15} />
-      <Icon name="volume-x" size={15} />
-    </button>
+    {/* The speaker. Both glyphs ship and CSS shows whichever matches aria-pressed, so the
+        state is carried by the attribute a screen reader already reads instead of by a
+        class only the eye can see. scripts/snd.ts owns that attribute.
+
+        It used to toggle sound on click. It opens the panel now, and the slider inside is
+        what turns sound on and off: zero is the mute switch, so there is no second control
+        that can disagree with the first. */}
+    <div class="anchor anchor--snd">
+      <details class="menu menu--snd" data-menu>
+        <summary class="menubar__link menubar__snd" id="snd" aria-pressed="false" aria-label="Sound">
+          <Icon name="volume-2" size={15} />
+          <Icon name="volume-x" size={15} />
+        </summary>
+      </details>
+
+      <div class="tray tray--snd" role="group" aria-label="Sound">
+        <div class="tray__row">
+          {/* No cover art exists for either track, so the tile is drawn rather than
+              fetched. A glyph on the accent reads as deliberate; a grey box reads as a
+              missing image. It drains when nothing is playing. */}
+          <span class="np__art" aria-hidden="true"><Icon name="music" size={17} /></span>
+          <span class="np__meta">
+            <strong class="np__title">Nothing playing</strong>
+            <span class="np__why">Open Work or Feedback</span>
+          </span>
+          <button class="np__toggle" type="button" disabled aria-pressed="false" aria-label="Pause">
+            <Icon name="pause" size={13} />
+            <Icon name="play" size={13} />
+          </button>
+        </div>
+
+        <div class="tray__line"></div>
+
+        <div class="tray__row">
+          <span class="vol__glyph" aria-hidden="true">
+            <Icon name="volume-2" size={15} />
+            <Icon name="volume-x" size={15} />
+          </span>
+          {/* A native range, so arrow keys, Home and End all work with nothing written. */}
+          <input class="vol__range" type="range" min="0" max="100" step="1" value="0" aria-label="Volume" />
+          <span class="vol__pct">0</span>
+        </div>
+      </div>
+    </div>
+
     {site.socials.map((so) => (
-      <a class="menubar__link" href={so.url} target="_blank" rel="noopener noreferrer" title={so.name} aria-label={so.name}>
+      <a class="menubar__link tip" href={so.url} target="_blank" rel="noopener noreferrer"
+         data-tip={so.name} aria-label={so.name}>
         <Icon name={so.glyph} size={15} />
       </a>
     ))}
+
     {/* Drawn in CSS rather than a glyph, so the fill is a real percentage instead of
         three discrete states, and so charging has somewhere to show. Defaults to full,
         which is what a browser without the Battery API keeps. */}
-    <span class="batt" id="batt" title="Battery" aria-label="Battery">
+    <span class="batt tip" id="batt" data-tip="Battery" aria-label="Battery">
       <span class="batt__box"><i class="batt__fill"></i></span>
     </span>
-    <span id="clock"></span>
+
+    {/* Control Center. The clock is the summary, so the panel is anchored to the thing
+        that opened it and the whole surface costs one <details>. */}
+    <div class="anchor anchor--cc">
+      <details class="menu menu--cc" id="cc" data-menu>
+        <summary id="clock-sum"><span id="clock"></span></summary>
+      </details>
+
+      <div class="tray tray--cc" role="group" aria-label="Control Center">
+        <div class="cc__tile cc__clock">
+          <strong id="cc-time">--:--</strong>
+          <span id="cc-date">---</span>
+        </div>
+
+        <div class="cc__tile">
+          <div class="cc__head">
+            <span class="vol__glyph" aria-hidden="true">
+              <Icon name="volume-2" size={15} />
+              <Icon name="volume-x" size={15} />
+            </span>
+            <strong>Sound</strong>
+            <span class="vol__pct">0</span>
+          </div>
+          {/* A second slider, not a moved one. Both carry .vol__range and scripts/panel.ts
+              writes every one of them from a single state, so they cannot disagree. */}
+          <input class="vol__range vol__range--wide" type="range" min="0" max="100" step="1"
+                 value="0" aria-label="Volume" />
+        </div>
+
+        <div class="cc__tile cc__tile--tight">
+          <div class="tray__row tray__row--flush">
+            <span class="np__art np__art--sm" aria-hidden="true"><Icon name="music" size={15} /></span>
+            <span class="np__meta">
+              <strong class="np__title">Nothing playing</strong>
+              <span class="np__why">Open Work or Feedback</span>
+            </span>
+            <button class="np__toggle" type="button" disabled aria-pressed="false" aria-label="Pause">
+              <Icon name="pause" size={13} />
+              <Icon name="play" size={13} />
+            </button>
+          </div>
+        </div>
+
+        {/* Theme. Four swatches, each a whole look rather than a mode plus an accent, so
+            there is one decision here instead of two. CSS-only selection; panel.ts only
+            writes the attribute on <html> and remembers the answer. */}
+        <div class="cc__tile">
+          <div class="cc__head"><strong>Theme</strong></div>
+          <fieldset class="sw" aria-label="Theme">
+            {themes.map((t) => (
+              <>
+                <input class="sw__radio" type="radio" name="theme" id={`th-${t.id}`}
+                       value={t.id} checked={t.id === 'day'} />
+                <label class="sw__opt" for={`th-${t.id}`}>
+                  <span class:list={['sw__chip', t.dark && 'sw__chip--dark']} data-th={t.id} aria-hidden="true"></span>
+                  <span class="sw__name">{t.label}</span>
+                </label>
+              </>
+            ))}
+          </fieldset>
+        </div>
+
+        <div class="cc__pair">
+          <button class="cc__btn" type="button" data-action="tidy">Clean up desktop</button>
+          <button class="cc__btn" type="button" data-action="lock">Lock</button>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
+
+{/* The window soundtracks. They live here rather than in the Music window because they
+    belong to the sound system, not to an app: opening Work has to be able to start one
+    whether or not the Music window was ever opened.
+
+    preload="none" is this file's whole side of rule 1, because the file is not fetched
+    until a window asks for it. `loop` is the whole of the fade and repeat, because the
+    fade is baked into both ends of the file. Two sources, no script: the browser takes
+    the first it can play. */}
+<div hidden>
+  {tracks.map((t) => (
+    <audio id={`a-${t.id}`} preload="none" loop
+           data-for={t.window} data-label={t.windowLabel} data-title={t.title}>
+      <source src={`${t.src}.opus`} type="audio/ogg; codecs=opus" />
+      <source src={`${t.src}.mp3`} type="audio/mpeg" />
+    </audio>
+  ))}
+</div>
 
 <style>
   .menubar {
@@ -86,7 +238,7 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   .menubar__avatar { border-radius: 50%; display: block; width: 22px; height: 22px; }
   .menubar__avatar--fallback {
     display: grid; place-items: center; font-size: 9px; font-weight: 700; letter-spacing: .02em;
-    background: var(--os-accent); color: #fff;
+    background: var(--os-accent); color: var(--os-on-accent);
   }
   /* The brand menu is just the avatar, so it needs tighter padding than a text menu */
   .menu--brand summary { padding: 3px 6px; }
@@ -97,12 +249,9 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     display: grid; place-items: center; width: 26px; height: 22px; border-radius: var(--r-inner);
     color: inherit; transition: background var(--t-fast);
   }
-  /* The speaker. A <button> in a row of <a>s, so it needs the browser's button styling
-     reset off it before it matches its neighbours. */
-  .menubar__snd {
-    appearance: none; padding: 0; border: 0; background: none;
-    font: inherit; cursor: var(--cur-hand);
-  }
+  /* The speaker is a <summary> now, so it loses its marker the same way the text menus do. */
+  .menubar__snd { list-style: none; cursor: var(--cur-hand); }
+  .menubar__snd::-webkit-details-marker { display: none; }
   /* Both icons sit in the same grid cell and one is hidden, so switching state is a class
      the browser already tracks rather than a DOM swap. Muted is the default because that
      is what a visitor who has answered nothing yet is. */
@@ -164,10 +313,10 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
   }
   .menu button { all: unset; display: block; width: 100%; padding: 6px 10px; border-radius: var(--r-inner); cursor: var(--cur-hand); font: inherit; }
-  .menu button:hover { background: var(--os-accent); color: #fff; }
-  /* Matches the margin on .batt, so the space either side of the battery is equal. The
-     row gap is 4px, so 8px here makes both gaps 12px. */
-  #clock { margin-left: var(--space-2); font-family: var(--font-chrome); font-size: 11px; letter-spacing: .02em; }
+  .menu button:hover { background: var(--os-accent); color: var(--os-on-accent); }
+  #clock { font-family: var(--font-chrome); font-size: 11px; letter-spacing: .02em; }
+  /* Matches the margin on .batt, so the space either side of the battery is equal. */
+  .menu--cc > summary { margin-left: var(--space-1); padding: 4px 7px; }
 
   .batt { display: inline-flex; align-items: center; gap: 5px; margin-left: var(--space-2); }
   .batt__box {
@@ -201,18 +350,254 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     font-variant-numeric: tabular-nums;
   }
 
+  /* ==================================================================
+     Tooltips. The dock's rule with the tail flipped to the top.
+
+     Only the social links and the battery get one. The speaker and the clock both open a
+     panel, and a tooltip that appears a third of a second before the panel that covers it
+     is noise rather than help.
+     ================================================================== */
+  .tip { position: relative; }
+  .tip::after, .tip::before {
+    position: absolute; left: 50%; opacity: 0; pointer-events: none;
+    transform: translateX(-50%) translateY(-3px);
+    transition: opacity var(--t-fast), transform var(--t-fast);
+  }
+  .tip::after {
+    content: attr(data-tip); top: calc(100% + 9px); white-space: nowrap;
+    background: rgba(30,30,34,.9); color: #fff;
+    font: 11px var(--font-chrome); letter-spacing: .02em;
+    padding: 5px 8px; border-radius: 8px;
+  }
+  .tip::before {
+    content: ''; top: calc(100% + 4px);
+    border: 5px solid transparent; border-bottom-color: rgba(30,30,34,.9); border-top: 0;
+  }
+  /* The delay is on the shown state only, so a tip waits before appearing and leaves at
+     once. A tip that lingers on the way out follows the pointer along the bar. */
+  .tip:hover::after, .tip:hover::before,
+  .tip:focus-visible::after, .tip:focus-visible::before {
+    opacity: 1; transform: translateX(-50%) translateY(0); transition-delay: .35s;
+  }
+  /* Nothing hovers on a touch screen, so a tip there can only ever be a flash on tap. */
+  @media (hover: none) { .tip::after, .tip::before { display: none; } }
+
+  /* ==================================================================
+     The two panels.
+
+     Anchored under the control that opens them rather than to the screen edge, so the
+     pointer travels straight down from the icon to the panel. A panel pinned to the right
+     edge would sit diagonally away from the speaker, and hover would drop on the way.
+     ================================================================== */
+  .tray {
+    position: absolute; top: calc(100% + 6px); right: -8px; z-index: 10;
+    background: var(--os-menu); border: 1px solid rgba(0,0,0,.12);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
+    color: var(--os-ink); cursor: default;
+  }
+  /* Bridges the gap between the summary and the panel, so travelling from one to the
+     other never leaves the hover area. Without it the panel closes mid-journey. */
+  .tray::before { content: ''; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+  .tray--snd { width: 278px; }
+  .tray--cc { width: 292px; padding: 10px; gap: 9px; background: var(--os-recess); }
+
+  /* Hover opens, and so does a click, and so does a track playing.
+
+     The panel is a sibling of its <details>, not its content, and the wrapper is what
+     both are positioned against. That is not tidiness, it is the only arrangement that
+     works: since Chrome 131 a closed <details> hides its content with
+     `content-visibility: hidden` on a ::details-content pseudo-element, which cannot be
+     overridden from the child and, when forced visible, applies layout containment and
+     becomes the containing block itself. Measured, not guessed: the panel's computed
+     display was already `block` while nothing was on screen, and once revealed it landed
+     163px above the viewport. Outside the details, none of that applies anywhere.
+
+     The <details> is still a real <details data-menu>, so scripts/menus.ts keeps giving
+     both panels one-open-at-a-time, close on an outside click and close on Escape. Only
+     the open attribute is read here, with :has().
+
+     The third state is the point. A panel that is up because music is playing must not be
+     closable by the outside click that closes real menus, or it would vanish the moment
+     you clicked the desktop and take the pause button with it. So it is a display rule,
+     not an open attribute. */
+  /* .tray, not .pop. global.css already owns .pop for the floating reaction emoji, which
+     is position: fixed and animates to translateY(-200px) at zero opacity. Both panels
+     inherited every bit of that silently: computed display was block, and they rendered
+     163px above the viewport where nothing could be seen. Check global.css before naming
+     anything here. */
+  .anchor { position: relative; display: flex; align-items: center; }
+  .anchor .tray { display: none; }
+  .anchor--snd:hover .tray,
+  .anchor--snd:has(.menu--snd[open]) .tray { display: block; }
+  .anchor--cc:has(.menu--cc[open]) .tray { display: grid; }
+  /* The resting state of this corner while a window soundtrack plays. */
+  :global(body.is-playing) .anchor--snd .tray { display: block; }
+  /* Except when another menu wants the corner. When that one closes this comes back on
+     its own, because the selector simply stops matching. No script, no bookkeeping. */
+  .menubar:has(.menu[open]:not(.menu--snd)) .anchor--snd .tray { display: none; }
+
+  .tray__row { display: flex; align-items: center; gap: var(--space-2); padding: 11px 12px; }
+  .tray__row--flush { padding: 0; }
+  .tray__line { height: 1px; background: var(--os-line); opacity: .35; }
+
+  /* --- now playing --- */
+  .np__art {
+    width: 38px; height: 38px; flex: none; border-radius: var(--r-inner);
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--os-accent), color-mix(in srgb, var(--os-accent) 45%, #000));
+    color: var(--os-on-accent);
+    transition: filter var(--t-fast), opacity var(--t-fast);
+  }
+  .np__art--sm { width: 32px; height: 32px; }
+  /* Nothing playing: the tile stays, drained, so the panel does not change shape when a
+     track starts. A panel that resizes under the pointer is a panel you misclick. */
+  :global(body:not(.is-playing)) .np__art { filter: grayscale(1); opacity: .45; }
+  .np__meta { display: grid; gap: 1px; min-width: 0; flex: 1; }
+  .np__title {
+    font: 12.5px var(--font-chrome); font-weight: 700;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .np__why {
+    font: 10.5px var(--font-chrome); color: var(--os-muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .np__toggle {
+    all: unset; width: 29px; height: 29px; flex: none; box-sizing: border-box;
+    border: 1px solid var(--os-line); border-radius: 50%;
+    background: var(--os-card); color: var(--os-ink);
+    display: grid; place-items: center; cursor: var(--cur-hand);
+    transition: background var(--t-fast), opacity var(--t-fast);
+  }
+  .np__toggle:hover { background: var(--os-chrome); }
+  .np__toggle:focus-visible { outline: 2px solid var(--os-accent); outline-offset: 2px; }
+  .np__toggle[disabled] { opacity: .35; cursor: default; }
+  /* Two glyphs in one cell, so the button never changes size when the state flips. */
+  .np__toggle :global(svg) { grid-area: 1 / 1; }
+  .np__toggle[aria-pressed='false'] :global(svg:first-child),
+  .np__toggle[aria-pressed='true'] :global(svg:last-child) { display: none; }
+
+  /* --- volume --- */
+  .vol__glyph { display: grid; width: 15px; height: 15px; flex: none; color: var(--os-muted); }
+  .vol__glyph :global(svg) { grid-area: 1 / 1; }
+  /* Driven by the same body flag the speaker uses, so the two glyphs cannot disagree. */
+  :global(body.snd-on) .vol__glyph :global(svg:last-child),
+  :global(body:not(.snd-on)) .vol__glyph :global(svg:first-child) { display: none; }
+
+  .vol__range {
+    -webkit-appearance: none; appearance: none; background: none;
+    flex: 1; min-width: 0; height: 15px; margin: 0; cursor: var(--cur-hand);
+  }
+  .vol__range--wide { width: 100%; flex: none; }
+  /* The filled part is painted into the track from a custom property that panel.ts keeps
+     in step with the value, because there is no cross-browser pseudo-element for it. */
+  .vol__range::-webkit-slider-runnable-track {
+    height: 4px; border-radius: 2px;
+    background: linear-gradient(to right,
+      var(--os-accent) var(--fill, 0%), var(--os-track-line) var(--fill, 0%));
+  }
+  .vol__range::-moz-range-track { height: 4px; border-radius: 2px; background: var(--os-track-line); }
+  .vol__range::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--os-accent); }
+  .vol__range::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 13px; height: 13px; margin-top: -4.5px;
+    border-radius: 50%; background: var(--os-card); border: 1px solid var(--os-line);
+  }
+  .vol__range::-moz-range-thumb {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--os-card); border: 1px solid var(--os-line);
+  }
+  .vol__range:focus-visible { outline: 2px solid var(--os-accent); outline-offset: 3px; border-radius: 4px; }
+  .vol__pct {
+    font: 10.5px var(--font-chrome); color: var(--os-muted);
+    width: 22px; text-align: right; font-variant-numeric: tabular-nums;
+  }
+
+  /* --- control center --- */
+  .cc__tile { background: var(--os-card); border-radius: var(--r-window); padding: 12px; }
+  .cc__tile--tight { padding: 10px; }
+  .cc__clock { display: grid; gap: 1px; }
+  .cc__clock strong { font: 700 26px/1.1 var(--font-chrome); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .cc__clock span { font: 10.5px var(--font-chrome); color: var(--os-muted); }
+  .cc__head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: 9px; }
+  .cc__head strong { flex: 1; font: 700 12px var(--font-chrome); }
+  .cc__pair { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .cc__btn {
+    all: unset; text-align: center; padding: 9px 6px; border-radius: var(--r-inner);
+    background: var(--os-card); font: 11px var(--font-chrome); cursor: var(--cur-hand);
+    color: var(--os-ink);
+  }
+  .cc__btn:hover { background: var(--os-accent); color: var(--os-on-accent); }
+  .cc__btn:focus-visible { outline: 2px solid var(--os-accent); outline-offset: 2px; }
+
+  /* --- theme swatches --- */
+  .sw { border: 0; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+  .sw__radio { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+  .sw__opt { display: grid; gap: 5px; justify-items: center; cursor: var(--cur-hand); }
+  .sw__chip {
+    width: 100%; aspect-ratio: 3 / 2; border-radius: var(--r-inner);
+    position: relative; overflow: hidden; background: #8fa8bb;
+    box-shadow: 0 0 0 2px transparent; transition: box-shadow var(--t-fast);
+  }
+  /* A miniature of the thing being chosen: a bar, and the accent on a button. Each chip
+     paints its own theme's colours, so the strip is a real preview and not four grey
+     rectangles with names under them. */
+  .sw__chip::before {
+    content: ''; position: absolute; inset: 0 0 auto 0; height: 22%; background: #ececea;
+  }
+  .sw__chip::after {
+    content: ''; position: absolute; left: 24%; top: 46%; width: 52%; height: 24%;
+    border-radius: 3px; background: var(--chip-acc, #077167);
+  }
+  .sw__chip--dark { background: #22323f; }
+  .sw__chip--dark::before { background: #2b2b31; }
+  .sw__chip[data-th='dusk']  { --chip-acc: #2cc0af; }
+  .sw__chip[data-th='paper'] { --chip-acc: #8a5410; }
+  .sw__chip[data-th='night'] { --chip-acc: #d09232; }
+  .sw__name { font: 10px var(--font-chrome); color: var(--os-muted); }
+  .sw__radio:checked + .sw__opt .sw__chip { box-shadow: 0 0 0 2px var(--os-accent); }
+  .sw__radio:checked + .sw__opt .sw__name { color: var(--os-ink); font-weight: 700; }
+  .sw__radio:focus-visible + .sw__opt .sw__chip {
+    box-shadow: 0 0 0 2px var(--os-card), 0 0 0 4px var(--os-accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tip::after, .tip::before, .np__art, .np__toggle, .sw__chip { transition: none; }
+  }
+
   @media (max-width: 640px) {
     /* File and View go, but the brand menu stays: it holds Lock desktop, which is the
-       one action worth having on a phone. */
+       one action worth having on a phone. The speaker and the clock stay too, because
+       they are the only way to reach the volume and the theme. */
     .menubar__name, .notch { display: none; }
-    .menu:not(.menu--brand) { display: none; }
+    .menu:not(.menu--brand):not(.menu--snd):not(.menu--cc) { display: none; }
+    /* Anchored under an icon that is now near the edge, so the panel is clamped to the
+       viewport instead. position: fixed rather than absolute, because an absolute box
+       cannot be measured against the screen. */
+    .tray {
+      position: fixed; top: calc(var(--menubar-h) + 6px);
+      right: var(--space-2); left: var(--space-2); width: auto;
+    }
+    /* The bridge only makes sense under a panel that sits below its own trigger. */
+    .tray::before { display: none; }
+    /* Hover is meaningless here, and a tap leaves a lingering :hover on a touch screen
+       that would pin the panel open until you tapped somewhere else.
+
+       Nor does a playing track pin it. On a phone the panel is full width, so leaving it
+       up for the length of a track would cover the top of the screen the whole time. The
+       speaker is one tap away instead, which on a phone is the same effort as a glance.
+
+       The tap rule sits last and wins on specificity: :has() counts its most specific
+       argument, so .anchor--snd:has(.menu--snd[open]) .tray is a class ahead of
+       body.is-playing .anchor--snd .tray. */
+    .anchor--snd:hover .tray { display: none; }
+    :global(body.is-playing) .anchor--snd .tray { display: none; }
+    .anchor--snd:has(.menu--snd[open]) .tray { display: block; }
   }
 </style>
 
 <script>
   import { startClock } from '../../scripts/clock';
   import { initMenus } from '../../scripts/menus';
-  import { initBattery } from '../../scripts/battery';
   /* Sound is a system setting, so it is wired up from the system chrome. initSound also
      runs the first-visit gate on the lock screen, which is fine from here: the two
      components always ship together, and it returns quietly if the gate is not on the
@@ -221,6 +606,8 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   import { initSound } from '../../scripts/snd';
   startClock(document.getElementById('clock'));
   initMenus();
-  initBattery();
   initSound();
+  /* The battery is not here. It is drawn full by default and the real reading arrives
+     from scripts/panel.ts, which is fetched on the first pointer move. Nobody reads a
+     battery meter in the first second of a page, and the bytes were needed elsewhere. */
 </script>

@@ -1,50 +1,16 @@
 ---
 /**
- * Music. Two sources: Yves's own hosted excerpts up top, and the Spotify playlist below.
+ * Music: the Spotify playlist, built on open.
  *
- * Neither costs anything until it is asked for. Every <audio> carries preload="none", so a
- * track is only fetched when someone presses its button, and the Spotify iframe is only
- * built once the window has been opened. Rule 2: nothing ever plays without a click.
+ * The window soundtracks are not here and are not a playlist. They belong to Work and to
+ * Feedback, they start when those windows open, and the only control over them is pause,
+ * in the speaker panel in the menu bar. A row of play buttons here would be a second way
+ * to choose a track, which is the one thing that feature is not.
  *
- * Each track offers two files and lets the browser choose. Opus is about half the bytes of
- * MP3 at the same perceived quality, but older Safari will not take it, and audio that
- * silently fails is worse than audio that is bigger than it needed to be. That choice is
- * made by <source>, not by script.
- *
- * The play and pause glyphs are both in the markup and one is hidden, the same way the menu
- * bar's sound button works, so switching state is a class change rather than a redraw.
+ * Nothing costs anything until this window opens, and then one iframe is injected.
  */
-import { tracks } from '../../data/tracks';
-import Icon from './../os/Icon.astro';
 ---
 <div class="music">
-  {tracks.length > 0 && (
-    <section>
-      <p class="music__label">TRACKS</p>
-      <ul class="music__list">
-        {tracks.map((t) => (
-          <li class="music__row">
-            <button class="btn btn--icon music__play" type="button"
-                    data-play={t.id} data-title={t.title}
-                    aria-pressed="false" aria-label={`Play ${t.title}`}>
-              <Icon name="play" size={14} />
-              <Icon name="pause" size={14} />
-            </button>
-            <span class="music__meta">
-              <strong>{t.title}</strong>
-              {t.artist && <><br />{t.artist}</>}
-            </span>
-            {/* Two sources, no script: the browser takes the first it can play. */}
-            <audio id={`a-${t.id}`} preload="none">
-              <source src={`${t.src}.opus`} type="audio/ogg; codecs=opus" />
-              <source src={`${t.src}.mp3`} type="audio/mpeg" />
-            </audio>
-          </li>
-        ))}
-      </ul>
-    </section>
-  )}
-
   <section>
     <p class="music__label">PLAYLIST</p>
     <div id="spotify-box"><p class="music__empty">Loading the playlist from Spotify…</p></div>
@@ -54,16 +20,7 @@ import Icon from './../os/Icon.astro';
 <style>
   .music { min-height: 200px; display: grid; gap: var(--space-4); }
   .music__label { margin: 0 0 var(--space-2); font: 10px var(--font-chrome); letter-spacing: .16em; color: var(--os-muted); }
-  .music__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
-  .music__row { display: flex; align-items: center; gap: var(--space-3); }
-  .music__meta { font-size: 13px; line-height: 1.35; }
 
-  /* Grid rather than the .btn family's inline-flex, so the two glyphs stack in one cell
-     and the button never changes size when the state flips. */
-  .music__play { flex: none; display: grid; place-items: center; }
-  .music__play :global(svg) { grid-area: 1 / 1; }
-  .music__play[aria-pressed='false'] :global(svg:last-child),
-  .music__play[aria-pressed='true'] :global(svg:first-child) { display: none; }
 
   .music__empty { font: 12px var(--font-mono); color: var(--os-muted); margin: 0; }
 </style>

@@ -1,5 +1,10 @@
 /** Menu bar menus behave like macOS: one open at a time, any outside click closes them. */
 const Q = 'details[data-menu]';
+/* What counts as inside. The speaker panel and Control Center are siblings of their
+   <details> rather than its content, so that they can be positioned without Chrome's
+   ::details-content pseudo becoming their containing block. Without this, dragging the
+   volume slider would read as a click outside its own menu and shut the panel. */
+const IN = Q + ', .tray';
 
 export function initMenus() {
   const menus = Array.from(document.querySelectorAll<HTMLDetailsElement>(Q));
@@ -23,7 +28,7 @@ export function initMenus() {
   }, { passive: true });
 
   document.addEventListener('pointerdown', (e) => {
-    if (!(e.target as HTMLElement).closest(Q)) closeAll();
+    if (!(e.target as HTMLElement).closest(IN)) closeAll();
   });
   document.addEventListener('click', (e) => {
     if ((e.target as HTMLElement).closest(Q + ' button')) closeAll();

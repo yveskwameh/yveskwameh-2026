@@ -114,6 +114,13 @@ const ld = schema?.length
         run scripts still has to be able to read it, and this site has no runtime that
         could inject it anyway. */}
     {ld && <script type="application/ld+json" set:html={ld} />}
+
+    {/* The theme, before the first paint. It has to be inline and it has to be here:
+        applied from a module after paint, a visitor on Dusk or Night gets a full white
+        page first and then the dark one, which is worse than having no dark theme.
+        Day is the default and stores nothing, so this writes no attribute for it.
+        scripts/panel.ts is what puts the answer in localStorage. */}
+    <script is:inline>document.documentElement.dataset.theme = localStorage.theme || ''</script>
   </head>
   <body>
     <slot />

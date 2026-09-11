@@ -30,7 +30,22 @@ let lastHover = 0;
 
 let started = false;
 
+/**
+ * The stored volume as a gain, 0 to 1. The slider in the speaker panel writes it and
+ * announces it; this is the only thing in here that knows a level exists at all.
+ */
+const level = () => {
+  const n = Number(localStorage.vol);
+  return Number.isFinite(n) ? Math.min(1, Math.max(0, n / 100)) : 1;
+};
+
 export function init() {
+  document.addEventListener('vol', (e) => {
+    // Dragging the slider has to change the click sounds under the pointer, not on the
+    // next reload. Only when sound is on: zero already turned it off through `snd`.
+    const d = (e as CustomEvent<number>).detail;
+    if (master && localStorage.snd === 'on') master.gain.value = d;
+  });
   if (started) return;
   started = true;
 
@@ -73,7 +88,7 @@ export function init() {
   /* Turning sound off has to silence what is already loaded, not just stop new fetches.
      src/scripts/snd.ts owns the setting and fires this. */
   document.addEventListener('snd', ((e: CustomEvent) => {
-    if (master) master.gain.value = e.detail ? 1 : 0;
+    if (master) master.gain.value = e.detail ? level() : 0;
     if (e.detail) resume();
   }) as EventListener);
 }

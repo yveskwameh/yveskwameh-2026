@@ -38,7 +38,7 @@ const panes = await Promise.all(
  * it cannot see into a string. Ids do the narrowing instead.
  */
 const rules = panes.map(({ p }) => `
-.settings:has(#w-${p.id}:checked) [for="w-${p.id}"]{background:var(--os-accent);color:#fff}
+.settings:has(#w-${p.id}:checked) [for="w-${p.id}"]{background:var(--os-accent);color:var(--os-on-accent)}
 .settings:has(#w-${p.id}:checked) #pane-${p.id}{display:block}
 .settings:has(#w-${p.id}:checked) .settings__pick-name[data-for="${p.id}"]{display:grid}
 .settings:has(#w-${p.id}:focus-visible) [for="w-${p.id}"]{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--os-accent)}
@@ -193,7 +193,7 @@ const rules = panes.map(({ p }) => `
      Scoped to the radios on purpose: #work-open is a checkbox in the same fieldset, and a
      bare :checked would count opening the phone menu as picking a case study. */
   .settings:not(:has(.settings__radio:checked)) .settings__pane:first-of-type { display: block; }
-  .settings:not(:has(.settings__radio:checked)) .settings__row:first-of-type { background: var(--os-accent); color: #fff; }
+  .settings:not(:has(.settings__radio:checked)) .settings__row:first-of-type { background: var(--os-accent); color: var(--os-on-accent); }
   .settings:not(:has(.settings__radio:checked)) .settings__pick-name:first-of-type { display: grid; }
 
   /* Same height as the Tic Tac Toe window: the full space the desktop allows. Not

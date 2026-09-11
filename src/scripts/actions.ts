@@ -48,8 +48,8 @@ export function initActions() {
     switch (btn?.dataset.action) {
       case 'tidy': tidyDesktop(); break;
       case 'lock': lock(); break;
-      // 'theme' is still a stub. The palette is an open decision in docs/BRIEF.md, so
-      // there is nothing to switch between yet.
+      // Not a fourth surface. The swatches live in Control Center, so this opens that.
+      case 'theme': (document.getElementById('cc') as HTMLDetailsElement).open = true; break;
     }
   });
 }

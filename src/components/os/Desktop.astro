@@ -40,6 +40,24 @@ import { desktopItems } from '../../data/desktop';
   <Window id="testimonials" title="Feedback" filename="feedback.txt" width={760}><TestimonialsApp /></Window>
   <!-- Add: trash -->
 
+  {/* The unmute notice. One line, once, and only to somebody who is missing something.
+
+      Every condition is in the selector at the bottom of this file rather than in a
+      script: sound off, lock screen already dismissed, not already waved away. The 45
+      second wait is the animation's delay, and `both` holds the first keyframe until it
+      elapses, which is what keeps the pill hidden and unclickable while it waits.
+
+      "Turn on" is a real button because the speaker is a <summary> now and cannot be
+      driven by a <label for>. scripts/panel.ts picks it up, and by 45 seconds in it has
+      been loaded for 44 of them. */}
+  <input class="notice__x" id="notice-x" type="checkbox" hidden />
+  <div class="notice" role="status">
+    <span class="notice__glyph" aria-hidden="true"></span>
+    <span class="notice__text">Sound is off</span>
+    <button class="notice__go" type="button" data-vol="60">Turn on</button>
+    <label class="notice__close" for="notice-x" tabindex="0" role="button" aria-label="Dismiss">&times;</label>
+  </div>
+
   {/* Pushes the desktop back behind whatever is open. Still pointer-events: none, even
       though window-manager.ts now dismisses on a click outside: swallowing the click here
       instead would cost the icons their double click to open, and windows their drag. */}
@@ -117,7 +135,7 @@ import { desktopItems } from '../../data/desktop';
     padding: 6px 10px; border-radius: var(--r-inner); cursor: var(--cur-hand);
     font: 12px var(--font-chrome); color: var(--os-ink);
   }
-  .ctx button:hover { background: var(--os-accent); color: #fff; }
+  .ctx button:hover { background: var(--os-accent); color: var(--os-on-accent); }
 
   /* ------------------------------------------------------------------
      Live cursors.
@@ -172,7 +190,7 @@ import { desktopItems } from '../../data/desktop';
   #me-chip:hover { opacity: 1; }
   .chip--edit {
     position: fixed; z-index: 860; left: -999px; width: 130px; border: 0; text-align: center;
-    background: var(--os-accent); color: #fff; font: 10px var(--font-chrome);
+    background: var(--os-accent); color: var(--os-on-accent); font: 10px var(--font-chrome);
     padding: 4px 9px; border-radius: var(--r-pill);
   }
   .chip--edit:focus { outline: 2px solid #fff; outline-offset: 1px; }
@@ -201,6 +219,66 @@ import { desktopItems } from '../../data/desktop';
     .peer, .me { will-change: auto; }
     .pop { animation-duration: 1ms; }
   }
+  /* ------------------------------------------------------------------
+     The unmute notice. A pill, which is the smallest thing that still offers the action.
+     ------------------------------------------------------------------ */
+  .notice {
+    position: fixed; z-index: 880;
+    top: calc(var(--menubar-h) + var(--space-2)); right: var(--space-2);
+    display: flex; align-items: center; gap: var(--space-3);
+    padding: 6px 6px 6px 14px; border-radius: var(--r-pill);
+    background: var(--os-menu); border: 1px solid rgba(0,0,0,.12);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    box-shadow: var(--os-shadow-sm); color: var(--os-ink);
+    /* Hidden, and unreachable, until the animation below is both applied and finished
+       waiting. Visibility rather than display, because display cannot be animated and
+       opacity alone would leave an invisible pill swallowing clicks for 45 seconds. */
+    visibility: hidden; opacity: 0;
+  }
+  .notice__glyph {
+    width: 13px; height: 13px; flex: none; border-radius: 2px;
+    background: var(--os-muted); opacity: .7;
+    clip-path: polygon(0 32%, 26% 32%, 55% 0, 55% 100%, 26% 68%, 0 68%);
+  }
+  .notice__text { font: 12px var(--font-chrome); }
+  .notice__go {
+    all: unset; padding: 7px 13px; border-radius: var(--r-pill); cursor: var(--cur-hand);
+    background: var(--os-accent); color: var(--os-on-accent);
+    font: 700 11px var(--font-chrome);
+  }
+  .notice__go:hover { background: var(--os-accent-bright); }
+  .notice__go:focus-visible, .notice__close:focus-visible {
+    outline: 2px solid var(--os-accent); outline-offset: 2px;
+  }
+  .notice__close {
+    width: 22px; height: 22px; flex: none; display: grid; place-items: center;
+    border-radius: 50%; cursor: var(--cur-hand); color: var(--os-muted);
+    font: 15px/1 var(--font-chrome);
+  }
+  .notice__close:hover { background: rgba(22,22,26,.08); color: var(--os-ink); }
+
+  /* Sound off, lock screen already dismissed, and not already waved away. #lock carries
+     is-open once the desktop has been entered, so the wait starts at the desktop rather
+     than at the lock screen, where the visitor has only just answered this question. */
+  body:not(.snd-on):has(#lock.is-open):not(:has(#notice-x:checked)) .notice {
+    animation: notice-in .42s var(--ease) 45s both;
+  }
+  @keyframes notice-in {
+    0%   { opacity: 0; transform: translateX(22px); visibility: hidden; }
+    1%   { visibility: visible; }
+    100% { opacity: 1; transform: none; visibility: visible; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    @keyframes notice-in {
+      0%   { opacity: 0; visibility: hidden; }
+      1%   { visibility: visible; }
+      100% { opacity: 1; visibility: visible; }
+    }
+  }
+  @media (max-width: 640px) {
+    .notice { left: var(--space-2); right: var(--space-2); }
+  }
+
   .ctx hr { margin: 4px 6px; border: 0; border-top: 1px solid rgba(22,22,26,.12); }
   @media (max-width: 640px) {
     /* phone home screen: icons flow in a grid, positions from data are ignored */

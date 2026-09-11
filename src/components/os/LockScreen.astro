@@ -78,7 +78,11 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     position: fixed; inset: 0; z-index: 1000;
     display: grid; grid-template-rows: auto 1fr auto; justify-items: center;
     padding: 6dvh var(--space-4) 4dvh; text-align: center; color: #fff;
-    background: var(--os-desktop) var(--wallpaper) center / cover no-repeat;
+    background-color: var(--os-desktop);
+    background-image: var(--wallpaper-wash), var(--wallpaper);
+    background-position: center, center;
+    background-size: cover, cover;
+    background-repeat: no-repeat, no-repeat;
     transition: opacity 420ms var(--ease), transform 420ms var(--ease), visibility 0s;
   }
   .lock::before {
