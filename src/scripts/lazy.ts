@@ -29,7 +29,6 @@ type App = { init(): void };
 const APPS: Record<string, () => Promise<App>> = {
   contact: () => import('./mail'),
   projects: () => import('./work'),
-  music: () => import('./music'),
   game: () => import('./game'),
 };
 

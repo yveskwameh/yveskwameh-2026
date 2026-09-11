@@ -107,7 +107,7 @@ const accents = [
           <span class="np__art" aria-hidden="true"><Icon name="music" size={17} /></span>
           <span class="np__meta">
             <strong class="np__title">Nothing playing</strong>
-            <span class="np__why">Open Work or Feedback</span>
+            <span class="np__why">Open Work, Feedback or Spotify</span>
           </span>
           <button class="np__toggle" type="button" disabled aria-pressed="false" aria-label="Pause">
             <Icon name="pause" size={13} />
@@ -184,7 +184,7 @@ const accents = [
             <span class="np__art np__art--sm" aria-hidden="true"><Icon name="music" size={15} /></span>
             <span class="np__meta">
               <strong class="np__title">Nothing playing</strong>
-              <span class="np__why">Open Work or Feedback</span>
+              <span class="np__why">Open Work, Feedback or Spotify</span>
             </span>
             <button class="np__toggle" type="button" disabled aria-pressed="false" aria-label="Pause">
               <Icon name="pause" size={13} />
@@ -231,31 +231,22 @@ const accents = [
           </fieldset>
         </div>
 
-        {/* Spotify, reachable from the desktop rather than only by finding the Music
-            icon. It opens the Music window rather than embedding a second player here,
-            and that is a measured decision rather than a shortcut: the embed inside this
-            panel would not start, at four widths and two heights, while the same playlist
-            in the Music window plays on the first click every time. The panel is a
-            backdrop-filtered, scrolling, absolutely positioned box inside a fixed
-            backdrop-filtered bar, and a cross origin iframe in that stack does not
-            reliably receive its own clicks.
+        {/* Spotify, simply present. No button to reveal it: opening Control Center is
+            the only asking anyone should have to do.
 
-            It also settles two other things for free. There is no second player to leave
-            blank space under, and there is only ever one Spotify on the page, so "no two
-            tracks at once" has one thing to switch off rather than two. */}
+            The shape is taken from parinazkassemi.com, read off the page rather than
+            guessed, because that one demonstrably works: the compact 152 embed at 100%
+            width, in a box a shade under 300, inside a widget carrying a blur of its own.
+            Which settles two things I had wrong. The blur was never the problem, and
+            neither was the compact height. What was wrong was the test: a synthetic click
+            does not reach inside the compact player, and it does not reach inside hers
+            either.
+
+            scripts/panel.ts builds it the first time this panel opens and not before,
+            because rule 1 says nothing loads that the visitor did not ask for. After that
+            it stays in the DOM, so it keeps its place in the playlist. */}
         <div class="cc__tile cc__tile--tight cc__tile--spotify" id="cc-spotify">
-          {/* Its own classes, not the now-playing ones. panel.ts writes every .np__title
-              and .np__why on the page from one state, so borrowing them here meant the
-              Spotify tile relabelled itself "Nothing playing" the moment the panel
-              painted. Same shape, different names. */}
-          <button class="sp" type="button" data-open="music" data-spotify>
-            <span class="sp__mark" aria-hidden="true"><Icon name="music" size={15} /></span>
-            <span class="sp__meta">
-              <strong class="sp__name">Spotify</strong>
-              <span class="sp__sub">What Yves listens to</span>
-            </span>
-            <span class="sp__go">Open</span>
-          </button>
+          <p class="sp__wait">Loading the playlist from Spotify&hellip;</p>
         </div>
 
         <div class="cc__pair">
@@ -499,11 +490,11 @@ const accents = [
      bar and a panel growing right from there would be off screen entirely. */
   .tray--snd { width: 278px; left: 0; transform-origin: top left; }
   .tray--cc { right: 0; transform-origin: top right; }
-  /* Back to 320 now that the Spotify embed has moved to the Music window. It was widened
-     to 360, then 400, then 420 to try to make that embed lay itself out; none of it is
-     needed for a clock, a slider, three tiles and two buttons. */
+  /* 344, which leaves the Spotify embed 322. It is a threshold, not a preference: below
+     about 320 Spotify's compact player collapses its own play button to a dot and there is
+     nothing to press. Measured at 272, 298 and 322. */
   .tray--cc {
-    width: 320px; padding: 10px; gap: 9px; background: var(--os-recess);
+    width: 344px; padding: 10px; gap: 9px; background: var(--os-recess);
     /* The Spotify embed is 352 tall, which can push this past the bottom of a laptop
        screen, so the panel scrolls rather than running off. The same gap it keeps from
        the bar is kept from the bottom. */
@@ -706,30 +697,21 @@ const accents = [
   }
 
   /* --- spotify --- */
-  .sp {
-    all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center;
-    gap: var(--space-2); cursor: var(--cur-hand); border-radius: var(--r-inner);
-  }
-  .sp:focus-visible { outline: 2px solid var(--os-accent); outline-offset: 3px; }
-  .sp__mark {
-    width: 32px; height: 32px; flex: none; border-radius: 50%;
-    display: grid; place-items: center; background: #1db954; color: #fff;
-  }
-  .sp__meta { display: grid; gap: 1px; min-width: 0; flex: 1; text-align: left; }
-  .sp__name { font: 700 12.5px var(--font-chrome); color: var(--os-ink); }
-  .sp__sub {
+  /* Seen only for the moment between the panel opening and the embed arriving, and only
+     once, because the embed then stays. */
+  .sp__wait {
+    margin: 0; padding: var(--space-3) 0; text-align: center;
     font: 10.5px var(--font-chrome); color: var(--os-muted);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .sp__go {
-    flex: none; font: 700 10.5px var(--font-chrome); color: var(--os-accent);
-    padding: 5px 9px; border-radius: var(--r-pill); background: var(--os-hover);
-  }
-  .sp:hover .sp__go { background: var(--os-accent); color: var(--os-on-accent); }
-  /* Once the embed is in, the tile is only a frame around it: no padding, so Spotify gets
-     every pixel of the panel it can, and the corners are clipped rather than drawn.
+  /* The tile is a frame around the player and nothing else, so no padding, and the corners
+     are clipped rather than drawn.
 
-     No iframe lives in here any more, so no rules for one. See the note on the markup. */
+     The frame is 152, which is the height Spotify's compact embed wants, and the tile shows
+     the 84 its player actually paints for this playlist. The rest is Spotify's own empty
+     background and it is not ours to fill. Both numbers are measured, so re-measure before
+     changing either: shrink the iframe instead of the tile and the player collapses. */
+  .cc__tile--spotify:has(iframe) { padding: 0; overflow: hidden; height: 84px; }
+  #cc-spotify iframe { display: block; border: 0; width: 100%; }
 
   @media (prefers-reduced-motion: reduce) {
     .tip::after, .tip::before, .np__art, .np__toggle, .th__mini { transition: none; }

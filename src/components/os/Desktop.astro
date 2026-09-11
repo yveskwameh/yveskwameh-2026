@@ -7,7 +7,6 @@ import DesktopIcon from './DesktopIcon.astro';
 import Window from '../windows/Window.astro';
 import AboutApp from '../apps/AboutApp.astro';
 import ProjectsApp from '../apps/ProjectsApp.astro';
-import MusicApp from '../apps/MusicApp.astro';
 import GameApp from '../apps/GameApp.astro';
 import ColophonApp from '../apps/ColophonApp.astro';
 import MailApp from '../apps/MailApp.astro';
@@ -23,7 +22,6 @@ import { desktopItems } from '../../data/desktop';
       layout whose panes fill their side and scroll themselves, and `height: 100%` against
       a window that sizes to its content collapses to the height of the sidebar. */}
   <Window id="projects" title="Work" filename="work.folder" width={860}><ProjectsApp /></Window>
-  <Window id="music" title="Music" filename="playlist.spotify" width={420}><MusicApp /></Window>
   {/* No height prop: GameApp.astro opens this one at the full height the desktop allows,
       so the thread has the most room it can get. Wider than the 400 column it holds on
       purpose: the margins either side are the layout. */}

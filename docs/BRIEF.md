@@ -27,7 +27,7 @@ A portfolio that behaves like an old operating system. Not macOS-glass like the 
 | Services / process | "Services" window styled like a control panel |
 | Tools | Dock: Claude Code, Codex, Figma, Webflow, VS Code, Higgsfield |
 | Testimonials / Upwork proof | "Feedback" window: grid of small windows, heyclicky style |
-| Music | "Music" app: Spotify playlist embed, loaded on click |
+| Music | No window. The Spotify playlist lives in Control Center, built the first time that panel opens |
 | Contact | "Mail" window with one big button, plus "Hire me" in the menu bar |
 | Fun | Trash with "things I don't do" |
 
@@ -35,7 +35,10 @@ A portfolio that behaves like an old operating system. Not macOS-glass like the 
 Icons flow into a phone home-screen grid. Windows open as bottom sheets. Widgets (theme, clock, music) live in a pull-up sheet. Drag is off.
 
 ## Music
-Spotify only. One or more playlists Yves curates. Embed is created when the Music app opens, never before. No autoplay anywhere.
+Two things, and neither is a window. The Spotify playlist Yves curates sits in Control Center
+and is built the first time that panel opens, never before. The two window soundtracks belong
+to Work and Feedback and start when those open, gated on the lock screen answer. Only one
+source plays at a time, and nothing plays before a click.
 
 Playback is limited and the limit is Spotify's, not ours. Full tracks need a logged-in
 Premium account in a desktop browser, and the visitor must press play on Spotify's own

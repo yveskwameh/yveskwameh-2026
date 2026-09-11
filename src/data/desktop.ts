@@ -9,7 +9,7 @@ export type DesktopItem = {
   id: string;
   label: string;
   icon: string;
-  opens: 'about' | 'projects' | 'services' | 'testimonials' | 'contact' | 'music' | 'trash' | 'game';
+  opens: 'about' | 'projects' | 'services' | 'testimonials' | 'contact' | 'trash' | 'game';
   x: number;
   y: number;
 };
@@ -19,7 +19,6 @@ export const desktopItems: DesktopItem[] = [
   { id: 'projects',     label: 'Work',       icon: '/icons/folder.png',   opens: 'projects',     x: 24,  y: 124 },
   { id: 'services',     label: 'Services',   icon: '/icons/prefs.png',    opens: 'services',     x: 24,  y: 224 },
   { id: 'testimonials', label: 'Feedback',   icon: '/icons/notes.png',    opens: 'testimonials', x: 24,  y: 324 },
-  { id: 'music',        label: 'Music',      icon: '/icons/music.png',    opens: 'music',        x: 124, y: 24 },
   { id: 'contact',      label: 'Mail',       icon: '/icons/mail.png',     opens: 'contact',      x: 124, y: 124 },
   { id: 'game',         label: 'Tic Tac Toe', icon: '/icons/game.png',    opens: 'game',         x: 124, y: 224 },
 ];

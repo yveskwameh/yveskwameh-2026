@@ -52,7 +52,7 @@ function paint() {
   for (const n of q<El>('.vol__pct')) n.textContent = String(vol);
 
   const title = current ? current.dataset.title! : 'Nothing playing';
-  const why = current ? `Because ${current.dataset.label} is open` : 'Open Work or Feedback';
+  const why = current ? `Because ${current.dataset.label} is open` : 'Open Work, Feedback or Spotify';
   for (const n of q<El>('.np__title')) n.textContent = title;
   for (const n of q<El>('.np__why')) n.textContent = why;
 
@@ -96,7 +96,7 @@ function applyVolume(fromUser: boolean) {
  * when the visitor goes back.
  */
 function stopSpotify() {
-  const f = document.querySelector<HTMLIFrameElement>('#spotify-box iframe');
+  const f = document.querySelector<HTMLIFrameElement>('#cc-spotify iframe');
   if (f) f.src = f.src;
 }
 
@@ -243,12 +243,39 @@ export function init() {
   pick('mode', 'mode', 'auto');
   pick('accent', 'accent', 'teal');
 
-  /* The Spotify tile opens the Music window, where the player is, so window-manager does
-     the opening off its data-open. All this adds is the other half of "one source at a
-     time": choosing Spotify puts the window soundtrack away rather than layering on top
-     of it. Paused, not forgotten, so the panel still names it and play still works. */
-  document.addEventListener('click', (e) => {
-    if (!(e.target as El).closest('[data-spotify]')) return;
-    stop();
+  /* Spotify. Built the first time Control Center opens and never again: rule 1 says
+     nothing loads that the visitor did not ask for, and opening the panel is the asking.
+     After that it stays in the DOM, so it keeps its place in the playlist for the rest of
+     the visit.
+
+     The shape is parinazkassemi.com's, because that one is known to work: the compact 152
+     player at full width, with autoplay delegated so its own button can start audio.
+
+     No theme=0 on the URL, which is the difference that mattered. That parameter is not
+     only a colour: with it Spotify draws a denser variant that, in a box this size, clips
+     its own title and collapses the play button to a dot. Hers carries utm_source and
+     nothing else, and lays out properly. */
+  const spot = $('cc-spotify');
+  cc?.addEventListener('toggle', () => {
+    if (!cc.open || !spot || spot.querySelector('iframe')) return;
+    /* After the panel has finished opening, not during. Spotify measures its own frame
+       once, on load, and lays itself out from that: built mid-animation it reads the
+       scaled-down box, draws a smaller player with the title clipped, and never
+       re-measures. --t-base is the animation, so this waits it out. Under reduced motion
+       the duration is zero and this is one tick. */
+    const settle = parseFloat(getComputedStyle(document.body).getPropertyValue('--t-base')) || 0;
+    setTimeout(() => {
+      if (!spot.querySelector('iframe')) {
+        spot.innerHTML = `<iframe title="Spotify playlist" width="100%" height="152" loading="lazy"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      src="https://open.spotify.com/embed/playlist/6vjBKgpH5qrt7DW06uJYgL?utm_source=generator"></iframe>`;
+      }
+    }, settle + 60);
   });
+
+  /* The other half of "one source at a time". Pressing play inside the embed is a click
+     this page never sees, because the frame is cross origin, so the soundtrack steps aside
+     on any press that lands on the player at all. Paused, not forgotten, so the panel still
+     names it and play still works. */
+  spot?.addEventListener('pointerdown', () => stop());
 }
