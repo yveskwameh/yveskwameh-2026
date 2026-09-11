@@ -8,15 +8,21 @@
  * same content with every row open runs to 1081px on a desktop and about two and a half
  * screens on a phone, and nobody scrolls that to find out whether you build in Webflow.
  *
- * The opening is CSS, not script, and it costs nothing on load. Each service is a radio,
- * its row is the label, and its panel is the element right after, so
- * `radio:checked + label + panel` picks exactly one. That adjacency is why nothing here is
- * wrapped: the triples are direct children of the fieldset, and the fieldset is the card.
- * A wrapper around each service would break the selector.
+ * The opening is CSS, not script, and it costs nothing on load. Each service is a
+ * checkbox, its row is the label, and its panel is the element right after, so
+ * `:checked + label + panel` opens exactly the one that was clicked. That adjacency is why
+ * nothing here is wrapped: the triples are direct children of the fieldset, and the
+ * fieldset is the card. A wrapper around each service would break the selector.
  *
- * One is always open, because a radio group cannot be emptied by clicking the checked one.
- * That is the behaviour this pattern wants anyway: an accordion where everything can be
- * shut is an accordion that can show a visitor nothing.
+ * Checkboxes rather than radios, and that is the whole of the change. A radio group cannot
+ * be emptied by clicking the checked one, so the only way to shut a service was to open a
+ * different one, which is a dead end a visitor runs into and cannot explain. A checkbox
+ * closes when you press it again.
+ *
+ * What that trades away is the one-at-a-time behaviour, since several can now be open at
+ * once. On a page somebody is using to compare two quotes, being able to hold both open
+ * is the better half of the trade. The first is open on arrival so the window never
+ * opens as six closed lines.
  */
 import { serviceGroups, howIWork } from '../../data/services';
 import Icon from '../os/Icon.astro';
@@ -38,7 +44,7 @@ import Icon from '../os/Icon.astro';
       <>
         {/* Visually hidden rather than display:none, so it stays a real radio and the
             arrow keys still move through the group. */}
-        <input class="svc__radio" type="radio" name="svc" id={`s-${s.id}`} checked={gi === 0 && i === 0} />
+        <input class="svc__radio" type="checkbox" id={`s-${s.id}`} checked={gi === 0 && i === 0} />
         <label class="svc__row" for={`s-${s.id}`}>
           <span class="svc__name">
             {/* The outcome rides on the closed row on purpose. A visitor who never opens
@@ -140,9 +146,10 @@ import Icon from '../os/Icon.astro';
        11.5  the outcome, and the body copy under it
        9     the group heading and the YOU GET label, both letterspaced caps
 
-     The accent is the third colour after ink and muted, and it is spent on exactly two
-     things: the price, and the marker beside each deliverable. Spending it anywhere else
-     would make it mean nothing.
+     The accent is the third colour after ink and muted, and it is spent on three things
+     and no more: the group heading, the price, and the marker beside each deliverable.
+     Those are the three a buyer scans for, which situation am I in, what does it cost,
+     and what is in the box. Spending it anywhere else would make it mean nothing.
      ------------------------------------------------------------------ */
   .svc__title { font: 700 14px var(--font-chrome); letter-spacing: -.01em; color: var(--os-ink); }
   .svc__price {
@@ -162,7 +169,7 @@ import Icon from '../os/Icon.astro';
   .svc__group {
     margin: 0; padding: 13px var(--space-3) 6px;
     font: 700 9px var(--font-chrome); letter-spacing: .16em;
-    text-transform: uppercase; color: var(--os-muted);
+    text-transform: uppercase; color: var(--os-accent);
   }
   /* A line above every group but the first, drawn the same way the rows do it: "a heading
      that follows a panel" never matches the first one. */
