@@ -5,6 +5,13 @@
  * No script at all: it is static content in a window. The one build-time trick is reading
  * the Astro version out of package.json rather than typing it, so the stack this claims
  * cannot drift from the stack it actually runs.
+ *
+ * There is deliberately nothing here about how fast it is. There was a Speed section and a
+ * line about the JavaScript budget, and they are gone on purpose: no real portfolio tells
+ * its visitors how many kilobytes it ships, so saying it reads as a machine talking rather
+ * than a person. The budget still exists and is still enforced on every build, it is just
+ * Yves's business rather than the visitor's. Anyone who wants the number can ask.
+ * Do not put it back.
  */
 import { readFileSync } from 'node:fs';
 import { site } from '../../data/site';
@@ -17,7 +24,7 @@ const stack = [
   ['Plain TypeScript', 'No React, no Vue, no framework. The things that move are small files that do one job each.'],
   ['Plain CSS', 'Every colour, size and duration lives in one tokens file, so changing the accent is one line.'],
   ['Cloudflare', 'Served as static assets from their edge.'],
-  ['Space Mono', 'Self-hosted, latin only, both weights. 19KB, and it never blocks the page.'],
+  ['Space Mono', 'Self-hosted, latin only, both weights. One typeface for the chrome, the body and the captions.'],
 ];
 
 const credits = [
@@ -34,14 +41,6 @@ const credits = [
     <p>A portfolio that behaves like an operating system. You land on a lock screen, you get
     a desktop, and the work sits in windows you open yourself.</p>
     <p>I design interfaces, so it made more sense to build one than to write about it.</p>
-  </section>
-
-  <section>
-    <h3 class="colo__h">Speed</h3>
-    <p>Nothing loads that you did not ask for. No video, no embeds and no third-party
-    scripts on arrival. The Spotify player is built when you open Music, and each app's
-    code is fetched when you open its window, not before.</p>
-    <p class="colo__note">Under 10KB of JavaScript on load, for the whole desktop.</p>
   </section>
 
   <section>
