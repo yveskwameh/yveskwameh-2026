@@ -1,23 +1,29 @@
 ---
 /**
- * One case study, presented the way an app listing is: a wide shot across the top, then
- * the title, then the facts as chips, then the write up.
+ * One case study, laid out the way the approved wireframe draws it (direction B, the
+ * ClickUp card): a wide shot across the top, the title, the facts as a two column grid of
+ * label and value, a hairline, then the write up.
  *
- * Used in two places that look different but hold the same thing: the pane inside the Work
- * window, and the standalone /work/<id> page. Sharing it is the point. The page used to
- * render a bare line of facts and the content, which was much thinner than the window, so
- * a shared link showed less than the desktop did.
+ * Measurements come straight off the Figma frame `Desktop / B · ClickUp card` rather than
+ * from taste: 132px banner, 20px title, 74px label column, 13px section headings.
+ *
+ * Used in two places that hold the same thing: the pane inside the Work window, and the
+ * standalone /work/<id> page. The page used to render a bare line of facts and the
+ * content, so a shared link showed markedly less than the desktop did.
  *
  * The banner is a separate field from `cover`, because `cover` is a 96px icon that the
  * sidebar uses at 20px. It cannot be stretched across a pane.
- *
- * The write up keeps the card stack it already had: a heading opens a card and whatever
- * sits before the next heading closes it, so it works for any case study without anyone
- * having to write markdown differently.
  */
 import type { CollectionEntry } from 'astro:content';
 interface Props { p: CollectionEntry<'projects'> }
 const { p } = Astro.props;
+
+const FACTS: [string, string][] = [
+  ['Client', p.data.client],
+  ['Year', String(p.data.year)],
+  ['Role', p.data.role],
+  ['Built with', p.data.stack.join(', ')],
+];
 ---
 <article class="cs">
   {p.data.banner && (
@@ -27,18 +33,17 @@ const { p } = Astro.props;
   )}
 
   <div class="cs__inner">
-    <header class="cs__head">
-      <h3 class="cs__title">{p.data.title}</h3>
-      <p class="cs__blurb">{p.data.summary}</p>
-      {/* Facts as one wrapping row. The stack keeps a quieter fill so a chip reading 2024
-          does not read as the same kind of thing as one reading Figma. */}
-      <ul class="cs__chips">
-        <li class="cs__chip">{p.data.client}</li>
-        <li class="cs__chip">{p.data.year}</li>
-        <li class="cs__chip">{p.data.role}</li>
-        {p.data.stack.map((tool) => <li class="cs__chip cs__chip--tool">{tool}</li>)}
-      </ul>
-    </header>
+    <h3 class="cs__title">{p.data.title}</h3>
+
+    {/* Two columns of label and value, which is the whole point of this direction: a fact
+        is a labelled thing, not a pill that could be a date or a tool. */}
+    <dl class="cs__facts">
+      {FACTS.map(([label, value]) => (
+        <div class="cs__fact"><dt>{label}</dt><dd>{value}</dd></div>
+      ))}
+    </dl>
+
+    <hr class="cs__rule" />
 
     <div class="cs__body"><slot /></div>
 
@@ -56,67 +61,58 @@ const { p } = Astro.props;
      so the standalone page needs no id of its own. */
   :global(.window__body:has(> .cs)) { padding: 0; }
 
-  .cs { display: block; }
+  /* The pane is a sheet of paper next to a grey sidebar, which is the arrangement the
+     wireframe draws and what makes the plain write up below sit on something. */
+  .cs { display: block; min-height: 100%; background: var(--os-card); }
+
   .cs__banner {
-    display: block; width: 100%; height: 160px;
+    display: block; width: 100%; height: 132px;
     /* Cropped from the middle, not the top. Every one of these shots has a browser title
        bar drawn into it, and keeping the top put a second row of traffic lights directly
        under the window's real ones. The middle is the content. */
     object-fit: cover; object-position: center;
     background: var(--os-recess);
   }
+
   .cs__inner { padding: var(--space-4); }
+  .cs__title { margin: 0 0 var(--space-3); font: 700 20px var(--font-chrome); }
 
-  .cs__head {
-    display: grid; gap: 8px;
-    padding: var(--space-3) var(--space-4);
-    background: var(--os-card); border-radius: var(--r-window);
+  .cs__facts {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px var(--space-3); margin: 0;
   }
-  .cs__title { margin: 0; font: 700 23px var(--font-chrome); }
-  .cs__blurb { margin: 0; max-width: 52ch; color: var(--os-muted); font-size: 12px; line-height: 1.55; }
+  .cs__fact { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 8px; font-size: 12px; }
+  .cs__facts dt { color: var(--os-muted); }
+  .cs__facts dd { margin: 0; color: var(--os-ink); }
 
-  .cs__chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 0; padding: 0; list-style: none; }
-  .cs__chip {
-    padding: 4px 10px; border-radius: var(--r-pill);
-    background: var(--os-recess); border: 1px solid var(--os-line);
-    font: 11px var(--font-chrome); color: var(--os-ink);
-  }
-  .cs__chip--tool { background: none; color: var(--os-muted); }
+  .cs__rule { height: 1px; margin: var(--space-3) 0; border: 0; background: var(--os-line); opacity: .45; }
 
-  /* One card per section, the way Settings stacks separate groups down a page. A heading
-     opens a card and whatever sits before the next heading closes it. */
-  .cs__body { margin-top: var(--space-3); font-size: 13px; line-height: 1.65; }
-  .cs__body :global(> *) { margin: 0; padding: 0 var(--space-4); background: var(--os-card); }
+  /* The write up, plain on the sheet. Every direct child is a markdown element, so the
+     spacing is set here rather than asking anyone to write markdown differently. */
+  .cs__body { font-size: 13px; line-height: 1.65; }
+  .cs__body :global(> *) { margin: 0; }
   .cs__body :global(> h2) {
-    margin-top: var(--space-3); padding-top: var(--space-3);
-    border-radius: var(--r-window) var(--r-window) 0 0;
-    font: 700 10px var(--font-chrome); letter-spacing: .16em; text-transform: uppercase;
-    color: var(--os-muted);
+    margin-top: var(--space-3); font: 700 13px var(--font-chrome); color: var(--os-ink);
   }
   .cs__body :global(> h2:first-child) { margin-top: 0; }
-  .cs__body :global(> h2 + *) { padding-top: var(--space-2); }
-  .cs__body :global(> :has(+ h2)),
-  .cs__body :global(> :last-child) {
-    padding-bottom: var(--space-3);
-    border-radius: 0 0 var(--r-window) var(--r-window);
-  }
-  .cs__body :global(> p + p) { padding-top: var(--space-2); }
+  .cs__body :global(> * + *) { margin-top: var(--space-2); }
+  .cs__body :global(> h2 + *) { margin-top: 6px; }
+  .cs__body :global(> p) { color: var(--os-muted); }
 
-  /* A screenshot in the markdown is a direct child, so it is a card in its own right. */
-  .cs__body :global(> img) { width: 100%; height: auto; padding: 0; border-radius: var(--r-window); }
-  .cs__body :global(> img + *) { margin-top: var(--space-3); }
-
-  .cs__links {
-    display: flex; flex-wrap: wrap; gap: var(--space-3);
-    margin: var(--space-3) 0 0; padding: 12px var(--space-4);
-    background: var(--os-card); border-radius: var(--r-window);
-    font-size: 12px;
+  /* A screenshot in the markdown is a direct child, so it gets its own breathing room. */
+  .cs__body :global(> img) {
+    width: 100%; height: auto; margin-top: var(--space-3);
+    border: 1px solid var(--os-line); border-radius: var(--r-inner);
   }
+
+  .cs__links { margin: var(--space-4) 0 0; font-size: 12px; }
 
   @media (max-width: 640px) {
-    .cs__banner { height: 120px; }
+    .cs__banner { height: 110px; }
     .cs__inner { padding: var(--space-3); }
-    .cs__head { padding: var(--space-3); }
-    .cs__title { font-size: 19px; }
+    .cs__title { font-size: 18px; }
+    /* One column: two 74px labels beside their values do not fit a phone without the
+       values wrapping to two lines each. */
+    .cs__facts { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   }
 </style>
