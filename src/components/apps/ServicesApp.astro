@@ -75,14 +75,29 @@ import Icon from '../os/Icon.astro';
     ))}
   </fieldset>
 
-  <p class="svcs__foot">{howIWork}</p>
+  {/* The page had no next step, which for a sales page is the whole point missing. The
+      process line earns the click and the button takes it, straight into the Mail window
+      rather than off to an email client. Low commitment on purpose: "tell me what you
+      need" asks for a sentence, not a brief. */}
+  <footer class="svcs__end">
+    <p class="svcs__foot">{howIWork}</p>
+    <button class="btn svcs__cta" type="button" data-open="contact">Tell me what you need</button>
+  </footer>
 </div>
 
 <style>
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
   .svcs { display: grid; gap: var(--space-3); font-size: 13px; line-height: 1.6; }
-  .svcs__foot { margin: 0; color: var(--os-muted); font-size: 11px; line-height: 1.55; }
+  .svcs__end {
+    display: flex; align-items: center; gap: var(--space-3);
+    padding-top: var(--space-3); border-top: 1px solid var(--os-hairline);
+  }
+  .svcs__foot { margin: 0; flex: 1; color: var(--os-muted); font-size: 11px; line-height: 1.55; }
+  .svcs__cta { flex: none; }
+  @media (max-width: 640px) {
+    .svcs__end { flex-direction: column; align-items: stretch; }
+  }
 
   /* The card. A fieldset because this is a radio group, and the browser's own grouping
      element is the honest one to use. Its default border and padding go. */

@@ -1,11 +1,17 @@
 /**
- * What Yves sells, written from the client's side of the table.
+ * What Yves sells. This is a sales page, so it is written as one.
  *
- * The first version of this file listed what Yves does. That is the wrong half of the
- * trade. Nobody buys a Figma file: they buy a site their team can run without paying a
- * developer every time a price changes, or a landing page that sells the thing it was
- * built to sell. So every service leads with `outcome`, which is what the client walks
- * away able to do, and only then says what the work is and what gets handed over.
+ * The first version listed what Yves does, which is the wrong half of the trade. Nobody
+ * buys a Figma file. They buy their way out of something: a marketing team that waits on
+ * engineering to change a price, a design that shipped looking like a cousin of itself, a
+ * landing page quietly spending the ad budget and returning nothing.
+ *
+ * So each service names that thing and then shows why it does not happen here. That is
+ * the value equation underneath, raise the outcome and the belief it will actually
+ * happen, lower the time and the effort, without the framework ever showing on the page.
+ * The fears are researched rather than assumed, and the specificity is what does the
+ * persuading: anybody can promise a better website, and only somebody who has done the
+ * work knows the long name breaks the layout.
  *
  * The deliverables stay, because a promise with nothing under it is worth nothing, and a
  * client comparing two quotes needs to see what is actually in the box. They are the
@@ -16,9 +22,10 @@
  * or a site that is losing them money looked at, and the fastest thing this window can do
  * is let them recognise themselves.
  *
- * Two rules for anything added here. No claim that cannot be kept: no percentages, no
- * "double your conversions", nothing that turns into an argument later. And `gets` stays
- * concrete, a file, a site, a list. "Great communication" is not a deliverable.
+ * Two rules for anything added here, and they are what keep this from reading like every
+ * other agency page. No claim that cannot be kept: no percentages, no "double your
+ * conversions", nothing that turns into an argument on a call. And `gets` stays concrete,
+ * a file, a site, a list. "Great communication" is not a deliverable.
  */
 export type Service = {
   /** Used for the radio id, so it has to be unique and URL safe. */
@@ -61,8 +68,8 @@ export const serviceGroups: ServiceGroup[] = [
       {
         id: 'no-code',
         name: 'No code design and build',
-        outcome: 'A site your team can update without calling a developer.',
-        what: 'Webflow or Framer. I design it in Figma and build it myself, so nothing gets lost in the handoff and you are not paying two people for one website. Send me a design you already have and I will just build it.',
+        outcome: 'Change a price or publish a page without waiting on anybody.',
+        what: 'If changing one line on your site means emailing someone and waiting, that is the thing this fixes. Webflow or Framer, designed in Figma and built by me, so nothing is lost between the two and you are not paying two people for one website. Your team gets a CMS they will actually use, which is the difference between a site that stays current and one that quietly goes stale. Send me a design you already have and I will just build it.',
         gets: [
           'The Figma file',
           'The built site',
@@ -75,21 +82,21 @@ export const serviceGroups: ServiceGroup[] = [
       {
         id: 'front-end',
         name: 'Front end design and build',
-        outcome: 'Nothing gets dropped between the design and the build.',
-        what: 'For what Webflow cannot do. Astro, React or Next.js, TypeScript and plain CSS, with the same person on the design and the build so the two do not drift apart.',
+        outcome: 'What you approved in Figma is what goes live.',
+        what: 'A design gets approved, somebody else builds it, and what ships looks like a cousin of it. One person on both ends means there is nobody to hand it to and nothing to lose in the passing. Astro, React or Next.js, TypeScript and plain CSS, for the things Webflow cannot do, and your developers get code they can carry on with rather than something only I understand.',
         gets: [
           'The Figma file',
           'The built front end',
           'Components your developers can carry on with',
         ],
         timeline: 'Usually 3 to 4 weeks',
-        from: 'From $2,500',
+        from: 'From $2,000',
       },
       {
         id: 'landing',
         name: 'Landing pages',
-        outcome: 'A page that does the one job you built it for.',
-        what: 'One page built around one action. I work out what has to be true before somebody will take that action, then order the page so they meet those things in that order.',
+        outcome: 'The traffic you paid for stops leaving on the first screen.',
+        what: 'A page that looks good and converts nothing is an expensive page, because it is spending your ad budget either way. So I start from the one action, work out what somebody has to believe before they will take it, and order the page so they meet those things in that order. The ad and the page say the same thing, and it loads fast enough that nobody leaves before it does.',
         gets: [
           'The page designed and built',
           'Responsive',
@@ -107,8 +114,8 @@ export const serviceGroups: ServiceGroup[] = [
       {
         id: 'product-ui',
         name: 'Product, dashboard and mobile UI',
-        outcome: 'Screens your developers can build without guessing.',
-        what: 'Screens for SaaS products, web apps, mobile apps and dashboards. Flows and wireframes first, then the high fidelity design, so the structure is agreed before anybody argues about a colour.',
+        outcome: 'Nobody has to guess what the screen does when it is empty or it breaks.',
+        what: 'What goes wrong after a handoff is rarely the happy path. It is the states nobody drew: empty, loading, error, too much data, the name that is far too long. I draw those. Flows and wireframes first so the structure is settled before anybody argues about a colour, then the screens, for SaaS products, web apps, mobile apps and dashboards.',
         timeline: 'Usually 2 to 4 weeks',
         from: 'From $1,800',
         gets: [
@@ -120,14 +127,14 @@ export const serviceGroups: ServiceGroup[] = [
       {
         id: 'design-systems',
         name: 'Design systems',
-        outcome: 'New pages get assembled from parts that already exist.',
-        what: 'Components and variables that still work when the file grows, so the tenth page costs less than the first one did.',
+        outcome: 'The tenth screen costs less than the first one did.',
+        what: 'A file that works at twenty screens and falls apart at two hundred is the normal way this goes, and by then it is cheaper to start again than to fix. Components and variables built to survive the product growing, with real variants and states rather than a folder of detached copies. After it, a new page is assembly rather than another design job.',
         gets: [
           'A component set with real variants and states',
           'New pages assembled out of parts that already exist',
         ],
         timeline: 'Usually 2 to 3 weeks',
-        from: 'From $1,200',
+        from: 'From $1,000',
       },
     ],
   },
@@ -138,8 +145,8 @@ export const serviceGroups: ServiceGroup[] = [
       {
         id: 'fixes',
         name: 'Fixing a site you already have',
-        outcome: 'Find where the site is losing people, then fix it.',
-        what: 'Speed, Core Web Vitals, on page SEO structure, and UX fixes where the site is losing people. You see the list before I touch anything, so you can stop at the audit if that is all you wanted.',
+        outcome: 'Find out what is actually wrong before anybody sells you a rebuild.',
+        what: 'A rebuild is the most expensive answer and it is not always the right one. I go through speed, Core Web Vitals, on page SEO structure and the places the site is losing people, then hand you the list before I touch anything. You can stop at the list if that is all you wanted, and take it to whoever you like.',
         gets: [
           'A list of what is wrong, in the order I would fix it',
           'Then the fixes',

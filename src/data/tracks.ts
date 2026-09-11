@@ -50,7 +50,7 @@ export const tracks: Track[] = [
     // theme, and calling it that in the panel says nothing about why it is playing; a
     // visitor who opens Work is looking at a league of shipped work, so the title says
     // that and the nod survives. The source stays in this comment for the record.
-    title: 'The Design League',
+    title: 'Design League',
     // Artist deliberately blank. There are several pieces called the Justice League theme
     // by different composers and the file carries no metadata, so naming one would be a
     // guess, and a guess with a composer's name on it is worse than a blank.
@@ -63,7 +63,7 @@ export const tracks: Track[] = [
     // The Avengers theme, by Alan Silvestri. Same idea: the Feedback window is clients
     // gathered in one place, and "assemble" is the one word that whole film is known for,
     // so the title does the joke and names the window at the same time.
-    title: 'The Clients Assemble',
+    title: 'Clients Assemble',
     artist: 'Alan Silvestri',
     src: '/audio/avengers',
     window: 'testimonials',
