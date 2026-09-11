@@ -6,9 +6,13 @@
  * Quote first on purpose. A card that opens with a name and a job title asks the reader to
  * care who this is before telling them why they should, and nobody reads the sixth name.
  *
- * The avatars are initials, not photographs. There are no photographs of these people and
- * inventing one, or dropping in a stock face, would be a lie told in a section whose whole
- * job is being believed. The initials chip is the same fallback the menu bar already uses.
+ * The avatars are the real people, supplied by Yves and cropped square in
+ * tools/../jobs (ffmpeg to crop, sips to encode avif). 96px source shown at 40, 15.7KB for
+ * all of them, and lazy, so none of it is fetched until the window opens.
+ *
+ * A quote without a photograph falls back to initials rather than to a stock face. That
+ * fallback is the point: a section whose whole job is being believed cannot carry an
+ * invented face, so `avatar` stays optional and the fallback stays in the markup.
  *
  * No script: two columns of build-time HTML that become one column on a phone.
  */
@@ -32,9 +36,13 @@ const initials = (name: string) =>
     {feedback.map((f) => (
       <li class="fb__card">
         {/* A blockquote because that is what it is, and the citation is the footer. */}
-        <blockquote class="fb__quote">{f.quote}</blockquote>
+        {/* The quotation marks are real characters rather than CSS content, so they
+            survive being copied out of the page along with the words they belong to. */}
+        <blockquote class="fb__quote">&ldquo;{f.quote}&rdquo;</blockquote>
         <footer class="fb__who">
-          <span class="fb__avatar" aria-hidden="true">{initials(f.name)}</span>
+          {f.avatar
+            ? <img class="fb__avatar" src={`/images/feedback/${f.avatar}`} alt="" width="40" height="40" loading="lazy" decoding="async" />
+            : <span class="fb__avatar fb__avatar--initials" aria-hidden="true">{initials(f.name)}</span>}
           <span class="fb__names">
             <span class="fb__name">{f.name}</span>
             <span class="fb__role">{f.role}</span>
@@ -76,14 +84,16 @@ const initials = (name: string) =>
 
   .fb__who { display: flex; align-items: center; gap: 10px; padding-top: var(--space-3); border-top: 1px solid rgba(22,22,26,.09); }
   .fb__avatar {
-    flex: none; display: grid; place-items: center;
-    width: 26px; height: 26px; border-radius: 50%;
-    background: var(--os-recess); color: var(--os-muted);
-    font: 700 10px var(--font-chrome); letter-spacing: .02em;
+    flex: none; width: 40px; height: 40px; border-radius: 50%;
+    object-fit: cover; background: var(--os-recess);
+  }
+  .fb__avatar--initials {
+    display: grid; place-items: center;
+    color: var(--os-muted); font: 700 12px var(--font-chrome); letter-spacing: .02em;
   }
   .fb__names { display: grid; min-width: 0; }
-  .fb__name { font: 700 11px var(--font-chrome); color: var(--os-ink); }
-  .fb__role { font-size: 10px; color: var(--os-muted); }
+  .fb__name { font: 700 12px var(--font-chrome); color: var(--os-ink); }
+  .fb__role { font-size: 10px; color: var(--os-muted); line-height: 1.4; }
 
   @media (max-width: 640px) {
     /* Two columns of a 12px quote at 390 is four words a line. */

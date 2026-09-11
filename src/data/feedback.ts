@@ -18,36 +18,47 @@ export type Quote = {
   /** Job title and company, or how the work came about. */
   role: string;
   quote: string;
+  /**
+   * File in public/images/feedback, 96px square avif. Optional: a quote without one
+   * falls back to the person's initials rather than to a stock face.
+   */
+  avatar?: string;
 };
 
 export const feedback: Quote[] = [
   {
     name: 'Matthew Haimm',
-    role: 'Creative Director and Founder, Minerva Creative Co.',
+    role: 'Creative Dir. & Founder, Minerva Creative Co.',
+    avatar: 'matthew.avif',
     quote: 'Yves joined us in our early-stage after a cold DM, and within a year he became the Swiss Army knife every startup needs.',
   },
   {
     name: 'Richard Tamunotonye',
+    avatar: 'richard.avif',
     role: 'Founder, Productsio',
     quote: 'I have worked with Yves for over three years, and his skill, dedication, and problem-solving consistently stand out.',
   },
   {
+    // No photograph yet. Falls back to initials until Yves sends one.
     name: 'Sid Jain',
     role: 'via Upwork',
     quote: 'Working with Yves was effortless. He delivered everything assigned on schedule, communicated clearly, and ensured the final result exceeded expectations.',
   },
   {
     name: 'Viktor Dimitrievski',
+    avatar: 'viktor.avif',
     role: 'via Upwork',
     quote: 'Yves transformed our webpage with a fresh, modern design that matched our requirements perfectly.',
   },
   {
     name: 'Victory Achionye',
+    avatar: 'victory.avif',
     role: 'via Upwork',
     quote: 'Yves is genuinely brilliant! He got the job done and will definitely hire again!',
   },
   {
     name: 'Samuel Sabastine',
+    avatar: 'samuel.avif',
     role: 'Creative Director, Sab Logo',
     quote: 'Yves communicates clearly, brings fresh ideas, and stays patient under pressure.',
   },
