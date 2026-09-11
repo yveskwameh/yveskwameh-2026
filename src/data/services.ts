@@ -35,15 +35,12 @@ export type Service = {
   /** What the client walks away holding. */
   gets: string[];
   /**
-   * Anchors, both optional and both deliberately empty.
+   * Anchors. Both optional: leave either out and the row simply does not show it.
    *
-   * These are Yves's numbers and nobody else's. A timeframe or a starting price invented
-   * here becomes a figure a client holds him to, so they stay blank until he gives them
-   * and the window simply renders nothing in the meantime. Fill them and the row shows
-   * them, no other change needed.
-   *
-   *   timeline: 'Usually 2 to 3 weeks'
-   *   from:     'From $1,500'
+   * The figures below are a starting point Yves asked to see rather than numbers he gave,
+   * pitched at a Top Rated freelancer doing design and build. They are the one thing on
+   * this page a client will hold him to on a call, so they are his to correct, and
+   * correcting one is a single line here.
    */
   timeline?: string;
   from?: string;
@@ -72,6 +69,8 @@ export const serviceGroups: ServiceGroup[] = [
           'A CMS your team can publish from without calling a developer',
           'Clean classes another developer can pick up later',
         ],
+        timeline: 'Usually 2 to 3 weeks',
+        from: 'From $1,500',
       },
       {
         id: 'front-end',
@@ -83,6 +82,8 @@ export const serviceGroups: ServiceGroup[] = [
           'The built front end',
           'Components your developers can carry on with',
         ],
+        timeline: 'Usually 3 to 4 weeks',
+        from: 'From $2,500',
       },
       {
         id: 'landing',
@@ -94,6 +95,8 @@ export const serviceGroups: ServiceGroup[] = [
           'Responsive',
           'Sections ordered to lead to that action',
         ],
+        timeline: 'About a week',
+        from: 'From $600',
       },
     ],
   },
@@ -103,9 +106,11 @@ export const serviceGroups: ServiceGroup[] = [
     services: [
       {
         id: 'product-ui',
-        name: 'Product and dashboard UI',
+        name: 'Product, dashboard and mobile UI',
         outcome: 'Screens your developers can build without guessing.',
-        what: 'Screens for SaaS products, web apps and dashboards. Flows and wireframes first, then the high fidelity design, so the structure is agreed before anybody argues about a colour.',
+        what: 'Screens for SaaS products, web apps, mobile apps and dashboards. Flows and wireframes first, then the high fidelity design, so the structure is agreed before anybody argues about a colour.',
+        timeline: 'Usually 2 to 4 weeks',
+        from: 'From $1,800',
         gets: [
           'User flows and wireframes',
           'Final screens in Figma',
@@ -121,6 +126,8 @@ export const serviceGroups: ServiceGroup[] = [
           'A component set with real variants and states',
           'New pages assembled out of parts that already exist',
         ],
+        timeline: 'Usually 2 to 3 weeks',
+        from: 'From $1,200',
       },
     ],
   },
@@ -137,6 +144,8 @@ export const serviceGroups: ServiceGroup[] = [
           'A list of what is wrong, in the order I would fix it',
           'Then the fixes',
         ],
+        timeline: 'Audit in 3 days',
+        from: 'From $400',
       },
     ],
   },

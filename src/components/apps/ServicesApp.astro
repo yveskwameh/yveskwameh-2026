@@ -41,12 +41,16 @@ import Icon from '../os/Icon.astro';
         <input class="svc__radio" type="radio" name="svc" id={`s-${s.id}`} checked={gi === 0 && i === 0} />
         <label class="svc__row" for={`s-${s.id}`}>
           <span class="svc__name">
-            {s.name}
             {/* The outcome rides on the closed row on purpose. A visitor who never opens
                 anything should still learn what each service is for, and a list of six
                 bare labels teaches them nothing. */}
+            <strong class="svc__title">{s.name}</strong>
             <em class="svc__outcome">{s.outcome}</em>
           </span>
+          {/* And so does the price. "Can I afford this" is the second question anybody
+              asks and the one they will scroll looking for, so it is on the closed row
+              where it can be compared across six services without opening any of them. */}
+          {s.from && <span class="svc__price">{s.from}</span>}
           <Icon name="chevron-down" size={14} />
         </label>
         {/* The inner wrapper is what makes the open animate. A grid row can go from 0fr
@@ -56,13 +60,9 @@ import Icon from '../os/Icon.astro';
         <div class="svc__panel">
           <div class="svc__inner">
             <p class="svc__what">{s.what}</p>
-            {/* Only when Yves has given them. Nothing renders otherwise, rather than a
-                figure made up here that a client could hold him to. */}
-            {(s.timeline || s.from) && (
-              <p class="svc__anchor">
-                {s.timeline}{s.timeline && s.from ? ' · ' : ''}{s.from}
-              </p>
-            )}
+            {/* How long, which only matters once somebody is interested, so it waits
+                inside rather than competing with the price on the row. */}
+            {s.timeline && <p class="svc__anchor">{s.timeline}</p>}
             <p class="svc__label">You get</p>
             <ul class="svc__gets">
               {s.gets.map((g) => <li>{g}</li>)}
@@ -96,7 +96,7 @@ import Icon from '../os/Icon.astro';
   .svc__row {
     display: flex; align-items: center; gap: var(--space-2);
     padding: 10px var(--space-3); cursor: var(--cur-hand);
-    font: 700 12px var(--font-chrome); color: var(--os-ink);
+    color: var(--os-ink);
     transition: background var(--t-fast), box-shadow var(--t-fast);
   }
   /* Numbered, because a list of six unnumbered lines in one weight reads as six lines
@@ -111,10 +111,33 @@ import Icon from '../os/Icon.astro';
     transition: color var(--t-fast);
   }
   .svc__name { flex: 1; min-width: 0; display: grid; gap: 2px; }
+  /* ------------------------------------------------------------------
+     The type scale, which is the whole of the hierarchy problem.
+
+     Everything in this window used to sit between 9 and 12px in one weight range of one
+     typeface, which is no scale at all: six things all shouting at the same volume, so a
+     reader has nothing to follow and no idea what to read first. One typeface is the
+     house rule and it stays, so the range has to do the work instead.
+
+     Loudest to quietest, and in the order somebody reads them:
+       14    the service name, bold
+       11    the price, bold, and the only accent on a closed row
+       11.5  the outcome, and the body copy under it
+       9     the group heading and the YOU GET label, both letterspaced caps
+
+     The accent is the third colour after ink and muted, and it is spent on exactly two
+     things: the price, and the marker beside each deliverable. Spending it anywhere else
+     would make it mean nothing.
+     ------------------------------------------------------------------ */
+  .svc__title { font: 700 14px var(--font-chrome); letter-spacing: -.01em; color: var(--os-ink); }
+  .svc__price {
+    flex: none; font: 700 11px var(--font-chrome); color: var(--os-accent);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
   /* The reason somebody would buy this, on the row, in the client's terms. Muted and a
      size down, so the list still scans as a list of names rather than as a paragraph. */
   .svc__outcome {
-    font: 11px var(--font-chrome); font-style: normal; font-weight: 400;
+    font: 11.5px var(--font-chrome); font-style: normal; font-weight: 400;
     color: var(--os-muted); line-height: 1.45;
   }
   .svc__radio:checked + .svc__row .svc__outcome { color: var(--os-ink); }
@@ -169,18 +192,18 @@ import Icon from '../os/Icon.astro';
     padding: 2px var(--space-3) var(--space-3) calc(var(--space-3) + 26px);
   }
 
-  .svc__what { margin: 0 0 var(--space-3); color: var(--os-muted); font-size: 12px; line-height: 1.55; }
+  .svc__what { margin: 0 0 6px; color: var(--os-muted); font-size: 11.5px; line-height: 1.65; }
   /* Timeframe and starting price, when there are any. Set in the accent because it is the
      one line on the row a client scanning for budget is actually hunting for. */
   .svc__anchor {
-    margin: calc(var(--space-3) * -1 + 2px) 0 var(--space-3);
-    font: 700 10.5px var(--font-chrome); color: var(--os-accent);
+    margin: 0 0 var(--space-3);
+    font: 10.5px var(--font-chrome); color: var(--os-muted);
   }
   .svc__label {
     margin: 0 0 6px; font: 700 9px var(--font-chrome);
     letter-spacing: .16em; text-transform: uppercase; color: var(--os-muted);
   }
-  .svc__gets { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; font-size: 12px; }
+  .svc__gets { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; font-size: 11.5px; }
   /* A dash rather than a bullet or a tick. A tick implies a checklist someone is working
      through, and these are things that already come with the job. In the accent now, so
      the deliverables read as a block rather than as more of the same prose. */
@@ -208,6 +231,12 @@ import Icon from '../os/Icon.astro';
   @keyframes svc-in { from { opacity: 0; transform: translateY(4px); } }
 
   @media (max-width: 640px) {
-    .svc__row { padding: 12px var(--space-3); }
+    .svc__row { padding: 12px var(--space-3); flex-wrap: wrap; }
+    /* On a phone there is not room for a name, an outcome and a price on one line, and
+       squeezing them would truncate the outcome, which is the half that sells. The price
+       drops to its own line under them instead, still lined up with the name. */
+    .svc__name { flex: 1 1 100%; }
+    .svc__price { margin-left: 26px; order: 3; }
+    .svc__row :global(svg) { order: 2; margin-left: auto; }
   }
 </style>
