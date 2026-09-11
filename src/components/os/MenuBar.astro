@@ -706,12 +706,23 @@ const accents = [
   /* The tile is a frame around the player and nothing else, so no padding, and the corners
      are clipped rather than drawn.
 
-     The frame is 152, which is the height Spotify's compact embed wants, and the tile shows
-     the 84 its player actually paints for this playlist. The rest is Spotify's own empty
-     background and it is not ours to fill. Both numbers are measured, so re-measure before
-     changing either: shrink the iframe instead of the tile and the player collapses. */
-  .cc__tile--spotify:has(iframe) { padding: 0; overflow: hidden; height: 84px; }
-  #cc-spotify iframe { display: block; border: 0; width: 100%; }
+     No clipping of the height any more. The player built through Spotify's iframe API
+     fills its 152 properly, list on top and transport under it, where the raw embed drew
+     a short player over its own empty background. Clipping to that shorter player, which
+     is what used to be here, now cuts the transport off. */
+  .cc__tile--spotify:has(iframe) {
+    padding: 0; overflow: hidden;
+    /* No card fill. The player is the surface here, and --os-card is a near white: any
+       sliver of tile left uncovered by the iframe, at the rounded corners or on a
+       fractional pixel down each edge, read as a white stroke drawn around the card. */
+    background: none;
+  }
+  /* Wider than the tile by a pixel on each side, pulled back by the same, so there is no
+     edge left for anything to show through. The tile clips the overhang. */
+  #cc-spotify iframe {
+    display: block; border: 0;
+    width: calc(100% + 2px); margin: 0 -1px;
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .tip::after, .tip::before, .np__art, .np__toggle, .th__mini { transition: none; }

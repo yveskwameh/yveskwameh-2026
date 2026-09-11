@@ -29,6 +29,10 @@ let current: HTMLAudioElement | null = null;
 let vol = 60;
 /** Where the slider was before the speaker was clicked, so unmuting can put it back. */
 let beforeMute = 60;
+/** Spotify's own controller, once its iframe API has handed one over. */
+let spotify: { pause(): void; resume(): void } | null = null;
+/** Whether Spotify is making noise right now, straight from its playback_update. */
+let spotifyOn = false;
 
 const stored = () => {
   const n = Number(localStorage.vol);
@@ -41,7 +45,7 @@ const stored = () => {
 };
 
 function paint() {
-  const playing = !!current && !current.paused;
+  const playing = spotifyOn || (!!current && !current.paused);
 
   for (const r of q<HTMLInputElement>('.vol__range')) {
     r.value = String(vol);
@@ -51,13 +55,18 @@ function paint() {
   }
   for (const n of q<El>('.vol__pct')) n.textContent = String(vol);
 
-  const title = current ? current.dataset.title! : 'Nothing playing';
-  const why = current ? `Because ${current.dataset.label} is open` : 'Open Work, Feedback or Spotify';
+  /* Spotify wins the label when it is playing, because it is the one the visitor
+     started by hand. Saying "Nothing playing" over a track somebody can hear is worse
+     than saying nothing at all. */
+  const title = spotifyOn ? 'Spotify' : current ? current.dataset.title! : 'Nothing playing';
+  const why = spotifyOn
+    ? 'What Yves listens to'
+    : current ? `Because ${current.dataset.label} is open` : 'Open Work, Feedback or Spotify';
   for (const n of q<El>('.np__title')) n.textContent = title;
   for (const n of q<El>('.np__why')) n.textContent = why;
 
   for (const b of q<HTMLButtonElement>('.np__toggle')) {
-    b.disabled = !current;
+    b.disabled = !current && !spotifyOn;
     b.setAttribute('aria-pressed', String(playing));
     b.setAttribute('aria-label', playing ? `Pause ${title}` : `Play ${title}`);
   }
@@ -96,6 +105,9 @@ function applyVolume(fromUser: boolean) {
  * when the visitor goes back.
  */
 function stopSpotify() {
+  // A real pause now that there is a controller to ask. Reloading the frame was the only
+  // lever before having one, and it threw away the visitor's place in the playlist.
+  if (spotify) return spotify.pause();
   const f = document.querySelector<HTMLIFrameElement>('#cc-spotify iframe');
   if (f) f.src = f.src;
 }
@@ -130,6 +142,60 @@ function syncToWindows() {
   if (next === current) return;
   if (!next) { stop(); current = null; return paint(); }
   start(next);
+}
+
+/**
+ * Put the playlist in, through Spotify's own iframe API rather than as raw markup.
+ *
+ * The API is what makes Spotify a source this panel can talk about: the controller emits
+ * playback_update, so the now playing row can say "Spotify" instead of lying about
+ * nothing playing, and it takes pause(), so one source at a time is a real pause rather
+ * than reloading the frame and losing the visitor's place.
+ *
+ * Third party, so it loads on the same terms as the embed it controls: the first time
+ * Control Center opens, never for somebody who does not open it. If it fails to arrive,
+ * the plain iframe goes in instead and everything except the label still works.
+ */
+function mountSpotify(host: HTMLElement) {
+  const URI = 'spotify:playlist:6vjBKgpH5qrt7DW06uJYgL';
+  const plain = () => {
+    if (host.querySelector('iframe')) return;
+    host.innerHTML = `<iframe title="Spotify playlist" width="100%" height="152" loading="lazy"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      src="https://open.spotify.com/embed/playlist/6vjBKgpH5qrt7DW06uJYgL?utm_source=generator"></iframe>`;
+  };
+
+  const w = window as unknown as Record<string, unknown>;
+  w.onSpotifyIframeApiReady = (API: {
+    createController(el: Element, opts: object, cb: (c: never) => void): void;
+  }) => {
+    const slot = document.createElement('div');
+    host.replaceChildren(slot);
+    API.createController(slot, { uri: URI, width: '100%', height: 152 }, (c) => {
+      const ctl = c as unknown as {
+        pause(): void; resume(): void;
+        addListener(name: string, fn: (e: { data: { isPaused: boolean } }) => void): void;
+      };
+      spotify = ctl;
+      ctl.addListener('playback_update', (e) => {
+        const on = !e.data.isPaused;
+        if (on === spotifyOn) return;
+        spotifyOn = on;
+        // One source at a time, decided by whichever started last. Spotify starting is a
+        // deliberate press, so the window soundtrack is the one that steps aside.
+        if (on) stop();
+        paint();
+      });
+    });
+  };
+
+  const s = document.createElement('script');
+  s.src = 'https://open.spotify.com/embed/iframe-api/v1';
+  s.async = true;
+  s.onerror = plain;
+  document.head.appendChild(s);
+  // If the API never calls back, fall back to the embed that at least plays.
+  setTimeout(() => { if (!spotify) plain(); }, 4000);
 }
 
 export function init() {
@@ -174,7 +240,13 @@ export function init() {
   /* Pause. Also delegated, for the same reason: the button exists twice. */
   document.addEventListener('click', (e) => {
     const b = (e.target as El).closest<HTMLButtonElement>('.np__toggle');
-    if (!b || b.disabled || !current) return;
+    if (!b || b.disabled) return;
+    // Whatever the row is naming is what this button controls.
+    if (spotifyOn || (spotify && !current)) {
+      if (spotifyOn) spotify?.pause(); else spotify?.resume();
+      return;
+    }
+    if (!current) return;
     if (current.paused) {
       // Pressing play on a muted desktop has to mean "and turn the sound on", or the
       // button would look broken.
@@ -256,26 +328,15 @@ export function init() {
      its own title and collapses the play button to a dot. Hers carries utm_source and
      nothing else, and lays out properly. */
   const spot = $('cc-spotify');
+  let mounted = false;
   cc?.addEventListener('toggle', () => {
-    if (!cc.open || !spot || spot.querySelector('iframe')) return;
-    /* After the panel has finished opening, not during. Spotify measures its own frame
-       once, on load, and lays itself out from that: built mid-animation it reads the
-       scaled-down box, draws a smaller player with the title clipped, and never
-       re-measures. --t-base is the animation, so this waits it out. Under reduced motion
-       the duration is zero and this is one tick. */
+    if (!cc.open || !spot || mounted) return;
+    mounted = true;
+    /* After the panel has finished opening, not during. Spotify measures its frame once,
+       on load, and lays itself out from that: built mid-animation it reads the scaled-down
+       box, draws a smaller player with the title clipped, and never re-measures. --t-base
+       is the animation, so this waits it out. Under reduced motion it is one tick. */
     const settle = parseFloat(getComputedStyle(document.body).getPropertyValue('--t-base')) || 0;
-    setTimeout(() => {
-      if (!spot.querySelector('iframe')) {
-        spot.innerHTML = `<iframe title="Spotify playlist" width="100%" height="152" loading="lazy"
-      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-      src="https://open.spotify.com/embed/playlist/6vjBKgpH5qrt7DW06uJYgL?utm_source=generator"></iframe>`;
-      }
-    }, settle + 60);
+    setTimeout(() => mountSpotify(spot), settle + 60);
   });
-
-  /* The other half of "one source at a time". Pressing play inside the embed is a click
-     this page never sees, because the frame is cross origin, so the soundtrack steps aside
-     on any press that lands on the player at all. Paused, not forgotten, so the panel still
-     names it and play still works. */
-  spot?.addEventListener('pointerdown', () => stop());
 }
