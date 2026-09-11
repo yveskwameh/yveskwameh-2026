@@ -118,10 +118,13 @@ const accents = [
         <div class="tray__line"></div>
 
         <div class="tray__row">
-          <span class="vol__glyph" aria-hidden="true">
+          {/* A button, not a label. Clicking the speaker mutes and clicking it again puts
+              the level back where it was, so nobody has to drag a slider to zero and then
+              guess their way back up. */}
+          <button class="vol__glyph" type="button" data-mute aria-label="Mute">
             <Icon name="volume-2" size={15} />
             <Icon name="volume-x" size={15} />
-          </span>
+          </button>
           {/* A native range, so arrow keys, Home and End all work with nothing written. */}
           <input class="vol__range" type="range" min="0" max="100" step="1" value="0" aria-label="Volume" />
           <span class="vol__pct">0</span>
@@ -163,10 +166,10 @@ const accents = [
 
         <div class="cc__tile">
           <div class="cc__head">
-            <span class="vol__glyph" aria-hidden="true">
+            <button class="vol__glyph" type="button" data-mute aria-label="Mute">
               <Icon name="volume-2" size={15} />
               <Icon name="volume-x" size={15} />
-            </span>
+            </button>
             <strong>Sound</strong>
             <span class="vol__pct">0</span>
           </div>
@@ -228,16 +231,24 @@ const accents = [
           </fieldset>
         </div>
 
-        {/* Spotify, one tap away from the desktop rather than only inside the Music
-            window. The iframe is built on click and not before: opening Control Center
-            is asking for Control Center, not for a third party embed, and rule 1 says
-            nothing loads that the visitor did not ask for. */}
+        {/* Spotify, reachable from the desktop rather than only by finding the Music
+            icon. It opens the Music window rather than embedding a second player here,
+            and that is a measured decision rather than a shortcut: the embed inside this
+            panel would not start, at four widths and two heights, while the same playlist
+            in the Music window plays on the first click every time. The panel is a
+            backdrop-filtered, scrolling, absolutely positioned box inside a fixed
+            backdrop-filtered bar, and a cross origin iframe in that stack does not
+            reliably receive its own clicks.
+
+            It also settles two other things for free. There is no second player to leave
+            blank space under, and there is only ever one Spotify on the page, so "no two
+            tracks at once" has one thing to switch off rather than two. */}
         <div class="cc__tile cc__tile--tight cc__tile--spotify" id="cc-spotify">
           {/* Its own classes, not the now-playing ones. panel.ts writes every .np__title
               and .np__why on the page from one state, so borrowing them here meant the
               Spotify tile relabelled itself "Nothing playing" the moment the panel
               painted. Same shape, different names. */}
-          <button class="sp" type="button" data-spotify>
+          <button class="sp" type="button" data-open="music" data-spotify>
             <span class="sp__mark" aria-hidden="true"><Icon name="music" size={15} /></span>
             <span class="sp__meta">
               <strong class="sp__name">Spotify</strong>
@@ -381,6 +392,9 @@ const accents = [
     -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
     border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
   }
+  /* Same idea as the panels, same reason for an animation over a transition. */
+  .menu[open] > ul { animation: menu-in var(--t-fast) var(--ease) both; transform-origin: top left; }
+  @keyframes menu-in { from { opacity: 0; transform: scale(.96) translateY(-4px); } }
   .menu button { all: unset; display: block; width: 100%; padding: 6px 10px; border-radius: var(--r-inner); cursor: var(--cur-hand); font: inherit; }
   .menu button:hover { background: var(--os-accent); color: var(--os-on-accent); }
   #clock { font-family: var(--font-chrome); font-size: 11px; letter-spacing: .02em; }
@@ -466,7 +480,7 @@ const accents = [
 
        The measurement only works because .anchor stretches to the full height of the bar
        below, so 100% here is 40px and not the height of whichever glyph opened it. */
-    position: absolute; top: calc(100% + var(--space-3)); right: 0; z-index: 10;
+    position: absolute; top: calc(100% + var(--space-3)); z-index: 10;
     background: var(--os-menu); border: 1px solid var(--os-edge);
     -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
     border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
@@ -478,13 +492,18 @@ const accents = [
     content: ''; position: absolute; left: 0; right: 0;
     top: calc(var(--space-3) * -1); height: var(--space-3);
   }
-  .tray--snd { width: 278px; }
-  /* 360 rather than 292 because of the Spotify embed. Spotify's compact player collapses
-     its own controls below about 320px: the title clips, the transport shrinks to a line,
-     and the rest of the frame goes blank. Measured at 298 and at 340 before landing here.
-     The tile it sits in is full bleed, so the iframe gets 340 of this. */
+  /* The speaker panel hangs to the RIGHT of its icon, left edge under left edge. There
+     is room: the speaker is the leftmost of the right hand group, so its left edge sits
+     roughly 360px in from the screen, and a 278px panel still clears the edge. Control
+     Center keeps the other alignment below, because the clock is the last thing in the
+     bar and a panel growing right from there would be off screen entirely. */
+  .tray--snd { width: 278px; left: 0; transform-origin: top left; }
+  .tray--cc { right: 0; transform-origin: top right; }
+  /* Back to 320 now that the Spotify embed has moved to the Music window. It was widened
+     to 360, then 400, then 420 to try to make that embed lay itself out; none of it is
+     needed for a clock, a slider, three tiles and two buttons. */
   .tray--cc {
-    width: 360px; padding: 10px; gap: 9px; background: var(--os-recess);
+    width: 320px; padding: 10px; gap: 9px; background: var(--os-recess);
     /* The Spotify embed is 352 tall, which can push this past the bottom of a laptop
        screen, so the panel scrolls rather than running off. The same gap it keeps from
        the bar is kept from the bottom. */
@@ -520,7 +539,18 @@ const accents = [
      of the menu bar rather than the bottom of a 22px glyph. Both panels then hang the
      same distance below the bar whatever opened them. */
   .anchor { position: relative; display: flex; align-items: center; align-self: stretch; }
-  .anchor .tray { display: none; }
+  /* An animation rather than a transition, and for the reason Window.astro already gives:
+     display: none to block restarts an animation and cancels a transition outright. One
+     rule covers every way a panel can appear, because a hidden element runs no animation
+     and starts one the moment it is displayed.
+
+     The origin is the corner the panel is pinned by, which is the corner its own icon is
+     at, so it reads as growing out of the thing you pressed rather than arriving from
+     nowhere. --t-base is zeroed under reduced motion along with every other duration. */
+  .anchor .tray { display: none; animation: tray-in var(--t-base) var(--ease) both; }
+  @keyframes tray-in {
+    from { opacity: 0; transform: scale(.93) translateY(-6px); }
+  }
   .anchor--snd:hover .tray,
   .anchor--snd:has(.menu--snd[open]) .tray { display: block; }
   .anchor--cc:has(.menu--cc[open]) .tray { display: grid; }
@@ -571,7 +601,14 @@ const accents = [
   .np__toggle[aria-pressed='true'] :global(svg:last-child) { display: none; }
 
   /* --- volume --- */
-  .vol__glyph { display: grid; width: 15px; height: 15px; flex: none; color: var(--os-muted); }
+  .vol__glyph {
+    all: unset; box-sizing: content-box; display: grid; place-items: center;
+    width: 15px; height: 15px; flex: none; color: var(--os-muted);
+    padding: 3px; margin: -3px; border-radius: var(--r-inner);
+    cursor: var(--cur-hand); transition: color var(--t-fast), background var(--t-fast);
+  }
+  .vol__glyph:hover { color: var(--os-ink); background: var(--os-hover); }
+  .vol__glyph:focus-visible { outline: 2px solid var(--os-accent); outline-offset: 1px; }
   .vol__glyph :global(svg) { grid-area: 1 / 1; }
   /* Driven by the same body flag the speaker uses, so the two glyphs cannot disagree. */
   :global(body.snd-on) .vol__glyph :global(svg:last-child),
@@ -690,9 +727,9 @@ const accents = [
   }
   .sp:hover .sp__go { background: var(--os-accent); color: var(--os-on-accent); }
   /* Once the embed is in, the tile is only a frame around it: no padding, so Spotify gets
-     every pixel of the panel it can, and the corners are clipped rather than drawn. */
-  #cc-spotify:has(iframe) { padding: 0; overflow: hidden; }
-  #cc-spotify iframe { display: block; border: 0; width: 100%; }
+     every pixel of the panel it can, and the corners are clipped rather than drawn.
+
+     No iframe lives in here any more, so no rules for one. See the note on the markup. */
 
   @media (prefers-reduced-motion: reduce) {
     .tip::after, .tip::before, .np__art, .np__toggle, .th__mini { transition: none; }

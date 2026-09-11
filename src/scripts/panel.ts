@@ -27,6 +27,8 @@ const byWindow = new Map<string, HTMLAudioElement>();
 let current: HTMLAudioElement | null = null;
 /** 0 to 100. Zero is the mute switch, so this is the only sound state there is. */
 let vol = 60;
+/** Where the slider was before the speaker was clicked, so unmuting can put it back. */
+let beforeMute = 60;
 
 const stored = () => {
   const n = Number(localStorage.vol);
@@ -86,8 +88,23 @@ function applyVolume(fromUser: boolean) {
   paint();
 }
 
+/**
+ * Stop Spotify, wherever it is. It is a cross origin iframe, so there is no pause to call
+ * from here without loading Spotify's own iframe API, a third party script this page has
+ * no other use for. Reloading the frame stops the audio and leaves a player sitting at
+ * 00:00, which is friendlier than removing it: the Music window still has something in it
+ * when the visitor goes back.
+ */
+function stopSpotify() {
+  const f = document.querySelector<HTMLIFrameElement>('#spotify-box iframe');
+  if (f) f.src = f.src;
+}
+
 function start(a: HTMLAudioElement) {
   current = a;
+  // Never two sources at once. The newest thing the visitor did wins, which is the only
+  // rule that stays predictable in both directions.
+  stopSpotify();
   for (const o of byWindow.values()) if (o !== a) { o.pause(); o.currentTime = 0; }
   if (localStorage.snd !== 'on' || vol === 0) return paint();
   // A rejected play must not leave the panel claiming it is playing, so state is re-read
@@ -101,6 +118,7 @@ function stop() {
   for (const a of byWindow.values()) a.pause();
   paint();
 }
+
 
 /** Which window is open right now, if any. One at a time, per the window manager. */
 const openId = () =>
@@ -142,6 +160,14 @@ export function init() {
     const r = (e.target as El).closest<HTMLInputElement>('.vol__range');
     if (!r) return;
     vol = Number(r.value);
+    applyVolume(true);
+  });
+
+  /* Clicking the speaker glyph mutes, and clicking it again restores the level it was at
+     rather than a guessed one. Delegated, because the glyph exists in both panels. */
+  document.addEventListener('click', (e) => {
+    if (!(e.target as El).closest('[data-mute]')) return;
+    if (vol > 0) { beforeMute = vol; vol = 0; } else { vol = beforeMute || 60; }
     applyVolume(true);
   });
 
@@ -217,23 +243,12 @@ export function init() {
   pick('mode', 'mode', 'auto');
   pick('accent', 'accent', 'teal');
 
-  /* Spotify, built on click and not before. Opening Control Center is asking for Control
-     Center, not for a third party iframe, which is rule 1. Compact height, because the
-     panel is 292 wide and the full player wants more room than that. */
-  const spot = $('cc-spotify');
-  spot?.addEventListener('click', (e) => {
+  /* The Spotify tile opens the Music window, where the player is, so window-manager does
+     the opening off its data-open. All this adds is the other half of "one source at a
+     time": choosing Spotify puts the window soundtrack away rather than layering on top
+     of it. Paused, not forgotten, so the panel still names it and play still works. */
+  document.addEventListener('click', (e) => {
     if (!(e.target as El).closest('[data-spotify]')) return;
-    /* Two things this got wrong before, both found by clicking it rather than by reading
-       it. autoplay has to be in the allow list: pressing play inside a cross origin iframe
-       starts playback programmatically in that frame, and without the permission delegated
-       the browser blocks it, so the player renders and the button does nothing.
-
-       And the height is 352, the full player, not Spotify's 152 compact one. The compact
-       player would not start at all here, twice, while the same playlist at 352 in the
-       Music window played on the first click. It also brings the track list, which is the
-       thing somebody opening this actually wants to see. Tall, so the panel scrolls. */
-    spot.innerHTML = `<iframe title="Spotify playlist" width="100%" height="352" loading="lazy"
-      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-      src="https://open.spotify.com/embed/playlist/6vjBKgpH5qrt7DW06uJYgL?utm_source=generator&theme=0"></iframe>`;
+    stop();
   });
 }

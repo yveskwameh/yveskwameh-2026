@@ -214,9 +214,12 @@ const columns = [feedback.filter((_, i) => i % 2 === 0), feedback.filter((_, i) 
        transforms the column it sits in. */
     .fb__col { animation: fb-drift 40s linear 1s infinite; }
     .fb__col--b { animation-direction: reverse; }
-    /* Pointing at it is a request to read it. focus-within covers the keyboard. */
-    .fb__wall:hover .fb__col,
-    .fb__wall:focus-within .fb__col { animation-play-state: paused; }
+    /* Pointing at a column is a request to read that column, not to stop the wall. Per
+       column rather than per wall, because a pointer can only be in one of them at a
+       time: the one you are reading holds still and the other carries on. focus-within
+       covers the keyboard. */
+    .fb__col:hover,
+    .fb__col:focus-within { animation-play-state: paused; }
   }
 
   @media (max-width: 640px) {
