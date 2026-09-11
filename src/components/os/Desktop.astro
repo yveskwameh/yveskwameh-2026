@@ -46,8 +46,8 @@ import { desktopItems } from '../../data/desktop';
       elapses, which is what keeps the pill hidden and unclickable while it waits.
 
       "Turn on" is a real button because the speaker is a <summary> now and cannot be
-      driven by a <label for>. scripts/panel.ts picks it up, and by 45 seconds in it has
-      been loaded for 44 of them. */}
+      driven by a <label for>. scripts/panel.ts picks it up, and by the time this shows
+      it has been loaded since the first pointer move. */}
   <input class="notice__x" id="notice-x" type="checkbox" hidden />
   <div class="notice" role="status">
     <span class="notice__glyph" aria-hidden="true"></span>
@@ -236,7 +236,7 @@ import { desktopItems } from '../../data/desktop';
     box-shadow: var(--os-shadow-sm); color: var(--os-ink);
     /* Hidden, and unreachable, until the animation below is both applied and finished
        waiting. Visibility rather than display, because display cannot be animated and
-       opacity alone would leave an invisible pill swallowing clicks for 45 seconds. */
+       opacity alone would leave an invisible pill swallowing clicks while it waits. */
     visibility: hidden; opacity: 0;
   }
   .notice__glyph {
@@ -263,9 +263,13 @@ import { desktopItems } from '../../data/desktop';
 
   /* Sound off, lock screen already dismissed, and not already waved away. #lock carries
      is-open once the desktop has been entered, so the wait starts at the desktop rather
-     than at the lock screen, where the visitor has only just answered this question. */
+     than at the lock screen, where the visitor has only just answered this question.
+
+     Twelve seconds, not the forty five it was. Long enough that it is not a popup landing
+     on somebody who has just arrived, short enough that they are still on their first
+     window when it comes, which is the moment the offer is worth anything. */
   body:not(.snd-on):has(#lock.is-open):not(:has(#notice-x:checked)) .notice {
-    animation: notice-in .42s var(--ease) 45s both;
+    animation: notice-in .42s var(--ease) 12s both;
   }
   @keyframes notice-in {
     0%   { opacity: 0; transform: translateX(22px); visibility: hidden; }
