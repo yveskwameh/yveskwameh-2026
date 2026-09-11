@@ -20,7 +20,7 @@ Strong in Figma/Webflow/Framer, newer to Astro and Cloudflare: explain choices b
 
 ## Non-negotiables
 1. Speed first. Target Lighthouse 100 across the board on mobile. Client JS **on page load** stays under 10KB: an app's code is fetched when its window opens, and does not count until then. Measure with `python3 tools/js-budget.py` after `npm run build`, never by eye. Nothing loads on page load that the visitor did not ask for (audio, video, embeds, third-party scripts)
-2. Music comes from Spotify embeds, created on click. The only self-hosted audio is the lock screen voice clip, and it is fetched only after the visitor opts in by clicking. Nothing ever plays without a click first
+2. Music comes from Spotify embeds, created on click, plus a short list of self-hosted excerpts in `public/audio` that Yves holds the rights to, listed in `src/data/tracks.ts`. Every `<audio>` carries `preload="none"`, so a track costs nothing until its button is pressed. The lock screen voice clip is fetched only after the visitor opts in by clicking. Nothing ever plays without a click first
 3. Windows are real HTML at build time, shown/hidden with CSS classes. Do not fetch window content at runtime
 4. Images: webp/avif, explicit width/height, lazy unless above the fold. Pixel icons use `.pixel` class
 7. UI glyphs come from Pixelarticons via `<Icon name="..." />` (inline SVG, currentColor). Add new ones to `tools/sync-icons.mjs`, never hand-draw a glyph that already exists there. Desktop icons are Yves-drawn PNGs per `docs/ICON-SPEC.md`; never use extracted Windows or Mac OS icons
