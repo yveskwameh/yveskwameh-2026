@@ -17,8 +17,13 @@
   --os-ink: #16161a;
   --os-muted: #6b6b70;
   --os-line: rgba(22, 22, 26, 0.35);             /* 1px outline on windows */
-  --os-scroll: rgba(22, 22, 26, 0.28);           /* scrollbar thumb, everywhere */
-  --os-scroll-hover: rgba(22, 22, 26, 0.45);
+  /* Scrollbars. The thumb is a piece of window chrome, so it borrows --os-chrome and
+     --os-line rather than owning colours of its own. Only the groove and the pressed
+     state need naming. The groove is a wash, not a solid, because the things that scroll
+     sit on both --os-surface and --os-recess and a wash reads as a groove on either. */
+  --os-track: rgba(22, 22, 26, 0.06);
+  --os-track-line: rgba(22, 22, 26, 0.18);
+  --os-thumb-hover: #dcdcd8;
   /* Primary actions and every CTA. Yves's brand teal, carried over from the previous
      site. White on it scores 5.89 and it scores 5.3 as a link on the window surface,
      so it clears WCAG AA both ways. */

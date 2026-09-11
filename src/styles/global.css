@@ -32,18 +32,81 @@ body {
 
 img, svg, video { display: block; max-width: 100%; }
 
-/* One scrollbar for the whole site. Chrome and Firefox take the two standard properties,
-   which on a Mac also turns the overlay bar into a thin one that is always there, which
-   is the point. Safari still reads the webkit rules. Applied to everything, so the window
-   bodies, the game thread, the compose field and the work panels all match. */
-* { scrollbar-width: thin; scrollbar-color: var(--os-scroll) transparent; }
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: var(--os-scroll); border-radius: var(--r-pill);
-  border: 2px solid transparent; background-clip: padding-box;
+/* ----------------------------------------------------------------
+   The scrollbar.
+
+   Only the -webkit- rules, and deliberately no scrollbar-width or scrollbar-color out
+   here. Chrome treats the two mechanisms as mutually exclusive: set either standard
+   property on an element and it throws away that element's ::-webkit-scrollbar rules.
+   A `*` rule setting them is what silently cancelled this whole block once already.
+   Firefox is handled on its own at the bottom, fenced so Chrome never reads it.
+
+   The look is window chrome. The thumb is the same material as a title bar, hairline and
+   all, with three pixel notches marking the part you grab, and the track is a groove cut
+   into the panel. It sits in the layout rather than floating, so unlike the Mac overlay
+   bar it is always there to be seen.
+   ---------------------------------------------------------------- */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+
+::-webkit-scrollbar-track {
+  background: var(--os-track);
+  border-left: 1px solid var(--os-track-line);
 }
-::-webkit-scrollbar-thumb:hover { background-color: var(--os-scroll-hover); }
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--os-chrome);
+  border: 1px solid var(--os-line);
+  border-radius: 3px;
+  min-height: 32px;               /* short threads still leave room for the notches */
+  background-image: linear-gradient(var(--os-muted) 0 0),
+                    linear-gradient(var(--os-muted) 0 0),
+                    linear-gradient(var(--os-muted) 0 0);
+  background-size: 4px 2px;
+  background-repeat: no-repeat;
+  background-position: center calc(50% - 4px), center center, center calc(50% + 4px);
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--os-thumb-hover); }
+/* :active is the drag, and the drag is the one place the accent is allowed to show. */
+::-webkit-scrollbar-thumb:active {
+  background-color: var(--os-accent);
+  border-color: var(--os-accent);
+  background-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+}
+
+/* Real steppers at both ends. The glyph has to be a background image: a scrollbar button
+   is a pseudo-element and cannot take a child, so <Icon> is not available to it. The path
+   below is copied verbatim from public/icons/ui/chevron-down.svg, and the up arrow is the
+   same path rotated, so both arrows are the real Pixelarticons artwork rather than
+   something drawn by hand. Re-copy it if that icon is ever resynced. */
+::-webkit-scrollbar-button {
+  display: block; height: 12px;
+  background-color: var(--os-chrome);
+  border: 1px solid var(--os-line);
+  background-repeat: no-repeat; background-position: center; background-size: 12px 12px;
+}
+::-webkit-scrollbar-button:hover { background-color: var(--os-thumb-hover); }
+::-webkit-scrollbar-button:vertical:decrement { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%236b6b70%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20transform%3D%22rotate%28180%2012%2012%29%22%20d%3D%22M13%2016h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4%200h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8%200h-2v-2h2v2ZM7%2010H5V8h2v2Zm12%200h-2V8h2v2Z%22%2F%3E%3C%2Fsvg%3E"); }
+::-webkit-scrollbar-button:vertical:increment { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%236b6b70%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20d%3D%22M13%2016h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4%200h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8%200h-2v-2h2v2ZM7%2010H5V8h2v2Zm12%200h-2V8h2v2Z%22%2F%3E%3C%2Fsvg%3E"); }
+/* Chrome offers a second pair of buttons at the wrong ends. Left alone, every end shows
+   two arrows pointing opposite ways. Nothing scrolls sideways here, so those go too. */
+::-webkit-scrollbar-button:vertical:start:increment,
+::-webkit-scrollbar-button:vertical:end:decrement,
+::-webkit-scrollbar-button:horizontal { display: none; }
+::-webkit-scrollbar-corner { background: var(--os-track); }
+
+/* A touch screen has no cursor to aim at a 12px stepper with, and every phone draws its
+   own overlay indicator. Taking the bar back gives a narrow screen its width back, and it
+   matches what a phone does everywhere else. Same test the cursor set uses. */
+@media (hover: none) {
+  ::-webkit-scrollbar { width: 0; height: 0; }
+}
+
+/* Firefox, which has no ::-webkit-scrollbar at all. Fenced on the selector itself, so
+   Chrome, which does support it, never enters this block and never has its own rules
+   cancelled by the standard properties inside. */
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: var(--os-muted) var(--os-track); }
+}
 
 /* ----------------------------------------------------------------
    The retro cursor set, drawn by tools/draw-cursors.py.
