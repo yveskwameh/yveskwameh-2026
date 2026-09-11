@@ -2,6 +2,13 @@
 /**
  * About this site. What it is, what it runs on, and who made the parts that are not mine.
  *
+ * Laid out as a ledger: the section label sits in a 92px gutter on the left and its
+ * content beside it, with a hairline between blocks. That is direction B from the Figma
+ * board, taken from the way OpenAI sets footnotes and the AI in Design Report sets its
+ * credits table. The thing at the bottom is direction A's footer band, which breaks out of
+ * the gutter and reaches the window edges, because an action at the end of a page is a
+ * footer and should not look like a fourth paragraph.
+ *
  * No script at all: it is static content in a window. The one build-time trick is reading
  * the Astro version out of package.json rather than typing it, so the stack this claims
  * cannot drift from the stack it actually runs.
@@ -14,38 +21,51 @@
  * Do not put it back.
  */
 import { readFileSync } from 'node:fs';
-import { site } from '../../data/site';
 
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 const astroVersion = (pkg.dependencies.astro as string).replace(/^\D+/, '').split('.')[0];
 
+/**
+ * Everything the site actually runs on, not just the headline three. If a tool is load
+ * bearing it belongs here, which is why the Worker, the Durable Object behind the cursors,
+ * the form handler and the deploy are all named.
+ *
+ * Space Mono names its foundry here rather than in the list below. It used to appear in
+ * both, and reading the same typeface twice on one screen was the thing that made the
+ * credits look padded. Naming Colophon Foundry in this row keeps the Open Font License
+ * attribution without the repeat.
+ */
 const stack = [
   ['Astro ' + astroVersion, 'Static build. Every page is finished HTML before anyone asks for it, so there is no server deciding anything at request time.'],
   ['Plain TypeScript', 'No React, no Vue, no framework. The things that move are small files that do one job each.'],
   ['Plain CSS', 'Every colour, size and duration lives in one tokens file, so changing the accent is one line.'],
-  ['Cloudflare', 'Served as static assets from their edge.'],
-  ['Space Mono', 'Self-hosted, latin only, both weights. One typeface for the chrome, the body and the captions.'],
+  ['Cloudflare Workers', 'Serves the files from their edge. Exactly one path is not a file: /ws, which is the socket behind the cursors.'],
+  ['Durable Objects', 'Holds everyone who has the site open at the same time, so you can watch each other move around. It sleeps when the room is empty.'],
+  ['Space Mono', 'Colophon Foundry. Self-hosted, latin only, both weights. One typeface for the chrome, the body and the captions.'],
+  ['Web3Forms', 'Takes whatever you write in the Mail window and puts it in my inbox.'],
+  ['GitHub', 'Pushing to main is the deploy. Cloudflare builds that commit and ships it.'],
 ];
 
+/** Other people's work that ships inside the site, with the licence it ships under. */
 const credits = [
-  ['Space Mono', 'Colophon Foundry, under the Open Font License', 'https://fonts.google.com/specimen/Space+Mono'],
   ['Pixelarticons', 'Gerrit Halfmann, MIT', 'https://pixelarticons.com/'],
   ['Sounds', 'Kenney, CC0', 'https://kenney.nl/assets'],
   ['Astro', 'the Astro team', 'https://astro.build'],
-  ['Playlist', 'Spotify', 'https://open.spotify.com/'],
 ];
 ---
 <div class="colo">
-  <section>
+  <section class="colo__sec">
     <h3 class="colo__h">The idea</h3>
-    <p>A portfolio that behaves like an operating system. You land on a lock screen, you get
-    a desktop, and the work sits in windows you open yourself.</p>
-    <p>I design interfaces, so it made more sense to build one than to write about it.</p>
+    <div class="colo__body">
+      <p>A portfolio that behaves like an operating system. You land on a lock screen, you get
+      a desktop, and the work sits in windows you open yourself.</p>
+      <p>I design interfaces, so it made more sense to build one than to write about it.</p>
+    </div>
   </section>
 
-  <section>
+  <section class="colo__sec">
     <h3 class="colo__h">What it runs on</h3>
-    <dl class="colo__stack">
+    <dl class="colo__body colo__stack">
       {stack.map(([name, why]) => (
         <div class="colo__row">
           <dt>{name}</dt>
@@ -55,46 +75,91 @@ const credits = [
     </dl>
   </section>
 
-  <section>
-    <h3 class="colo__h">Credit where it is due</h3>
-    <ul class="colo__credits">
-      {credits.map(([what, who, url]) => (
-        <li>
-          <a href={url} target="_blank" rel="noopener noreferrer">{what}</a> by {who}
-        </li>
-      ))}
-    </ul>
-    <p class="colo__note">The desktop icons and the wallpaper are mine. The tool logos in
-    the dock are trademarks of their owners, here to name what I use, nothing more.</p>
+  <section class="colo__sec">
+    <h3 class="colo__h">Thanks to</h3>
+    <div class="colo__body">
+      <ul class="colo__credits">
+        {credits.map(([what, who, url]) => (
+          <li>
+            <a href={url} target="_blank" rel="noopener noreferrer">{what}</a>
+            <span class="colo__who">{who}</span>
+          </li>
+        ))}
+      </ul>
+      <p class="colo__note">The desktop icons and the wallpaper are mine. The tool logos in
+      the dock are trademarks of their owners, here to name what I use, nothing more.</p>
+    </div>
   </section>
 
-  <section>
-    <h3 class="colo__h">Something broken?</h3>
-    <p>Tell me and I will fix it. <button class="btn" type="button" data-open="contact">Send me a message</button></p>
-  </section>
+  {/* Outside the gutter grid on purpose. See the note on .colo__cta. */}
+  <div class="colo__cta">
+    <div class="colo__cta-text">
+      <h3>Found something broken?</h3>
+      <p>Tell me and I will fix it.</p>
+    </div>
+    <button class="btn" type="button" data-open="contact">Send me a message</button>
+  </div>
 </div>
 
 <style>
-  .colo { display: grid; gap: var(--space-4); font-size: 13px; line-height: 1.6; max-width: 62ch; }
-  .colo p { margin: 0 0 var(--space-2); }
-  .colo p:last-child { margin-bottom: 0; }
-  .colo__h {
-    margin: 0 0 var(--space-2); font: 700 10px var(--font-chrome);
-    letter-spacing: .18em; text-transform: uppercase; color: var(--os-muted);
+  .colo { font-size: 13px; line-height: 1.6; }
+
+  /* The ledger. A label column and a content column, and a hairline where one block ends
+     and the next begins. No max-width on the wrapper: the content column is already about
+     48 characters at this window size, and a max-width here would stop the footer below
+     from reaching the right edge. */
+  .colo__sec { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: var(--space-3); }
+  .colo__sec + .colo__sec {
+    margin-top: var(--space-4); padding-top: var(--space-4);
+    border-top: 1px solid rgba(22, 22, 26, .12);
   }
-  .colo__note { color: var(--os-muted); font-size: 12px; }
+  /* Sentence case and no tracking, unlike the old label. In a gutter the label is already
+     separated from the content by 92px of nothing, so it does not need shouting too. */
+  .colo__h { margin: 2px 0 0; font: 700 11px var(--font-chrome); color: var(--os-muted); }
 
-  /* A description list, because that is what this is: a term and what it does. The row
-     wrapper is what lets the pair sit side by side without a table. */
-  .colo__stack { margin: 0; display: grid; gap: var(--space-2); }
-  .colo__row { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: var(--space-3); }
-  .colo__stack dt { font-weight: 700; }
-  .colo__stack dd { margin: 0; color: var(--os-muted); }
+  .colo__body > p { margin: 0 0 var(--space-2); }
+  .colo__body > p:last-child { margin-bottom: 0; }
 
-  .colo__credits { margin: 0 0 var(--space-2); padding-left: 1.1em; display: grid; gap: 3px; }
+  .colo__stack { margin: 0; }
+  .colo__row { padding-bottom: var(--space-2); }
+  .colo__row + .colo__row {
+    margin-top: var(--space-2); padding-top: var(--space-2);
+    border-top: 1px solid rgba(22, 22, 26, .07);
+  }
+  .colo__row:last-child { padding-bottom: 0; }
+  .colo__stack dt { font-weight: 700; font-size: 12px; }
+  .colo__stack dd { margin: 2px 0 0; color: var(--os-muted); font-size: 12px; line-height: 1.5; }
+
+  .colo__credits { margin: 0; padding: 0; list-style: none; }
+  .colo__credits li {
+    display: flex; align-items: baseline; gap: var(--space-2);
+    padding: 6px 0; font-size: 12px;
+  }
+  .colo__credits li + li { border-top: 1px solid rgba(22, 22, 26, .07); }
+  .colo__credits li:first-child { padding-top: 0; }
+  /* Pushed right so the names line up on the left and the licences on the right, which is
+     what makes it scan as a table rather than as a sentence per line. */
+  .colo__who { margin-left: auto; color: var(--os-muted); text-align: right; }
+  .colo__note { margin: var(--space-3) 0 0; color: var(--os-muted); font-size: 12px; }
+
+  /* The footer. Negative margins cancel the window body's padding so the band reaches all
+     three edges, which is what makes the eye read it as the end of the page rather than as
+     one more block in the ledger. It is the only thing on this page that leaves the grid. */
+  .colo__cta {
+    margin: var(--space-4) calc(var(--space-3) * -1) calc(var(--space-3) * -1);
+    padding: var(--space-4) var(--space-3);
+    background: var(--os-recess);
+    display: flex; flex-wrap: wrap; gap: var(--space-3);
+    align-items: center; justify-content: space-between;
+  }
+  .colo__cta-text { min-width: 0; }
+  .colo__cta h3 { margin: 0 0 2px; font: 700 14px var(--font-chrome); color: var(--os-ink); }
+  .colo__cta p { margin: 0; font-size: 12px; color: var(--os-muted); }
 
   @media (max-width: 640px) {
-    /* Two columns at 116px leaves nothing for the explanation on a phone, so it stacks. */
-    .colo__row { grid-template-columns: 1fr; gap: 2px; }
+    /* 92px of gutter beside a 280px column leaves nothing for the writing, so the label
+       goes back on top of its block. The footer is unaffected: it was never in the grid. */
+    .colo__sec { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+    .colo__credits li { flex-wrap: wrap; gap: 0 var(--space-2); }
   }
 </style>
