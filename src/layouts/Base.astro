@@ -120,7 +120,7 @@ const ld = schema?.length
         page first and then the dark one, which is worse than having no dark theme.
         Day is the default and stores nothing, so this writes no attribute for it.
         scripts/panel.ts is what puts the answer in localStorage. */}
-    <script is:inline>document.documentElement.dataset.theme = localStorage.theme || ''</script>
+    <script is:inline>var d=document.documentElement.dataset,s=localStorage;d.mode=s.mode||'';d.accent=s.accent||''</script>
   </head>
   <body>
     <slot />

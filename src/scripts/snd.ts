@@ -16,27 +16,27 @@
  */
 const $ = (id: string) => document.getElementById(id);
 
-let btn: HTMLElement | null = null;
-
-/** The one writer. Stores the answer, updates the speaker, tells everyone. */
+/** The one writer. Stores the answer, updates every speaker, tells everyone. */
 export function set(on: boolean) {
   localStorage.snd = on ? 'on' : 'off';
   paint(on);
   document.dispatchEvent(new CustomEvent('snd', { detail: on }));
 }
 
-/* aria-pressed carries the state and the label names the control, so a screen reader says
-   "Sound, toggle button, pressed" rather than reading out an icon. The body flag is what
-   the volume glyphs inside both panels read, so every speaker on the page agrees without
-   any of them being found by id. The title attribute that used to live here is gone: the
-   speaker opens a panel now, and a tooltip over a panel is noise. */
+/* One flag on <body>, and every speaker glyph on the page reads it: the one in the menu
+   bar and the two inside the panels. None of them has to be found by id, and none can
+   disagree with another.
+
+   aria-pressed used to live on the menu bar speaker and is gone. That element is a
+   <summary> now, which is a disclosure: its state is aria-expanded and the browser
+   already manages it. aria-pressed there was describing a toggle button that no longer
+   exists. The title attribute went the same way, because the speaker opens a panel and a
+   tooltip over a panel is noise. */
 function paint(on: boolean) {
   document.body.classList.toggle('snd-on', on);
-  btn?.setAttribute('aria-pressed', String(on));
 }
 
 export function initSound() {
-  btn = $('snd');
   paint(localStorage.snd === 'on');
 
   const g = $('lock-gate');

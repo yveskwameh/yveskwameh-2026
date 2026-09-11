@@ -61,7 +61,7 @@ const columns = [feedback.filter((_, i) => i % 2 === 0), feedback.filter((_, i) 
     <div class="fb__badges">
       {badges.map((b) => (
         <span class="fb__badge" role="img" aria-label={b.alt}
-              style={`background-image:url('${b.src}');width:${b.width}px;height:${b.height}px`}></span>
+              style={`background-image:url('${b.src}');--dark-src:url('${b.src.replace('.svg', '-dark.svg')}');width:${b.width}px;height:${b.height}px`}></span>
       ))}
     </div>
   </div>
@@ -115,6 +115,22 @@ const columns = [feedback.filter((_, i) => i % 2 === 0), feedback.filter((_, i) 
      start on the same line. */
   .fb__badges { display: grid; gap: 10px; justify-items: start; }
   .fb__badge { display: block; max-width: 100%; background: center left / contain no-repeat; }
+  /* The badges are background images, so they cannot take currentColor, and their ink
+     stayed black on every dark surface. A blanket filter: invert(1) was the first idea
+     and it is wrong: these are not flat marks. Upwork carries its green and a blue,
+     Behance an orange and two gradients, and inverting turns the green magenta. So there
+     is a second file per badge with only the greys and blacks moved, built by
+     tools/../badge_dark.py, and only a visitor on a dark theme ever fetches it.
+
+     Written against both routes into dark, the explicit choice and the system default,
+     the same way tokens.css has to be. The URL is set inline per badge from the data, so
+     these rules can only swap the whole layer, which is why the src is rebuilt here. */
+  :global(html[data-mode='dark']) .fb__badge,
+  :global(html[data-mode='dark']) .fb__avatar { color-scheme: dark; }
+  :global(html[data-mode='dark']) .fb__badge { background-image: var(--dark-src) !important; }
+  @media (prefers-color-scheme: dark) {
+    :global(html:not([data-mode='light'])) .fb__badge { background-image: var(--dark-src) !important; }
+  }
 
   /* Scrolls by default. Only the drifting version clips, because only the drifting version
      brings the content back round by itself. Someone who has asked for reduced motion gets
@@ -140,9 +156,18 @@ const columns = [feedback.filter((_, i) => i % 2 === 0), feedback.filter((_, i) 
     margin: 0 0 var(--space-2); display: grid; gap: var(--space-3);
     padding: var(--space-3);
     background: var(--os-card); border-radius: var(--r-window);
+    /* The ring is drawn transparent rather than added on hover, so the card never grows
+       by two pixels under the pointer and nudges the column it is drifting in. */
+    box-shadow: 0 0 0 2px transparent;
+    transition: box-shadow var(--t-fast) var(--ease);
   }
+  /* The wall pauses when you point at it, which is easy to miss when nothing under the
+     pointer changes. The ring says which card you have hold of, and that pointing was
+     the thing that stopped everything. */
+  .fb__card:hover { box-shadow: 0 0 0 2px var(--os-accent); }
+  .fb__card:focus-within { box-shadow: 0 0 0 2px var(--os-accent); }
   .fb__quote { margin: 0; font-size: 12px; line-height: 1.6; color: var(--os-ink); }
-  .fb__who { display: flex; align-items: center; gap: 10px; padding-top: var(--space-3); border-top: 1px solid rgba(22,22,26,.09); }
+  .fb__who { display: flex; align-items: center; gap: 10px; padding-top: var(--space-3); border-top: 1px solid var(--os-hairline); }
   .fb__avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--os-recess) center / cover no-repeat; }
   .fb__avatar--initials { display: grid; place-items: center; color: var(--os-muted); font: 700 12px var(--font-chrome); }
   .fb__names { display: grid; min-width: 0; }

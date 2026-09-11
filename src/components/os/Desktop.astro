@@ -127,7 +127,7 @@ import { desktopItems } from '../../data/desktop';
     position: fixed; z-index: 950; min-width: 190px; padding: 6px;
     background: var(--os-menu);
     -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
-    border: 1px solid rgba(0,0,0,.12); border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
+    border: 1px solid var(--os-edge); border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
   }
   .ctx[hidden] { display: none; }
   .ctx button {
@@ -197,7 +197,7 @@ import { desktopItems } from '../../data/desktop';
 
   .react {
     position: fixed; z-index: 860; left: -999px; display: flex; gap: 2px; padding: 4px;
-    background: var(--os-menu); border: 1px solid rgba(0,0,0,.12);
+    background: var(--os-menu); border: 1px solid var(--os-edge);
     border-radius: var(--r-pill); box-shadow: var(--os-shadow-sm);
     -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
   }
@@ -207,7 +207,7 @@ import { desktopItems } from '../../data/desktop';
     border-radius: 50%; cursor: var(--cur-hand); font-size: 15px; line-height: 1;
     transition: transform var(--t-fast), background var(--t-fast);
   }
-  .react button:hover { background: rgba(22,22,26,.08); transform: scale(1.25); }
+  .react button:hover { background: var(--os-hover); transform: scale(1.25); }
 
   /* The reaction emoji are styled in global.css, not here. They are created by
      presence.ts rather than written in this file's markup, and Astro scopes these styles
@@ -227,7 +227,7 @@ import { desktopItems } from '../../data/desktop';
     top: calc(var(--menubar-h) + var(--space-2)); right: var(--space-2);
     display: flex; align-items: center; gap: var(--space-3);
     padding: 6px 6px 6px 14px; border-radius: var(--r-pill);
-    background: var(--os-menu); border: 1px solid rgba(0,0,0,.12);
+    background: var(--os-menu); border: 1px solid var(--os-edge);
     -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
     box-shadow: var(--os-shadow-sm); color: var(--os-ink);
     /* Hidden, and unreachable, until the animation below is both applied and finished
@@ -255,7 +255,7 @@ import { desktopItems } from '../../data/desktop';
     border-radius: 50%; cursor: var(--cur-hand); color: var(--os-muted);
     font: 15px/1 var(--font-chrome);
   }
-  .notice__close:hover { background: rgba(22,22,26,.08); color: var(--os-ink); }
+  .notice__close:hover { background: var(--os-hover); color: var(--os-ink); }
 
   /* Sound off, lock screen already dismissed, and not already waved away. #lock carries
      is-open once the desktop has been entered, so the wait starts at the desktop rather
@@ -279,7 +279,7 @@ import { desktopItems } from '../../data/desktop';
     .notice { left: var(--space-2); right: var(--space-2); }
   }
 
-  .ctx hr { margin: 4px 6px; border: 0; border-top: 1px solid rgba(22,22,26,.12); }
+  .ctx hr { margin: 4px 6px; border: 0; border-top: 1px solid var(--os-hairline); }
   @media (max-width: 640px) {
     /* phone home screen: icons flow in a grid, positions from data are ignored */
     .desktop { display: grid; grid-template-columns: repeat(4, 1fr); align-content: start; gap: var(--space-4) var(--space-2); padding: var(--space-4) var(--space-2) 120px; }

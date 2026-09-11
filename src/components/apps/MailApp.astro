@@ -95,7 +95,7 @@ if (!contact.accessKey) {
      column also carries 16px of left padding, so anything narrower runs the two together. */
   .compose__field {
     display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: center;
-    border-bottom: 1px solid rgba(22,22,26,.10);
+    border-bottom: 1px solid var(--os-hairline);
     transition: background var(--t-fast);
   }
   /* Bold, so the label reads as the label and the field reads as what was typed. That
@@ -113,7 +113,7 @@ if (!contact.accessKey) {
   .compose__pill {
     justify-self: start; display: inline-flex; align-items: center; gap: 9px;
     margin: 8px 0; padding: 5px 16px 5px 5px; border-radius: var(--r-pill);
-    background: rgba(22,22,26,.08); font-size: 13px; line-height: 1;
+    background: var(--os-hover); font-size: 13px; line-height: 1;
   }
   .compose__pill img { width: 26px; height: 26px; border-radius: 50%; }
 
@@ -140,7 +140,7 @@ if (!contact.accessKey) {
   /* Cancel on the left, Send on the right, the way the reference has it. */
   .compose__actions {
     display: flex; align-items: center; gap: var(--space-2);
-    padding: 10px var(--space-3); border-top: 1px solid rgba(22,22,26,.10);
+    padding: 10px var(--space-3); border-top: 1px solid var(--os-hairline);
   }
   .compose__send { margin-left: auto; }
   .compose__trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }

@@ -192,18 +192,39 @@ export function init() {
   cc?.addEventListener('toggle', () => cc.open && stamp());
   stamp();
 
-  /* Theme. The attribute on <html> is the whole mechanism; tokens.css does the rest. The
-     inline script in Base.astro has already applied the stored one before first paint, so
-     all this does is keep the radios in step and write the answer down. */
-  const saved = document.documentElement.dataset.theme || 'day';
-  const radio = $(`th-${saved}`) as HTMLInputElement | null;
-  if (radio) radio.checked = true;
-  for (const r of q<HTMLInputElement>('.sw__radio')) {
-    r.addEventListener('change', () => {
-      // Day is the default and carries no attribute, so the cleanest state is no state.
-      if (r.value === 'day') delete document.documentElement.dataset.theme;
-      else document.documentElement.dataset.theme = r.value;
-      localStorage.theme = r.value;
-    });
-  }
+  /* Theme. Two attributes on <html> are the whole mechanism; tokens.css does the rest.
+     The inline script in Base.astro has already applied the stored pair before first
+     paint, so all this does is keep the controls in step and write the answers down.
+
+     Auto needs nothing here and nothing at load either. With no data-mode set, the
+     prefers-color-scheme block in tokens.css is what applies, and it keeps applying when
+     the system flips at sunset. A matchMedia listener would be a second, slower copy of
+     something CSS already does. */
+  const root = document.documentElement;
+  const pick = (name: string, attr: 'mode' | 'accent', dflt: string) => {
+    const on = $(`${name === 'mode' ? 'md' : 'ac'}-${root.dataset[attr] || dflt}`) as HTMLInputElement | null;
+    if (on) on.checked = true;
+    for (const r of q<HTMLInputElement>(`input[name="${name}"]`)) {
+      r.addEventListener('change', () => {
+        // The default carries no attribute, so the cleanest state is no state, and a
+        // visitor who never touches this is served exactly what they were before.
+        if (r.value === dflt) delete root.dataset[attr];
+        else root.dataset[attr] = r.value;
+        localStorage[attr] = r.value;
+      });
+    }
+  };
+  pick('mode', 'mode', 'auto');
+  pick('accent', 'accent', 'teal');
+
+  /* Spotify, built on click and not before. Opening Control Center is asking for Control
+     Center, not for a third party iframe, which is rule 1. Compact height, because the
+     panel is 292 wide and the full player wants more room than that. */
+  const spot = $('cc-spotify');
+  spot?.addEventListener('click', (e) => {
+    if (!(e.target as El).closest('[data-spotify]')) return;
+    spot.innerHTML = `<iframe title="Spotify playlist" width="100%" height="152" loading="lazy"
+      allow="clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      src="https://open.spotify.com/embed/playlist/6vjBKgpH5qrt7DW06uJYgL?utm_source=generator&theme=0"></iframe>`;
+  });
 }

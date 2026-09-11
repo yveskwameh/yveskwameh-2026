@@ -167,11 +167,11 @@ const rules = panes.map(({ p }) => `
     font: 12px var(--font-chrome); color: var(--os-ink);
   }
   .settings__icon { width: 20px; height: 20px; border-radius: 5px; object-fit: cover; }
-  .settings__icon--blank { display: block; background: rgba(22,22,26,.12); }
+  .settings__icon--blank { display: block; background: var(--os-hairline); }
   /* One line, and it stays one line: a long title gets an ellipsis rather than wrapping
      and making its row taller than the others. */
   .settings__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .settings__row:hover { background: rgba(22,22,26,.06); }
+  .settings__row:hover { background: var(--os-track); }
   /* A disabled row is not going anywhere, so it should not pretend to be clickable. */
   [for="w-none"] { cursor: var(--cur-arrow); }
   [for="w-none"]:hover { background: none; }
@@ -214,13 +214,13 @@ const rules = panes.map(({ p }) => `
     .settings__picker {
       display: block; order: -1; position: sticky; top: 0; z-index: 20;
       padding: var(--space-2); background: var(--os-chrome);
-      border-bottom: 1px solid rgba(22,22,26,.12);
+      border-bottom: 1px solid var(--os-hairline);
     }
     .settings__pick {
       display: grid; grid-template-columns: minmax(0, 1fr) 16px; align-items: center; gap: 10px;
       padding: 10px var(--space-2); cursor: var(--cur-hand);
       background: var(--os-card); color: var(--os-ink);
-      border: 1px solid rgba(22,22,26,.22); border-radius: var(--r-inner);
+      border: 1px solid var(--os-line); border-radius: var(--r-inner);
       font: 700 13px var(--font-chrome);
     }
     .settings__pick-label { min-width: 0; }
@@ -235,7 +235,7 @@ const rules = panes.map(({ p }) => `
       padding: 6px; z-index: 30;
       background: var(--os-menu);
       -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
-      border: 1px solid rgba(0,0,0,.12); border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
+      border: 1px solid var(--os-edge); border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
     }
     .settings:has(#work-open:checked) .settings__menu { display: block; }
     .settings__row { margin: 0; padding: 9px 10px; border-radius: var(--r-inner); }

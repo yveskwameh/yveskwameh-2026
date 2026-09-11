@@ -73,8 +73,8 @@ img, svg, video { display: block; max-width: 100%; }
   min-height: 32px;               /* short panels still leave room for the ridges */
   background-image: repeating-linear-gradient(
     to bottom,
-    rgba(22, 22, 26, .30) 0 1px,
-    rgba(255, 255, 255, .75) 1px 2px,
+    var(--os-ridge-shadow) 0 1px,
+    var(--os-ridge-light) 1px 2px,
     transparent 2px 4px
   );
   background-size: 7px 10px;      /* three ridges at a 4px pitch, last gap trimmed */
@@ -208,7 +208,7 @@ a { color: var(--os-accent); }
 
 .btn--secondary { background: none; color: var(--os-ink); border-color: var(--os-line); }
 .btn--secondary:hover { background: none; }
-.btn--secondary:active { background: rgba(22,22,26,.12); }
+.btn--secondary:active { background: var(--os-hairline); }
 
 .btn--icon { padding: 0; width: 34px; height: 34px; border-radius: 50%; }
 

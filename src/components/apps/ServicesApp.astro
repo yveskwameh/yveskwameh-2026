@@ -74,8 +74,8 @@ import Icon from '../os/Icon.astro';
 
   /* Every row after the first gets a line above it. Written as "a row that follows a
      panel" so the first row never gets one, whichever row happens to be open. */
-  .svc__panel + .svc__radio + .svc__row { border-top: 1px solid rgba(22,22,26,.09); }
-  .svc__row:hover { background: rgba(22,22,26,.04); }
+  .svc__panel + .svc__radio + .svc__row { border-top: 1px solid var(--os-hairline); }
+  .svc__row:hover { background: var(--os-hover); }
   .svc__radio:focus-visible + .svc__row { box-shadow: inset 0 0 0 2px var(--os-accent); }
 
   .svc__panel { display: none; padding: 0 var(--space-3) var(--space-3); }

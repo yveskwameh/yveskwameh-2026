@@ -28,6 +28,22 @@
   --os-track: rgba(22, 22, 26, 0.06);
   --os-track-line: rgba(22, 22, 26, 0.18);
   --os-thumb-hover: #dcdcd8;
+  /* The three washes that used to be written out as literals in a dozen files, which is
+     why none of them followed a theme. --os-edge is the rim on a blurred surface, where
+     --os-line would be far too strong. --os-hairline divides content inside one surface.
+     --os-hover and --os-press are the two states every unfilled control shares.
+
+     On the dark themes all four invert to white at low alpha, because a dark wash on a
+     dark surface is not a line, it is nothing. */
+  --os-edge: rgba(0, 0, 0, 0.12);
+  --os-hairline: rgba(22, 22, 26, 0.12);
+  --os-hover: rgba(22, 22, 26, 0.08);
+  --os-press: rgba(22, 22, 26, 0.14);
+  /* The two halves of an embossed ridge, which is what the scrollbar thumb is made of.
+     They have to invert together or the highlight turns into a glowing white bar on a
+     dark thumb. */
+  --os-ridge-shadow: rgba(22, 22, 26, 0.3);
+  --os-ridge-light: rgba(255, 255, 255, 0.75);
   /* Primary actions and every CTA. Yves's brand teal, carried over from the previous
      site. White on it scores 5.89 and it scores 5.3 as a link on the window surface,
      so it clears WCAG AA both ways. */
@@ -140,26 +156,27 @@
 }
 
 /* ==========================================================
-   Themes. Four of them, picked from the swatch strip in Control Center.
+   Themes: an appearance and an accent, picked separately in Control Center.
 
-   A theme is nothing but a set of overrides on one attribute, so there is no theme
-   engine and no second stylesheet: every value below already exists above, and the
-   only job here is to say what it becomes.
+   A theme is nothing but a set of overrides on two attributes, so there is no theme
+   engine and no second stylesheet: every value below already exists above, and the only
+   job here is to say what it becomes.
 
-       Day    light surfaces, teal accent   (the default, no attribute)
-       Dusk   dark surfaces,  teal accent
-       Paper  light surfaces, amber accent
-       Night  dark surfaces,  amber accent
+       data-mode    absent = follow the system, or 'light' / 'dark' to override it
+       data-accent  absent = teal, or 'amber' / 'blue' / 'violet'
 
-   Surfaces and accent are deliberately two independent axes written as two blocks
-   rather than four, so a fifth theme is one selector on an existing list.
+   The dark block is written twice on purpose, once for the explicit choice and once for
+   the system default, because CSS has no way to share a declaration list across a media
+   query boundary. The alternative was resolving 'auto' in the inline head script, which
+   would have cost real bytes on every page load to save repetition in a file that costs
+   none against the budget. Keep the two copies in step.
 
-   The attribute is written on <html> by the inline script in Base.astro, before first
+   Both attributes are written on <html> by the inline script in Base.astro, before first
    paint, because a theme applied after paint is a white flash on the way to dark.
    ========================================================== */
 
-/* --- dark surfaces --- */
-html[data-theme='dusk'], html[data-theme='night'] {
+/* --- dark surfaces: the explicit choice --- */
+html[data-mode='dark'] {
   --os-desktop: #16202a;
   --os-surface: #1e1e22;
   --os-recess: #17171a;
@@ -172,21 +189,73 @@ html[data-theme='dusk'], html[data-theme='night'] {
   --os-ink: #f2f2ef;
   --os-muted: #a0a0a6;
   --os-line: rgba(255, 255, 255, 0.2);
+  --os-edge: rgba(255, 255, 255, 0.14);
+  --os-hairline: rgba(255, 255, 255, 0.13);
+  --os-hover: rgba(255, 255, 255, 0.1);
+  --os-press: rgba(255, 255, 255, 0.16);
   --os-track: rgba(255, 255, 255, 0.08);
   --os-track-line: rgba(255, 255, 255, 0.16);
   --os-thumb-hover: #3a3a42;
-  /* The wallpaper is one file, washed here rather than swapped for a second one. A dark
-     crop would be a second 33KB download for a visitor who already has this one. */
+  --os-ridge-shadow: rgba(0, 0, 0, 0.45);
+  --os-ridge-light: rgba(255, 255, 255, 0.13);
+  /* One wallpaper, washed rather than swapped. A dark crop would be a second 33KB
+     download for a visitor who already has this one. */
   --wallpaper-wash: linear-gradient(rgba(8, 12, 18, 0.62), rgba(8, 12, 18, 0.62));
-  /* Near black on the accent, because the accent below is bright. */
+  /* The accent gets brighter on dark so it still reads as a link, so what sits on top of
+     a filled accent has to go the other way. */
   --os-on-accent: #0d1412;
+  --os-accent: #2cc0af;
+  --os-accent-bright: #48d3c3;
+}
+/* --- dark surfaces: following the system, unless light was chosen --- */
+@media (prefers-color-scheme: dark) {
+  html:not([data-mode='light']) {
+    --os-desktop: #16202a;
+    --os-surface: #1e1e22;
+    --os-recess: #17171a;
+    --os-card: #26262b;
+    --os-chrome: #2b2b31;
+    --os-bar: rgba(28, 28, 33, 0.74);
+    --os-dock: rgba(32, 32, 37, 0.55);
+    --os-menu: rgba(32, 32, 37, 0.93);
+    --os-titlebar: rgba(28, 28, 33, 0.74);
+    --os-ink: #f2f2ef;
+    --os-muted: #a0a0a6;
+    --os-line: rgba(255, 255, 255, 0.2);
+    --os-edge: rgba(255, 255, 255, 0.14);
+    --os-hairline: rgba(255, 255, 255, 0.13);
+    --os-hover: rgba(255, 255, 255, 0.1);
+    --os-press: rgba(255, 255, 255, 0.16);
+    --os-track: rgba(255, 255, 255, 0.08);
+    --os-track-line: rgba(255, 255, 255, 0.16);
+    --os-thumb-hover: #3a3a42;
+    --os-ridge-shadow: rgba(0, 0, 0, 0.45);
+    --os-ridge-light: rgba(255, 255, 255, 0.13);
+    /* One wallpaper, washed rather than swapped. A dark crop would be a second 33KB
+       download for a visitor who already has this one. */
+    --wallpaper-wash: linear-gradient(rgba(8, 12, 18, 0.62), rgba(8, 12, 18, 0.62));
+    /* The accent gets brighter on dark so it still reads as a link, so what sits on top of
+       a filled accent has to go the other way. */
+    --os-on-accent: #0d1412;
+    --os-accent: #2cc0af;
+    --os-accent-bright: #48d3c3;
+  }
 }
 
-/* --- amber accent --- */
-html[data-theme='paper'] { --os-accent: #8a5410; --os-accent-bright: #a96a1c; }
-html[data-theme='night'] { --os-accent: #d09232; --os-accent-bright: #e0a951; }
-/* --- teal accent on dark. Brighter than Day's, to read as a link on a dark surface. --- */
-html[data-theme='dusk'] { --os-accent: #2cc0af; --os-accent-bright: #48d3c3; }
+/* --- accents on light --- */
+html[data-accent='amber'] { --os-accent: #8a5410; --os-accent-bright: #a96a1c; }
+html[data-accent='blue'] { --os-accent: #2f5fae; --os-accent-bright: #3d74ce; }
+html[data-accent='violet'] { --os-accent: #7b3f8f; --os-accent-bright: #9552aa; }
+
+/* --- accents on dark, both routes again --- */
+html[data-mode='dark'][data-accent='amber'] { --os-accent: #d09232; --os-accent-bright: #e0a951; }
+html[data-mode='dark'][data-accent='blue'] { --os-accent: #6c9bee; --os-accent-bright: #8fb5f3; }
+html[data-mode='dark'][data-accent='violet'] { --os-accent: #c08ad6; --os-accent-bright: #d2a6e3; }
+@media (prefers-color-scheme: dark) {
+  html:not([data-mode='light'])[data-accent='amber'] { --os-accent: #d09232; --os-accent-bright: #e0a951; }
+  html:not([data-mode='light'])[data-accent='blue'] { --os-accent: #6c9bee; --os-accent-bright: #8fb5f3; }
+  html:not([data-mode='light'])[data-accent='violet'] { --os-accent: #c08ad6; --os-accent-bright: #d2a6e3; }
+}
 
 @media (max-width: 640px) {
   :root { --window-top: 24px; --window-bottom: calc(var(--dock-clear) + 16px); }

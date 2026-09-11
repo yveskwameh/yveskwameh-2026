@@ -27,14 +27,23 @@ import Icon from './Icon.astro';
 const hasAvatar = existsSync('public' + site.avatar);
 const initials = site.name.split(' ').map((w) => w[0]).join('');
 
-/* The four themes, in the order the swatch strip reads. Day is the default and carries no
-   attribute, so a visitor who never opens Control Center is served exactly what they were
-   served before any of this existed. The `dark` flag only drives the swatch drawing. */
-const themes = [
-  { id: 'day',   label: 'Day',   dark: false },
-  { id: 'dusk',  label: 'Dusk',  dark: true },
-  { id: 'paper', label: 'Paper', dark: false },
-  { id: 'night', label: 'Night', dark: true },
+/* A theme is two separate choices, which is why there are two controls rather than four
+   named combinations. Auto is the default and stores nothing, so a visitor who never
+   opens Control Center follows their own system setting and pays nothing for the feature.
+
+   The dots carry the mid-brightness version of each accent, not the light-mode one. A
+   swatch has to identify a hue on whichever surface it is sitting on, and the light-mode
+   teal is nearly black against a dark panel. */
+const modes = [
+  { id: 'light', label: 'Light' },
+  { id: 'dark',  label: 'Dark' },
+  { id: 'auto',  label: 'Auto' },
+];
+const accents = [
+  { id: 'teal',   label: 'Teal',   hex: '#0e9c8d' },
+  { id: 'amber',  label: 'Amber',  hex: '#b4761a' },
+  { id: 'blue',   label: 'Blue',   hex: '#3d74ce' },
+  { id: 'violet', label: 'Violet', hex: '#9552aa' },
 ];
 ---
 <header class="menubar">
@@ -80,7 +89,7 @@ const themes = [
         that can disagree with the first. */}
     <div class="anchor anchor--snd">
       <details class="menu menu--snd" data-menu>
-        <summary class="menubar__link menubar__snd" id="snd" aria-pressed="false" aria-label="Sound">
+        <summary class="menubar__link menubar__snd" id="snd" aria-label="Sound">
           <Icon name="volume-2" size={15} />
           <Icon name="volume-x" size={15} />
         </summary>
@@ -126,8 +135,13 @@ const themes = [
     {/* Drawn in CSS rather than a glyph, so the fill is a real percentage instead of
         three discrete states, and so charging has somewhere to show. Defaults to full,
         which is what a browser without the Battery API keeps. */}
+    {/* The percentage is a real element, not content: attr() on ::after. It used to be
+        the pseudo-element, and then this got a tooltip, whose text is also on ::after.
+        One pseudo-element cannot print two things, so the tooltip silently ate the
+        number. A span costs nothing and both can exist. */}
     <span class="batt tip" id="batt" data-tip="Battery" aria-label="Battery">
       <span class="batt__box"><i class="batt__fill"></i></span>
+      <b class="batt__pct" id="batt-pct"></b>
     </span>
 
     {/* Control Center. The clock is the summary, so the panel is anchored to the thing
@@ -172,23 +186,61 @@ const themes = [
           </div>
         </div>
 
-        {/* Theme. Four swatches, each a whole look rather than a mode plus an accent, so
-            there is one decision here instead of two. CSS-only selection; panel.ts only
-            writes the attribute on <html> and remembers the answer. */}
+        {/* Theme. Three miniature desktops for the appearance, then the accent under
+            them, because the two are separate decisions and a grid of every combination
+            would be twelve swatches. The tile is a picture of the thing being changed,
+            which is the one place on this site where a preview is literally the subject.
+
+            CSS-only selection; panel.ts only writes the attributes on <html> and
+            remembers the answer. Auto needs no script at all: with no data-mode set,
+            the prefers-color-scheme block in tokens.css is what applies. */}
         <div class="cc__tile">
-          <div class="cc__head"><strong>Theme</strong></div>
-          <fieldset class="sw" aria-label="Theme">
-            {themes.map((t) => (
+          <div class="cc__head"><strong>Appearance</strong></div>
+          <fieldset class="th" aria-label="Appearance">
+            {modes.map((m) => (
               <>
-                <input class="sw__radio" type="radio" name="theme" id={`th-${t.id}`}
-                       value={t.id} checked={t.id === 'day'} />
-                <label class="sw__opt" for={`th-${t.id}`}>
-                  <span class:list={['sw__chip', t.dark && 'sw__chip--dark']} data-th={t.id} aria-hidden="true"></span>
-                  <span class="sw__name">{t.label}</span>
+                <input class="th__radio" type="radio" name="mode" id={`md-${m.id}`}
+                       value={m.id} checked={m.id === 'auto'} />
+                <label class="th__opt" for={`md-${m.id}`}>
+                  <span class:list={['th__mini', `th__mini--${m.id}`]} aria-hidden="true"></span>
+                  <span class="th__name">{m.label}</span>
                 </label>
               </>
             ))}
           </fieldset>
+
+          <p class="cc__sub">Accent</p>
+          <fieldset class="ac" aria-label="Accent">
+            {accents.map((a) => (
+              <>
+                <input class="ac__radio" type="radio" name="accent" id={`ac-${a.id}`}
+                       value={a.id} checked={a.id === 'teal'} />
+                <label class="ac__opt" for={`ac-${a.id}`} style={`--c:${a.hex}`}
+                       title={a.label} aria-label={a.label}>
+                  <span class="ac__dot" aria-hidden="true"></span>
+                </label>
+              </>
+            ))}
+          </fieldset>
+        </div>
+
+        {/* Spotify, one tap away from the desktop rather than only inside the Music
+            window. The iframe is built on click and not before: opening Control Center
+            is asking for Control Center, not for a third party embed, and rule 1 says
+            nothing loads that the visitor did not ask for. */}
+        <div class="cc__tile cc__tile--tight" id="cc-spotify">
+          {/* Its own classes, not the now-playing ones. panel.ts writes every .np__title
+              and .np__why on the page from one state, so borrowing them here meant the
+              Spotify tile relabelled itself "Nothing playing" the moment the panel
+              painted. Same shape, different names. */}
+          <button class="sp" type="button" data-spotify>
+            <span class="sp__mark" aria-hidden="true"><Icon name="music" size={15} /></span>
+            <span class="sp__meta">
+              <strong class="sp__name">Spotify</strong>
+              <span class="sp__sub">What Yves listens to</span>
+            </span>
+            <span class="sp__go">Open</span>
+          </button>
         </div>
 
         <div class="cc__pair">
@@ -230,7 +282,7 @@ const themes = [
     -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
     /* One hairline to sit the bar on, and no drop shadow: a shadow under a bar that is
        already pinned to the top edge only smears the wallpaper under it. */
-    border-bottom: 1px solid rgba(0,0,0,.12);
+    border-bottom: 1px solid var(--os-edge);
     font-size: 13px;
   }
   .menubar__left { display: flex; align-items: center; gap: var(--space-3); }
@@ -249,23 +301,27 @@ const themes = [
     display: grid; place-items: center; width: 26px; height: 22px; border-radius: var(--r-inner);
     color: inherit; transition: background var(--t-fast);
   }
-  /* The speaker is a <summary> now, so it loses its marker the same way the text menus do. */
-  .menubar__snd { list-style: none; cursor: var(--cur-hand); }
+  /* The speaker is a <summary> now, so it loses its marker the same way the text menus
+     do. It also has to shed .menu summary's padding: inside a 26px border-box that left a
+     10px cell for a 15px glyph, and the speaker came out visibly smaller than the social
+     icons beside it. Same box as .menubar__link, exactly. */
+  .menubar__snd { list-style: none; cursor: var(--cur-hand); padding: 0; }
   .menubar__snd::-webkit-details-marker { display: none; }
   /* Both icons sit in the same grid cell and one is hidden, so switching state is a class
-     the browser already tracks rather than a DOM swap. Muted is the default because that
-     is what a visitor who has answered nothing yet is. */
+     rather than a DOM swap. It reads the same body flag the panel glyphs do, so no
+     speaker on the page can disagree with another. Muted is the default because that is
+     what a visitor who has answered nothing yet is. */
   .menubar__snd :global(svg) { grid-area: 1 / 1; }
-  .menubar__snd[aria-pressed='false'] :global(svg:first-child),
-  .menubar__snd[aria-pressed='true'] :global(svg:last-child) { display: none; }
+  :global(body:not(.snd-on)) .menubar__snd :global(svg:first-child),
+  :global(body.snd-on) .menubar__snd :global(svg:last-child) { display: none; }
   /* Muted is a state worth noticing, so it sits back a little until you look for it. */
-  .menubar__snd[aria-pressed='false'] { opacity: .55; }
+  :global(body:not(.snd-on)) .menubar__snd { opacity: .55; }
   /* A flat wash. Deliberately no backdrop-filter: this sits inside the bar, which is
      already blurring, and a nested backdrop-filter samples its parent's result rather than
      the wallpaper, so it would cost a second filter pass and change nothing. */
   .menubar__link:hover, .menubar__link:focus-visible,
-  .menu summary:hover, .menu[open] summary { background: rgba(22,22,26,.08); }
-  .menubar__link:active, .menu summary:active { background: rgba(22,22,26,.14); }
+  .menu summary:hover, .menu[open] summary { background: var(--os-hover); }
+  .menubar__link:active, .menu summary:active { background: var(--os-press); }
   /* A real notch has four corners, not two. The bottom pair curve inward the ordinary
      way. The top pair curve the other way, so the bar appears to flow into the notch
      rather than butt against it. That outward flare is what a plain rounded rectangle
@@ -308,7 +364,7 @@ const themes = [
     /* The least see-through of the three: the smallest type in the OS sits on this. The
        -webkit- prefix was missing here once, so Safari rendered these flat with no blur
        while every other surface had one. */
-    background: var(--os-menu); border: 1px solid rgba(0,0,0,.12);
+    background: var(--os-menu); border: 1px solid var(--os-edge);
     -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
     border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
   }
@@ -342,13 +398,13 @@ const themes = [
     width: 7px; height: 10px; background: var(--os-ink);
     clip-path: polygon(58% 0, 20% 55%, 45% 55%, 38% 100%, 80% 42%, 52% 42%);
   }
-  /* The number rides on the same element, printed from its data attribute. Absent until
-     the API reports one, so an unsupported browser shows the battery and no figure. */
-  .batt[data-pct]::after {
-    content: attr(data-pct);
-    font-family: var(--font-chrome); font-size: 11px; letter-spacing: .02em;
+  /* Empty until the API reports a level, so a browser without it shows the battery and
+     no figure. Inventing a number for somebody else's device is worse than showing none. */
+  .batt__pct {
+    font: 11px var(--font-chrome); font-weight: 400; letter-spacing: .02em;
     font-variant-numeric: tabular-nums;
   }
+  .batt__pct:empty { display: none; }
 
   /* ==================================================================
      Tooltips. The dock's rule with the tail flipped to the top.
@@ -391,7 +447,7 @@ const themes = [
      ================================================================== */
   .tray {
     position: absolute; top: calc(100% + 6px); right: -8px; z-index: 10;
-    background: var(--os-menu); border: 1px solid rgba(0,0,0,.12);
+    background: var(--os-menu); border: 1px solid var(--os-edge);
     -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
     border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
     color: var(--os-ink); cursor: default;
@@ -529,39 +585,77 @@ const themes = [
   .cc__btn:hover { background: var(--os-accent); color: var(--os-on-accent); }
   .cc__btn:focus-visible { outline: 2px solid var(--os-accent); outline-offset: 2px; }
 
-  /* --- theme swatches --- */
-  .sw { border: 0; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
-  .sw__radio { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
-  .sw__opt { display: grid; gap: 5px; justify-items: center; cursor: var(--cur-hand); }
-  .sw__chip {
-    width: 100%; aspect-ratio: 3 / 2; border-radius: var(--r-inner);
+  /* --- appearance: three miniature desktops --- */
+  .th { border: 0; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); }
+  .th__radio { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+  .th__opt { display: grid; gap: 5px; justify-items: center; cursor: var(--cur-hand); }
+  /* A wallpaper, a menu bar and a window. Drawn from two pseudo-elements rather than an
+     image, so each tile costs nothing to fetch and stays crisp at any density. */
+  .th__mini {
+    width: 100%; aspect-ratio: 16 / 10; border-radius: var(--r-inner);
     position: relative; overflow: hidden; background: #8fa8bb;
     box-shadow: 0 0 0 2px transparent; transition: box-shadow var(--t-fast);
   }
-  /* A miniature of the thing being chosen: a bar, and the accent on a button. Each chip
-     paints its own theme's colours, so the strip is a real preview and not four grey
-     rectangles with names under them. */
-  .sw__chip::before {
-    content: ''; position: absolute; inset: 0 0 auto 0; height: 22%; background: #ececea;
+  .th__mini::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 20%; background: #ececea; }
+  .th__mini::after {
+    content: ''; position: absolute; left: 18%; top: 34%; width: 64%; height: 48%;
+    border-radius: 2px; background: #f3f3f1;
   }
-  .sw__chip::after {
-    content: ''; position: absolute; left: 24%; top: 46%; width: 52%; height: 24%;
-    border-radius: 3px; background: var(--chip-acc, #077167);
-  }
-  .sw__chip--dark { background: #22323f; }
-  .sw__chip--dark::before { background: #2b2b31; }
-  .sw__chip[data-th='dusk']  { --chip-acc: #2cc0af; }
-  .sw__chip[data-th='paper'] { --chip-acc: #8a5410; }
-  .sw__chip[data-th='night'] { --chip-acc: #d09232; }
-  .sw__name { font: 10px var(--font-chrome); color: var(--os-muted); }
-  .sw__radio:checked + .sw__opt .sw__chip { box-shadow: 0 0 0 2px var(--os-accent); }
-  .sw__radio:checked + .sw__opt .sw__name { color: var(--os-ink); font-weight: 700; }
-  .sw__radio:focus-visible + .sw__opt .sw__chip {
+  .th__mini--dark { background: #22323f; }
+  .th__mini--dark::before { background: #2b2b31; }
+  .th__mini--dark::after { background: #2b2b31; }
+  /* Auto is split down the middle, which is how every appearance picker draws it and the
+     only way it does not read as a second Light tile. */
+  .th__mini--auto { background: linear-gradient(90deg, #8fa8bb 50%, #22323f 50%); }
+  .th__mini--auto::before { background: linear-gradient(90deg, #ececea 50%, #2b2b31 50%); }
+  .th__mini--auto::after { background: linear-gradient(90deg, #f3f3f1 50%, #2b2b31 50%); }
+  .th__name { font: 10px var(--font-chrome); color: var(--os-muted); }
+  .th__radio:checked + .th__opt .th__mini { box-shadow: 0 0 0 2px var(--os-accent); }
+  .th__radio:checked + .th__opt .th__name { color: var(--os-ink); font-weight: 700; }
+  .th__radio:focus-visible + .th__opt .th__mini {
     box-shadow: 0 0 0 2px var(--os-card), 0 0 0 4px var(--os-accent);
   }
 
+  /* --- accent: four dots --- */
+  .cc__sub { margin: var(--space-3) 0 var(--space-2); font: 10px var(--font-chrome); letter-spacing: .14em; color: var(--os-muted); text-transform: uppercase; }
+  .ac { border: 0; margin: 0; padding: 0; display: flex; gap: var(--space-3); }
+  .ac__radio { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+  .ac__opt { display: block; cursor: var(--cur-hand); }
+  .ac__dot { display: block; width: 22px; height: 22px; border-radius: 50%; background: var(--c); }
+  /* The ring is ink, not the accent: on the selected dot those would be the same colour
+     and the ring would disappear on exactly the one that needs it. */
+  .ac__radio:checked + .ac__opt .ac__dot {
+    box-shadow: 0 0 0 2px var(--os-card), 0 0 0 4px var(--os-ink);
+  }
+  .ac__radio:focus-visible + .ac__opt .ac__dot {
+    box-shadow: 0 0 0 2px var(--os-card), 0 0 0 4px var(--os-accent);
+  }
+
+  /* --- spotify --- */
+  .sp {
+    all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center;
+    gap: var(--space-2); cursor: var(--cur-hand); border-radius: var(--r-inner);
+  }
+  .sp:focus-visible { outline: 2px solid var(--os-accent); outline-offset: 3px; }
+  .sp__mark {
+    width: 32px; height: 32px; flex: none; border-radius: 50%;
+    display: grid; place-items: center; background: #1db954; color: #fff;
+  }
+  .sp__meta { display: grid; gap: 1px; min-width: 0; flex: 1; text-align: left; }
+  .sp__name { font: 700 12.5px var(--font-chrome); color: var(--os-ink); }
+  .sp__sub {
+    font: 10.5px var(--font-chrome); color: var(--os-muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .sp__go {
+    flex: none; font: 700 10.5px var(--font-chrome); color: var(--os-accent);
+    padding: 5px 9px; border-radius: var(--r-pill); background: var(--os-hover);
+  }
+  .sp:hover .sp__go { background: var(--os-accent); color: var(--os-on-accent); }
+  #cc-spotify iframe { display: block; border: 0; border-radius: var(--r-inner); }
+
   @media (prefers-reduced-motion: reduce) {
-    .tip::after, .tip::before, .np__art, .np__toggle, .sw__chip { transition: none; }
+    .tip::after, .tip::before, .np__art, .np__toggle, .th__mini { transition: none; }
   }
 
   @media (max-width: 640px) {

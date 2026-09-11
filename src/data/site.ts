@@ -16,5 +16,6 @@ export const site = {
     { name: 'LinkedIn',  glyph: 'linkedin',     url: 'https://www.linkedin.com/in/yveskwameh/' },
     { name: 'Instagram', glyph: 'instagram',    url: 'https://www.instagram.com/yveskwameh/' },
     { name: 'X',         glyph: 'twitter-bird', url: 'https://x.com/yveskwameh' },
+    { name: 'GitHub',    glyph: 'github',       url: 'https://github.com/yveskwameh' },
   ],
 } as const;

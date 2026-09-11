@@ -88,7 +88,7 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
        worth keeping. */
     background: var(--os-titlebar);
     -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
-    border-bottom: 1px solid rgba(0,0,0,.12);
+    border-bottom: 1px solid var(--os-edge);
     cursor: var(--cur-grab); touch-action: none; user-select: none;
   }
   /* Both states. :active covers holding the bar down, and .is-dragging is what
