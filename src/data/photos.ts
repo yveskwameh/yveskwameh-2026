@@ -59,7 +59,8 @@ export const portraits: Portrait[] = [
  * entirely to the right of it or the panel covers prints the visitor is trying to reach.
  * The origin in os/Prints.astro is measured from the right edge for the same reason.
  * Later entries sit on top: the two in the middle go first so they sit behind, and the
- * ones on the edges, which have the most room to be seen, go last.
+ * ones on the edges, which have the most room to be seen, go last. On a phone the same
+ * offsets apply to 110px prints, so the spread is a little tighter there.
  */
 export const prints: Print[] = [
   { slug: 'sunset-on-the-main-road', alt: 'Sunset over a main road, with a billboard frame above the buildings', w: 1268, h: 1400, dx: 10,  dy: -20,  r: 2 },

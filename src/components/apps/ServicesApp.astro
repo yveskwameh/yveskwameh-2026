@@ -265,7 +265,9 @@ import Icon from '../os/Icon.astro';
        squeezing them would truncate the outcome, which is the half that sells. The price
        drops to its own line under them instead, still lined up with the name. */
     .svc__name { flex: 1 1 100%; }
-    .svc__price { margin-left: 26px; order: 3; }
-    .svc__row :global(svg) { order: 2; margin-left: auto; }
+    /* Price first, then the chevron at the far right, so the second line reads the way
+       the desktop row does. With the chevron first it sat to the left of the price. */
+    .svc__price { margin-left: 26px; order: 2; }
+    .svc__row :global(svg) { order: 3; margin-left: auto; }
   }
 </style>

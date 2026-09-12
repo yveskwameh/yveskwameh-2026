@@ -298,7 +298,11 @@ import Prints from './Prints.astro';
   @media (max-width: 640px) {
     /* phone home screen: icons flow in a grid, positions from data are ignored */
     .desktop { display: grid; grid-template-columns: repeat(4, 1fr); align-content: start; gap: var(--space-4) var(--space-2); padding: var(--space-4) var(--space-2) 120px; }
-    .desktop :global(.icon) { position: static !important; }
+    /* width: auto as well. An icon is 98px wide on a desktop, and four of those with the
+       gaps and padding come to 424px, which cut the fourth column off a 393px phone.
+       auto lets each one fill its column instead, 88px on that phone, and the label wraps
+       inside it. Measured in headless Chrome and on the iPhone 17 simulator. */
+    .desktop :global(.icon) { position: static !important; width: auto; }
   }
 </style>
 

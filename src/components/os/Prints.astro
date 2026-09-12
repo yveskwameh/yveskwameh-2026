@@ -35,7 +35,7 @@ import { prints } from '../../data/photos';
   {prints.map((p) => (
     <div class="print is-stowed" role="img" aria-label={p.alt} tabindex="0"
          data-slug={p.slug} data-w={p.w} data-h={p.h}
-         style={`--hx:calc(var(--pile-x) + ${p.dx}px); --hy:calc(var(--pile-y) + ${p.dy}px); --r:${p.r}deg; --ar:${p.w} / ${p.h}`}>
+         style={`--hx:calc(var(--pile-x) + ${p.dx}px * var(--kx, 1)); --hy:calc(var(--pile-y) + ${p.dy}px * var(--ky, 1)); --r:${p.r}deg; --ar:${p.w} / ${p.h}`}>
       <span class="print__art" style={`background-image:url('/images/prints/${p.slug}-240.avif')`} aria-hidden="true"></span>
     </div>
   ))}
@@ -157,7 +157,23 @@ import { prints } from '../../data/photos';
     .print:hover { transform: rotate(var(--r)); }
     .ql { animation: none; }
   }
+  /* ---- Phone ----
+     The layer used to be display: none here, from when the pile sat loose on the desk
+     and had no place in a grid of icons. Now the Images icon is the way in, so hiding
+     the layer made the icon do nothing on a phone. The pile lives under the icon grid
+     instead, centred, in smaller prints. There is no drag on a phone (drag.ts stays out
+     under 640) and no hover, so a tap on a print pins Quick Look and a tap elsewhere
+     closes it, the same as a click does on a desktop. The panel is sized by width here,
+     because a 3:4 photograph 68vh tall is wider than the screen. */
   @media (max-width: 640px) {
-    .prints { display: none; }
+    /* The same offsets, scaled: --kx and --ky multiply them in the inline style, so the
+       pile keeps its shape and shrinks to the strip of desk between the icon grid, which
+       ends near 300px, and the dock, which starts near 600 on a 740px viewport. The
+       label goes above the pile here because below it is the dock. */
+    .prints { --pile-x: calc(50% - 48px); --pile-y: 388px; --kx: .8; --ky: .4; }
+    .print { width: 96px; }
+    .prints__label { left: calc(var(--pile-x) + 48px); top: calc(var(--pile-y) - 108px); }
+    .ql { max-width: calc(100vw - 32px); }
+    .ql__img { height: auto; width: min(calc(100vw - 34px), 420px); max-width: none; }
   }
 </style>
