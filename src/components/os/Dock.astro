@@ -19,6 +19,10 @@ import Icon from './Icon.astro';
             ? <span class="dock__drawn pixel" style={`background-image:url('${s.icon}')`}></span>
             : <Icon name={s.glyph!} size={26} />}
         </button>
+        {/* Images is a stack (scripts/prints.ts) and the count is how many prints are in
+            it. Nine at build time, because they start stowed; the script keeps it right
+            and hides it at zero. */}
+        {s.opens === 'images' && <span class="dock__count" aria-hidden="true">9</span>}
       </li>
     ))}
   </ul>
@@ -88,6 +92,19 @@ import Icon from './Icon.astro';
     box-sizing: border-box; cursor: var(--cur-hand); color: var(--os-ink);
   }
   .dock__system :global(.glyph) { width: 62%; height: 62%; }
+  /* The Images stack. The count sits on the icon's corner the way a badge does, and the
+     icon swells while a print is held over it, to say it will take it. Both are driven by
+     scripts/prints.ts, which is lazy; nothing here runs on load. */
+  .dock__item { position: relative; }
+  .dock__count {
+    position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
+    display: grid; place-items: center; border-radius: var(--r-pill);
+    background: var(--os-accent); color: var(--os-on-accent);
+    font: 700 10px var(--font-chrome); line-height: 1; pointer-events: none;
+    box-shadow: 0 0 0 2px var(--os-dock);
+  }
+  .dock__count[hidden] { display: none; }
+  .dock__system:global(.is-target) { transform: scale(1.18); transition: transform var(--t-fast) var(--ease); }
   .dock__drawn {
     width: 100%; height: 100%; display: block;
     /* The drawn icons only fill about 73% of their own canvas, the rest is transparent

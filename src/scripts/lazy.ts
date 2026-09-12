@@ -30,6 +30,10 @@ const APPS: Record<string, () => Promise<App>> = {
   contact: () => import('./mail'),
   projects: () => import('./work'),
   game: () => import('./game'),
+  services: () => import('./services'),
+  /* Not a window. The Images icon in the dock is the stack the prints live in, and
+     openWindow launches this when it finds no window called images. */
+  images: () => import('./prints'),
 };
 
 /** Clean Up Desktop. Lives in context.ts with the rename it has to undo; see actions.ts. */

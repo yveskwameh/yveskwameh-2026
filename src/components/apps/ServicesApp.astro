@@ -19,10 +19,12 @@
  * different one, which is a dead end a visitor runs into and cannot explain. A checkbox
  * closes when you press it again.
  *
- * What that trades away is the one-at-a-time behaviour, since several can now be open at
- * once. On a page somebody is using to compare two quotes, being able to hold both open
- * is the better half of the trade. The first is open on arrival so the window never
- * opens as six closed lines.
+ * What that traded away was the one-at-a-time behaviour, and Yves wanted both: a service
+ * closes when pressed again, and opening one closes whichever was open. Checkboxes give
+ * the first for free and cannot give the second, so scripts/services.ts, fetched the
+ * first time this window opens and never on page load, unchecks the others when one is
+ * checked. It is the only script this window has. The first is open on arrival so the
+ * window never opens as six closed lines.
  */
 import { serviceGroups, howIWork } from '../../data/services';
 import Icon from '../os/Icon.astro';
@@ -108,7 +110,9 @@ import Icon from '../os/Icon.astro';
   /* The card. A fieldset because this is a radio group, and the browser's own grouping
      element is the honest one to use. Its default border and padding go. */
   .svc {
-    margin: 0; padding: 0; border: 0; overflow: hidden;
+    /* clip rather than hidden, for the reason Window.astro gives: a hidden box can be
+       scrolled by focus and never scrolled back, and the checkboxes in here take focus. */
+    margin: 0; padding: 0; border: 0; overflow: clip;
     background: var(--os-card); border-radius: var(--r-window);
     counter-reset: svc;
   }
@@ -207,7 +211,10 @@ import Icon from '../os/Icon.astro';
     display: grid; grid-template-rows: 0fr;
     transition: grid-template-rows var(--t-base) var(--ease), background var(--t-fast);
   }
-  .svc__inner { overflow: hidden; min-height: 0; }
+  /* The padding rides the same curve as the height. Without this it snapped off the
+     moment a service was unchecked, while the row was still shrinking, and the text
+     jumped left for the length of the close. */
+  .svc__inner { overflow: hidden; min-height: 0; transition: padding var(--t-base) var(--ease); }
   .svc__radio:checked + .svc__row + .svc__panel { grid-template-rows: 1fr; }
   /* Lined up under the name, past the number, rather than under the number. */
   .svc__radio:checked + .svc__row + .svc__panel .svc__inner {

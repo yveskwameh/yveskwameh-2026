@@ -55,7 +55,9 @@ const unhash = () => {
 };
 
 export function openWindow(id: string) {
-  const win = q(id); if (!win) return;
+  // An id with no window behind it still launches its app, if the APPS map has one.
+  // That is how a dock item can do something other than open a window.
+  const win = q(id); if (!win) { launch(id); return; }
   closeOthers(win);     // one at a time: opening anything puts away whatever was already up
   win.classList.add('is-open');
   placeWindow(win);     // every open: centred across, --window-top below the menu bar

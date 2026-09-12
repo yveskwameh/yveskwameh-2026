@@ -31,11 +31,11 @@
  */
 import { prints } from '../../data/photos';
 ---
-<div class="prints" aria-label="Photographs by Yves, in a pile on the desk. Hover one to look at it, or drag it out.">
+<div class="prints is-empty" aria-label="Photographs by Yves. Click Images in the dock to lay them out on the desk, hover one to look at it, drag one back to put it away.">
   {prints.map((p) => (
-    <div class="print" role="img" aria-label={p.alt} tabindex="0"
+    <div class="print is-stowed" role="img" aria-label={p.alt} tabindex="0"
          data-slug={p.slug} data-w={p.w} data-h={p.h}
-         style={`left:calc(var(--pile-x) + ${p.dx}px); top:calc(var(--pile-y) + ${p.dy}px); --r:${p.r}deg; --ar:${p.w} / ${p.h}`}>
+         style={`--hx:calc(var(--pile-x) + ${p.dx}px); --hy:calc(var(--pile-y) + ${p.dy}px); --r:${p.r}deg; --ar:${p.w} / ${p.h}`}>
       <span class="print__art" style={`background-image:url('/images/prints/${p.slug}-240.avif')`} aria-hidden="true"></span>
     </div>
   ))}
@@ -69,7 +69,12 @@ import { prints } from '../../data/photos';
   .prints { position: absolute; inset: 0; z-index: 1; pointer-events: none; --pile-x: calc(100% - 246px); --pile-y: 250px; }
 
   .print {
-    position: absolute; width: 136px; aspect-ratio: var(--ar);
+    /* Home is two custom properties rather than inline left and top on purpose. A drag
+       writes left and top inline and wins; clearing those two puts the print back here.
+       With home itself inline there was nothing to fall back to, and a print sent home
+       landed in the top left corner of the desk. */
+    position: absolute; left: var(--hx); top: var(--hy);
+    width: 136px; aspect-ratio: var(--ar);
     padding: 4px; background: var(--print-paper); border-radius: 3px;
     box-shadow: var(--os-shadow-sm);
     transform: rotate(var(--r));
@@ -88,6 +93,23 @@ import { prints } from '../../data/photos';
   :global(.print.is-dragging) {
     transform: rotate(var(--r)) scale(1.06); box-shadow: var(--os-shadow); z-index: 4; transition: none;
   }
+
+  /* ---- In the stack ----
+     A stowed print is at its own place on the desk, translated to the Images icon and
+     scaled to nothing, so taking the class off is the flight out and putting it on is the
+     flight in. --sx and --sy are the vector to the icon, written by scripts/prints.ts,
+     because the icon is wherever the dock happens to be. visibility waits for the flight
+     in to finish and drops instantly on the way out. Last, so it beats the hover rule. */
+  .print.is-stowed {
+    transform: translate(var(--sx, 0px), var(--sy, 0px)) rotate(var(--r)) scale(.06);
+    opacity: 0; visibility: hidden; pointer-events: none;
+  }
+  .print { transition: transform .56s var(--ease), opacity .4s, visibility 0s .56s, box-shadow var(--t-fast); }
+  .print:not(.is-stowed) { transition: transform .56s var(--ease), opacity .4s, visibility 0s, box-shadow var(--t-fast); }
+  .print:hover:not(.is-stowed) { transition-duration: var(--t-fast); transition-delay: 0s; }
+  /* The label goes with the last print. */
+  .prints__label { transition: opacity .4s; }
+  .prints.is-empty .prints__label { opacity: 0; }
 
   /* Under the lowest print, centred on the spread. Set exactly like an icon's label so it
      reads as the pile's name rather than as a caption. It stays put when prints are
@@ -131,7 +153,7 @@ import { prints } from '../../data/photos';
   .ql__img { display: block; height: min(68vh, 640px); width: auto; max-width: 80vw; background: var(--os-recess); }
 
   @media (prefers-reduced-motion: reduce) {
-    .print { transition: none; }
+    .print, .print:not(.is-stowed), .prints__label { transition: none; }
     .print:hover { transform: rotate(var(--r)); }
     .ql { animation: none; }
   }
