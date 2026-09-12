@@ -1,44 +1,100 @@
 ---
 /**
- * About Yves. The short version of who he is, in his own voice.
+ * About Yves. The bio on the left, nine of his own photographs on the right.
  *
- * This is a draft built only from things already true in the repo (his role and location
- * in data/site.ts, the tools in data/dock.ts). Nothing here is invented: no client names,
- * no numbers, no war stories. Replace it with the real thing whenever you like.
+ * Direction A of three drawn in Figma (section 268:17) and picked by Yves off the live
+ * artifact. Three across at the ratio each one was shot, so all nine are on screen at
+ * once and the window never scrolls. The other two directions traded that away: one made
+ * the photographs twice the size and pushed five rows under the fold, the other showed a
+ * single large one with the rest as thumbnails, and Yves's objection to that was the
+ * right one, that a strip running off the edge hides what is on the other side.
+ *
+ * The copy is his, word for word. Earlier drafts of mine narrated how he got into design
+ * and he cut all of it: the route in was context for knowing who he is, not content. What
+ * is left says what he does, why he learns the next part rather than handing it off, and
+ * what he makes when nobody is paying him, which is what the photographs are.
+ *
+ * No script and no state. Nine images and a button.
  */
 import { site } from '../../data/site';
+import { photos } from '../../data/photos';
 ---
 <div class="about">
-  <img src={site.avatar} alt={site.name} width="88" height="88" loading="eager" decoding="async" />
   <div class="about__text">
-    <p class="about__name">{site.name}</p>
-    <p class="about__role">{site.role}</p>
+    <div class="about__head">
+      <img src={site.avatar} alt={site.name} width="56" height="56" loading="eager" decoding="async" />
+      <div>
+        <p class="about__name">{site.name}</p>
+        <p class="about__role">{site.role}</p>
+      </div>
+    </div>
 
-    <p>I design interfaces and I build them. Usually that means the design in Figma and the
-    build in Webflow or Framer, so the thing that ships is the thing that was designed.</p>
+    <p>I’m Yves Kwameh, a UX/UI designer and no-code developer. I design digital products
+    and build websites in Webflow and Framer. I start by understanding what the business
+    needs and what people are trying to do, then work out how the design can help.</p>
 
-    <p>I work from {site.location}, and I work to my clients' hours rather than mine.</p>
+    <p>I enjoy taking a project from the first idea through to a working website. I’m
+    curious about how things are built, so I keep learning beyond design. That
+    understanding also helps me explain what I need when I’m working with someone else.</p>
+
+    <p>Clients describe me as reliable. I care about the relationships behind the work, and
+    I want the people I work with to know they can count on me to show up and follow
+    through.</p>
+
+    <p>Outside work, I’m usually cooking, watching a film, playing a game, or taking
+    photographs. I’m drawn to streets, landscapes, and nature. I like making things even
+    when there’s no brief, just something I want to try.</p>
 
     <p class="about__status"><span class="about__dot" aria-hidden="true"></span>{site.status}</p>
 
     <button class="btn" type="button" data-open="contact">Send me a message</button>
   </div>
+
+  {/* Not a figure and not a list of links. It is a wall of photographs, so one container
+      of images is the honest markup. The alt text describes each one, because the copy
+      never names them. */}
+  <div class="about__wall">
+    {photos.map((p) => (
+      <img
+        src={`/images/about/${p.slug}-420.avif`}
+        srcset={`/images/about/${p.slug}-420.avif ${p.smallW}w, /images/about/${p.slug}.avif ${p.w}w`}
+        sizes="(max-width: 640px) 29vw, 151px"
+        alt={p.alt}
+        width={p.smallW}
+        height={p.smallH}
+        loading="lazy"
+        decoding="async"
+      />
+    ))}
+  </div>
 </div>
 
 <style>
-  .about { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--space-3); align-items: start; }
-  .about img { border-radius: 16px; }
+  .about { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: var(--space-4); align-items: start; }
   .about__text { display: grid; gap: var(--space-2); font-size: 13px; line-height: 1.6; }
   .about__text p { margin: 0; }
-  .about__name { font-family: var(--font-chrome); font-size: 14px; font-weight: 700; }
-  .about__role { color: var(--os-muted); font-size: 12px; }
+  .about__head { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 14px; align-items: center; }
+  .about__head img { border-radius: 16px; }
+  .about__name { font-family: var(--font-chrome); font-size: 15px; font-weight: 700; }
+  .about__role { color: var(--os-muted); font-size: 11px; line-height: 1.45; }
   .about__status { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--os-muted); }
   .about__dot { width: 7px; height: 7px; border-radius: 50%; background: #35d07f; box-shadow: 0 0 0 3px rgba(53,208,127,.22); }
   /* The button is the only grid item that should not stretch across the column. */
   .about .btn { justify-self: start; margin-top: var(--space-1); }
 
+  .about__wall { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: start; }
+  /* height auto, and align-items: start above, so each photograph keeps the shape it was
+     shot in. Eight are 3:4 and the ninth is nearly square, so its cell is shorter than
+     its neighbours. That is the point of this direction rather than a bug in it, and it
+     is the last one so the short cell sits bottom right. */
+  .about__wall img {
+    display: block; width: 100%; height: auto;
+    border-radius: var(--r-inner); background: var(--os-recess);
+  }
+
   @media (max-width: 640px) {
-    /* 88px of photo plus a text column does not fit at 320px, so the photo goes on top. */
-    .about { grid-template-columns: minmax(0, 1fr); }
+    /* A 330px column of text and a wall of photographs do not both fit at 390, so the
+       text goes on top and the wall keeps its three columns underneath. */
+    .about { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
   }
 </style>

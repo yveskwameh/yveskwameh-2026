@@ -17,7 +17,10 @@ import { desktopItems } from '../../data/desktop';
 <main class="desktop" id="desktop">
   {desktopItems.map((item) => <DesktopIcon {...item} />)}
 
-  <Window id="about" title="About Yves" filename="about-yves.txt"><AboutApp /></Window>
+  {/* 860 like Work and the game. The bio is a 330px column and the nine photographs are
+      three across beside it, and at the old 560 the wall came out too small to be worth
+      showing. */}
+  <Window id="about" title="About Yves" filename="about-yves.txt" width={860}><AboutApp /></Window>
   {/* Explicitly sized, unlike the other windows. The browser inside it is a two column
       layout whose panes fill their side and scroll themselves, and `height: 100%` against
       a window that sizes to its content collapses to the height of the sidebar. */}
