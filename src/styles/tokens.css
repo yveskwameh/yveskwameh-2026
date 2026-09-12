@@ -59,6 +59,11 @@
      white on every theme, which is why this is the one surface with no dark override: a
      print on a dark desk is still a white print. */
   --print-paper: #fff;
+  /* The count on the Images icon in the dock. A notification badge is red on every Mac
+     and every theme, so it does not follow the accent, and white on it is what macOS
+     uses. No dark override for the same reason. */
+  --os-badge: #ff3b30;
+  --os-on-badge: #fff;
 
   /* macOS traffic lights, exact */
   --light-close: #ff5f57;  --light-close-line: #e0443e;
