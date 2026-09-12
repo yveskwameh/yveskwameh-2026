@@ -249,8 +249,16 @@ const columns = [
     .fb__wall { grid-template-columns: minmax(0, 1fr); }
     .fb__col:not(.fb__col--m) { display: none; }
     .fb__col--m { display: grid; }
-    .fb__record { gap: var(--space-3); }
+    /* Two columns here, the same as the desktop: figures stacked on the left, badges
+       stacked on the right. It used to wrap into one column because the long label did
+       not leave room for the badges, so the label breaks after "Score" instead. 17ch is
+       exactly "Job Success Score", so "on Upwork" goes to the second line together. */
+    .fb__record { gap: var(--space-3); flex-wrap: nowrap; align-items: flex-start; }
     .fb__stats { display: grid; gap: var(--space-3); }
+    /* On the label, not the block: ch is measured in the element's own font, and the
+       block's is 13px while the label's is 11px, so 17ch there let "on" onto line one. */
+    .fb__label { max-width: 17ch; }
+    .fb__badges { flex: none; }
   }
   @media (max-width: 640px) and (prefers-reduced-motion: reduce) {
     /* No drift, so the sheet scrolls the way every other window does. */
