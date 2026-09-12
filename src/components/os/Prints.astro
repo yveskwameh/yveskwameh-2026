@@ -2,12 +2,17 @@
 /**
  * A pile of prints on the desk, and the Quick Look panel that opens them.
  *
- * Yves's own photographs of Port Harcourt, nine of them, shuffled on top of each other in
- * one spot with a white paper border, the way a stack of prints sits on a real desk.
+ * Yves's own photographs of Port Harcourt, nine of them, in one loose pile with a white
+ * paper border, the way a stack of prints sits on a real desk once somebody has spread
+ * it out to see what is there. A short label under the pile says what it is, the way
+ * every other thing on this desktop has a name under it.
+ *
  * Hover one and it opens in a Quick Look panel, the macOS space bar preview: a small
  * floating window with the file name in its bar, the photograph at a proper size, and a
  * close light. Move away and it goes. Click a print and the panel stays until it is
  * closed, so it can be looked at without holding the mouse still. Escape closes it too.
+ * The panel sits where the windows sit, up at --window-top and centred, rather than in
+ * the middle of the screen, so it reads as one of them.
  *
  * Pick a print up and it comes out of the pile and stays where it is dropped. That rides
  * the same lazy drag module as the icons (scripts/drag.ts), which moves a dropped print to
@@ -34,6 +39,7 @@ import { prints } from '../../data/photos';
       <span class="print__art" style={`background-image:url('/images/prints/${p.slug}-240.avif')`} aria-hidden="true"></span>
     </div>
   ))}
+  <p class="prints__label" aria-hidden="true">Port Harcourt, on my phone</p>
 
   {/* The Quick Look panel. One for all nine: the script points it at whichever print is
       under the pointer. width and height are placeholders the script overwrites with the
@@ -52,12 +58,14 @@ import { prints } from '../../data/photos';
      desktop and deselects, exactly as it did before the prints were there. z-index 1 is
      above the icons, which have none, and below the scrim at 5 and the windows at 10.
 
-     The pile's origin. A percentage across so it stays right of centre on any width,
-     pixels down so it never lands under the dock on a short screen. */
-  .prints { position: absolute; inset: 0; z-index: 1; pointer-events: none; --pile-x: 72%; --pile-y: 190px; }
+     The pile's origin: the top left of the print at the centre of the spread. A
+     percentage across so the pile stays right of centre on any width, pixels down so
+     the top print clears the menu bar and the bottom one clears the dock on a short
+     screen. The offsets in data/photos.ts run from -190 to +190 around it. */
+  .prints { position: absolute; inset: 0; z-index: 1; pointer-events: none; --pile-x: 68%; --pile-y: 214px; }
 
   .print {
-    position: absolute; width: 120px; aspect-ratio: var(--ar);
+    position: absolute; width: 136px; aspect-ratio: var(--ar);
     padding: 4px; background: var(--print-paper); border-radius: 3px;
     box-shadow: var(--os-shadow-sm);
     transform: rotate(var(--r));
@@ -77,13 +85,24 @@ import { prints } from '../../data/photos';
     transform: rotate(var(--r)) scale(1.06); box-shadow: var(--os-shadow); z-index: 4; transition: none;
   }
 
+  /* Under the lowest print, centred on the spread. Set exactly like an icon's label so it
+     reads as the pile's name rather than as a caption. It stays put when prints are
+     dragged away: the name is the place on the desk, not the prints. */
+  .prints__label {
+    position: absolute; margin: 0;
+    left: calc(var(--pile-x) + 68px); top: calc(var(--pile-y) + 400px); transform: translateX(-50%);
+    font: 10px var(--font-chrome); color: #fff; white-space: nowrap;
+    text-shadow: 0 0 3px rgba(0,0,0,.85), 0 1px 3px rgba(0,0,0,.65);
+  }
+
   /* ---- Quick Look ----
-     Centred in the desktop, above the pile and under the scrim. Sized by the photograph's
-     height, so a near-square one comes out a little wider and a 3:4 one a little taller,
-     and the bar follows whatever width that gives. The animation restarts on every open
-     because hidden toggles display, which is the documented idiom for panels here. */
+     Placed like a window: centred across, and down at --window-top rather than in the
+     middle of the screen. Its size did not change when it moved up: sized by the
+     photograph's height, so a near-square one comes out a little wider and a 3:4 one a
+     little taller, and the bar follows whatever width that gives. The animation restarts
+     on every open because hidden toggles display, the documented idiom here. */
   .ql {
-    position: absolute; left: 50%; top: 50%; translate: -50% -50%; z-index: 4;
+    position: absolute; left: 50%; top: var(--window-top); translate: -50% 0; z-index: 4;
     width: max-content; max-width: min(80vw, 100%);
     background: var(--os-surface); border: 1px solid var(--os-line); border-radius: var(--r-window);
     box-shadow: var(--os-shadow); overflow: hidden; pointer-events: auto;
@@ -104,6 +123,7 @@ import { prints } from '../../data/photos';
     flex: 1; text-align: center; margin-right: 20px;
     font: 11px var(--font-chrome); color: var(--os-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  /* The same size it had when it sat in the middle. Only the position moved up. */
   .ql__img { display: block; height: min(68vh, 640px); width: auto; max-width: 80vw; background: var(--os-recess); }
 
   @media (prefers-reduced-motion: reduce) {

@@ -162,14 +162,17 @@ import Icon from './Icon.astro';
   .dock__hint { background: rgba(20,24,32,.9); color: #fff; transform: translate(-50%, 14px); }
   .dock__say {
     left: 50%; bottom: calc(var(--dock-clear) + 8px); transform: translateX(-50%);
-    background: #fff; color: var(--os-ink); font-weight: 700;
+    /* The card surface, not #fff. The ink follows the theme, so a fixed white bubble put
+       light text on a white ground the moment the desktop went dark. */
+    background: var(--os-card); color: var(--os-ink); font-weight: 700;
+    border: 1px solid var(--os-edge);
     box-shadow: 0 12px 30px -10px rgba(0,0,0,.55);
     animation: say var(--t-base) var(--ease);
   }
   /* The tail, pointing down at the dock. */
   .dock__say::after {
     content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%);
-    border: 7px solid transparent; border-top-color: #fff; border-bottom: 0;
+    border: 7px solid transparent; border-top-color: var(--os-card); border-bottom: 0;
   }
   @keyframes say { from { opacity: 0; transform: translateX(-50%) translateY(6px); } }
 

@@ -1,23 +1,42 @@
 ---
 /**
- * About Yves. A profile header, the bio under it, six photographs of him under that.
+ * About Yves. A profile header, the bio under it, and a reel of six photographs of him
+ * filling whatever height is left.
  *
- * Top to bottom rather than side by side, on his call. The header is the identity in one
- * row: avatar, name, role and the availability dot on the left, and the one action on the
- * right, which is where a profile page keeps it (Portrait, read.cv, GitHub) and where
- * somebody who has already decided goes looking for it. The four paragraphs run in two
- * columns under that, because 828px is far too wide a measure for 13px type and a single
- * narrow column would leave the right half of the window empty.
+ * Top to bottom, on his call. The header is the identity in one row: avatar, name, role
+ * and the availability dot on the left, the one action on the right, which is where a
+ * profile page keeps it and where somebody who has already decided goes looking. The four
+ * paragraphs run in two columns under that, because 828px is far too wide a measure for
+ * 13px type and one narrow column would leave half the window empty.
+ *
+ * The window opens at the full height the desktop allows, the same rule the game uses,
+ * and the reel takes everything under the text. The photographs are as tall as that
+ * space, which on a normal desktop is around 300px, three times what a grid gave them.
+ * They run right to left without end: the track holds the six twice and slides by exactly
+ * one set, so the seam never shows. Hovering pauses it, so a photograph can be looked at,
+ * and reduced motion stops it, so it is a still row.
  *
  * The photographs are the ones from the About section of his previous site, because
  * those are the ones with his face in them. The nine he took of Port Harcourt live on the
  * desktop (see os/Prints.astro): a photograph he took is something he made, not
- * something about him. All six are square, so six across in one row is exact.
+ * something about him.
  *
  * The copy is his, word for word. No script and no state.
  */
 import { site } from '../../data/site';
 import { portraits } from '../../data/photos';
+
+const photo = (p: (typeof portraits)[number], hidden = false) => ({
+  src: `/images/about/${p.slug}-320.avif`,
+  srcset: `/images/about/${p.slug}-320.avif 320w, /images/about/${p.slug}-800.avif 800w`,
+  sizes: '(max-width: 640px) 44vw, 320px',
+  alt: hidden ? '' : p.alt,
+  width: 320,
+  height: 320,
+  loading: 'lazy' as const,
+  decoding: 'async' as const,
+  ...(hidden ? { 'aria-hidden': 'true' } : {}),
+});
 ---
 <div class="about">
   <header class="about__head">
@@ -48,26 +67,22 @@ import { portraits } from '../../data/photos';
     when there’s no brief, just something I want to try.</p>
   </div>
 
-  <div class="about__wall">
-    {portraits.map((p) => (
-      <img
-        src={`/images/about/${p.slug}-320.avif`}
-        srcset={`/images/about/${p.slug}-320.avif 320w, /images/about/${p.slug}-800.avif 800w`}
-        sizes="(max-width: 640px) 29vw, 131px"
-        alt={p.alt}
-        width="320"
-        height="320"
-        loading="lazy"
-        decoding="async"
-      />
-    ))}
+  {/* The six, then the six again. The second set is decoration to the reader, so it is
+      hidden from assistive tech and its alt text is empty. The track slides by 50%, which
+      is exactly one set because every image carries its own margin rather than the track
+      using gap, so the last gap of set one is inside that 50% too. */}
+  <div class="about__reel" aria-label="Six photographs of Yves">
+    <div class="about__track">
+      {portraits.map((p) => <img {...photo(p)} />)}
+      {portraits.map((p) => <img {...photo(p, true)} />)}
+    </div>
   </div>
 </div>
 
 <style>
-  .about { display: grid; gap: var(--space-4); }
+  .about { display: flex; flex-direction: column; gap: var(--space-4); height: 100%; min-height: 0; }
 
-  .about__head { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+  .about__head { flex: none; display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 14px; align-items: center; }
   .about__head img { border-radius: 16px; }
   .about__who { display: grid; gap: 2px; }
   .about__who p { margin: 0; }
@@ -78,19 +93,37 @@ import { portraits } from '../../data/photos';
 
   /* Two columns, filled top to bottom, so the first two paragraphs sit left and the last
      two right. break-inside keeps a paragraph from splitting across the fold. */
-  .about__text { columns: 2; column-gap: var(--space-4); font-size: 13px; line-height: 1.6; }
+  .about__text { flex: none; columns: 2; column-gap: var(--space-4); font-size: 13px; line-height: 1.6; }
   .about__text p { margin: 0 0 var(--space-2); break-inside: avoid; }
   .about__text p:last-child { margin-bottom: 0; }
 
-  .about__wall { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-  .about__wall img { display: block; width: 100%; height: auto; border-radius: var(--r-inner); background: var(--os-recess); }
+  /* The reel. It takes whatever is left, clips at its own edges, and the images are as
+     tall as it is. Squares, so their width follows. */
+  .about__reel { flex: 1 1 auto; min-height: 120px; overflow: hidden; }
+  .about__track { display: flex; width: max-content; height: 100%; animation: reel 48s linear infinite; }
+  .about__track img {
+    display: block; height: 100%; width: auto; margin-right: 12px;
+    border-radius: var(--r-inner); background: var(--os-recess);
+  }
+  @keyframes reel { to { transform: translateX(-50%); } }
+  .about__reel:hover .about__track { animation-play-state: paused; }
 
+  /* The full height the desktop allows, the same calc Window.astro uses as every window's
+     cap. Not important, for the reason GameApp.astro gives: the resize grips write a pixel
+     height inline and an important rule here would defeat them. */
+  @media (min-width: 641px) {
+    :global(#win-about) { height: calc(100% - var(--window-top) - var(--window-bottom)); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .about__track { animation: none; }
+  }
   @media (max-width: 640px) {
-    /* The button drops under the name, the text goes to one column, and six across
-       becomes three across, twice. */
+    /* The button drops under the name, the text goes to one column, and the reel gets a
+       fixed height because a bottom sheet has no spare height to give it. */
     .about__head { grid-template-columns: 56px minmax(0, 1fr); }
     .about__head .btn { grid-column: 1 / -1; justify-self: start; }
     .about__text { columns: 1; }
-    .about__wall { grid-template-columns: repeat(3, 1fr); }
+    .about__reel { flex: none; height: 44vw; }
   }
 </style>
