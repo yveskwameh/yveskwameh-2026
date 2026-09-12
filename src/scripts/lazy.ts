@@ -29,9 +29,15 @@ type App = { init(): void };
 const APPS: Record<string, () => Promise<App>> = {
   contact: () => import('./mail'),
   projects: () => import('./work'),
-  music: () => import('./music'),
   game: () => import('./game'),
+  services: () => import('./services'),
+  /* Not a window. The Images icon in the dock is the stack the prints live in, and
+     openWindow launches this when it finds no window called images. */
+  images: () => import('./prints'),
 };
+
+/** Clean Up Desktop. Lives in context.ts with the rename it has to undo; see actions.ts. */
+export const tidy = () => import('./context').then((m) => m.tidyDesktop());
 
 const mods = new Map<string, Promise<App>>();
 const started = new Set<string>();
@@ -92,8 +98,15 @@ export function initWarm() {
   const pullDrag = () => {
     if (pulled) return;
     pulled = true;
-    import('./drag').then((m) => m.init('.icon, .window__titlebar'));
+    import('./drag').then((m) => m.init('.icon, .print, .window__titlebar'));
     import('./dock-drag').then((m) => m.init());
+    /* Quick Look for the pile of prints. Hover is a pointer thing, so it lands with drag. */
+    import('./quicklook').then((m) => m.init());
+    /* The menu bar panels ride the same trigger. A pointer has to travel to the bar
+       before it can hover the speaker, and a window has to be opened before a soundtrack
+       can start, so this always lands first. It is not gated on the sound answer the way
+       sfx is, because the slider inside the panel is how somebody turns sound back on. */
+    import('./panel').then((m) => m.init());
   };
   addEventListener('pointermove', pullDrag, dragOnce);
   addEventListener('pointerdown', pullDrag, dragOnce);

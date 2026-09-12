@@ -1,0 +1,273 @@
+---
+/**
+ * Services, as a disclosure list. Direction A from the Figma board, taken from the way a
+ * spa or a salon sets out treatments: every service is one line, and the one you open
+ * shows what you walk away with.
+ *
+ * Six closed rows fit one phone screen, which is the whole reason for this direction. The
+ * same content with every row open runs to 1081px on a desktop and about two and a half
+ * screens on a phone, and nobody scrolls that to find out whether you build in Webflow.
+ *
+ * The opening is CSS, not script, and it costs nothing on load. Each service is a
+ * checkbox, its row is the label, and its panel is the element right after, so
+ * `:checked + label + panel` opens exactly the one that was clicked. That adjacency is why
+ * nothing here is wrapped: the triples are direct children of the fieldset, and the
+ * fieldset is the card. A wrapper around each service would break the selector.
+ *
+ * Checkboxes rather than radios, and that is the whole of the change. A radio group cannot
+ * be emptied by clicking the checked one, so the only way to shut a service was to open a
+ * different one, which is a dead end a visitor runs into and cannot explain. A checkbox
+ * closes when you press it again.
+ *
+ * What that traded away was the one-at-a-time behaviour, and Yves wanted both: a service
+ * closes when pressed again, and opening one closes whichever was open. Checkboxes give
+ * the first for free and cannot give the second, so scripts/services.ts, fetched the
+ * first time this window opens and never on page load, unchecks the others when one is
+ * checked. It is the only script this window has. The first is open on arrival so the
+ * window never opens as six closed lines.
+ */
+import { serviceGroups, howIWork } from '../../data/services';
+import Icon from '../os/Icon.astro';
+---
+<div class="svcs">
+  {/* No intro line any more. It used to say "What I do, and what you walk away with",
+      which the three group headings now say better and more specifically, and the whole
+      point of this pass was less prose rather than more. */}
+  {/* One radio group across every section, so only one service is ever open no matter
+      which group it is in. The headings sit between triples rather than wrapping them,
+      because the radio + row + panel adjacency this whole pattern rests on cannot survive
+      a wrapper. */}
+  <fieldset class="svc">
+    <legend class="sr-only">Services</legend>
+    {serviceGroups.map((group, gi) => (
+      <>
+        <p class="svc__group">{group.label}</p>
+        {group.services.map((s, i) => (
+      <>
+        {/* Visually hidden rather than display:none, so it stays a real radio and the
+            arrow keys still move through the group. */}
+        <input class="svc__radio" type="checkbox" id={`s-${s.id}`} checked={gi === 0 && i === 0} />
+        <label class="svc__row" for={`s-${s.id}`}>
+          <span class="svc__name">
+            {/* The outcome rides on the closed row on purpose. A visitor who never opens
+                anything should still learn what each service is for, and a list of six
+                bare labels teaches them nothing. */}
+            <strong class="svc__title">{s.name}</strong>
+            <em class="svc__outcome">{s.outcome}</em>
+          </span>
+          {/* And so does the price. "Can I afford this" is the second question anybody
+              asks and the one they will scroll looking for, so it is on the closed row
+              where it can be compared across six services without opening any of them. */}
+          {s.from && <span class="svc__price">{s.from}</span>}
+          <Icon name="chevron-down" size={14} />
+        </label>
+        {/* The inner wrapper is what makes the open animate. A grid row can go from 0fr
+            to 1fr, which is the one way CSS can animate to a height nobody measured, and
+            that needs exactly one child to clip. It sits INSIDE the panel, so the
+            radio + row + panel adjacency the whole pattern rests on is untouched. */}
+        <div class="svc__panel">
+          <div class="svc__inner">
+            <p class="svc__what">{s.what}</p>
+            {/* How long, which only matters once somebody is interested, so it waits
+                inside rather than competing with the price on the row. */}
+            {s.timeline && <p class="svc__anchor">{s.timeline}</p>}
+            <p class="svc__label">You get</p>
+            <ul class="svc__gets">
+              {s.gets.map((g) => <li>{g}</li>)}
+            </ul>
+          </div>
+        </div>
+      </>
+        ))}
+      </>
+    ))}
+  </fieldset>
+
+  {/* The page had no next step, which for a sales page is the whole point missing. The
+      process line earns the click and the button takes it, straight into the Mail window
+      rather than off to an email client. Low commitment on purpose: "tell me what you
+      need" asks for a sentence, not a brief. */}
+  <footer class="svcs__end">
+    <p class="svcs__foot">{howIWork}</p>
+    <button class="btn svcs__cta" type="button" data-open="contact">Tell me what you need</button>
+  </footer>
+</div>
+
+<style>
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  .svcs { display: grid; gap: var(--space-3); font-size: 13px; line-height: 1.6; }
+  .svcs__end {
+    display: flex; align-items: center; gap: var(--space-3);
+    padding-top: var(--space-3); border-top: 1px solid var(--os-hairline);
+  }
+  .svcs__foot { margin: 0; flex: 1; color: var(--os-muted); font-size: 11px; line-height: 1.55; }
+  .svcs__cta { flex: none; }
+  @media (max-width: 640px) {
+    .svcs__end { flex-direction: column; align-items: stretch; }
+  }
+
+  /* The card. A fieldset because this is a radio group, and the browser's own grouping
+     element is the honest one to use. Its default border and padding go. */
+  .svc {
+    /* clip rather than hidden, for the reason Window.astro gives: a hidden box can be
+       scrolled by focus and never scrolled back, and the checkboxes in here take focus. */
+    margin: 0; padding: 0; border: 0; overflow: clip;
+    background: var(--os-card); border-radius: var(--r-window);
+    counter-reset: svc;
+  }
+  .svc__radio { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+  .svc__row {
+    display: flex; align-items: center; gap: var(--space-2);
+    padding: 10px var(--space-3); cursor: var(--cur-hand);
+    color: var(--os-ink);
+    transition: background var(--t-fast), box-shadow var(--t-fast);
+  }
+  /* Numbered, because a list of six unnumbered lines in one weight reads as six lines
+     that happen to be there, and a numbered one reads as a set somebody decided on. The
+     order is real: the two build services come first. */
+  .svc__row::before {
+    counter-increment: svc;
+    content: counter(svc, decimal-leading-zero);
+    flex: none; width: 18px;
+    font: 700 10px var(--font-chrome); color: var(--os-muted);
+    font-variant-numeric: tabular-nums;
+    transition: color var(--t-fast);
+  }
+  .svc__name { flex: 1; min-width: 0; display: grid; gap: 2px; }
+  /* ------------------------------------------------------------------
+     The type scale, which is the whole of the hierarchy problem.
+
+     Everything in this window used to sit between 9 and 12px in one weight range of one
+     typeface, which is no scale at all: six things all shouting at the same volume, so a
+     reader has nothing to follow and no idea what to read first. One typeface is the
+     house rule and it stays, so the range has to do the work instead.
+
+     Loudest to quietest, and in the order somebody reads them:
+       14    the service name, bold
+       11    the price, bold, and the only accent on a closed row
+       11.5  the outcome, and the body copy under it
+       9     the group heading and the YOU GET label, both letterspaced caps
+
+     The accent is the third colour after ink and muted, and it is spent on three things
+     and no more: the group heading, the price, and the marker beside each deliverable.
+     Those are the three a buyer scans for, which situation am I in, what does it cost,
+     and what is in the box. Spending it anywhere else would make it mean nothing.
+     ------------------------------------------------------------------ */
+  .svc__title { font: 700 14px var(--font-chrome); letter-spacing: -.01em; color: var(--os-ink); }
+  .svc__price {
+    flex: none; font: 700 11px var(--font-chrome); color: var(--os-accent);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  /* The reason somebody would buy this, on the row, in the client's terms. Muted and a
+     size down, so the list still scans as a list of names rather than as a paragraph. */
+  .svc__outcome {
+    font: 11.5px var(--font-chrome); font-style: normal; font-weight: 400;
+    color: var(--os-muted); line-height: 1.45;
+  }
+  .svc__radio:checked + .svc__row .svc__outcome { color: var(--os-ink); }
+
+  /* The client's situation, not the discipline. Sits between the triples rather than
+     around them, so the adjacency selectors below still reach across it. */
+  .svc__group {
+    margin: 0; padding: 13px var(--space-3) 6px;
+    font: 700 9px var(--font-chrome); letter-spacing: .16em;
+    text-transform: uppercase; color: var(--os-accent);
+  }
+  /* A line above every group but the first, drawn the same way the rows do it: "a heading
+     that follows a panel" never matches the first one. */
+  .svc__panel + .svc__group { border-top: 1px solid var(--os-hairline); margin-top: 2px; }
+  .svc__row :global(svg) { flex: none; color: var(--os-muted); transition: transform var(--t-base) var(--ease); }
+
+  /* Every row after the first gets a line above it. Written as "a row that follows a
+     panel" so the first row never gets one, whichever row happens to be open. */
+  .svc__panel + .svc__radio + .svc__row { border-top: 1px solid var(--os-hairline); }
+  .svc__row:hover { background: var(--os-hover); }
+  .svc__radio:focus-visible + .svc__row { box-shadow: inset 0 0 0 2px var(--os-accent); }
+
+  /* ------------------------------------------------------------------
+     Open has to look open. It used to be a rotated chevron and the fact that words had
+     appeared underneath, which is no signal at all in a card where every row is the same
+     weight on the same fill. Now the open service carries a rail down its edge and a wash
+     of the accent, across the row and its panel both, so the pair reads as one block that
+     opened rather than as a paragraph that turned up.
+     ------------------------------------------------------------------ */
+  .svc__radio:checked + .svc__row,
+  .svc__radio:checked + .svc__row + .svc__panel {
+    background: color-mix(in srgb, var(--os-accent) 7%, transparent);
+    box-shadow: inset 3px 0 0 var(--os-accent);
+  }
+  .svc__radio:checked + .svc__row::before { color: var(--os-accent); }
+  .svc__radio:checked + .svc__row :global(svg) { transform: rotate(180deg); color: var(--os-accent); }
+  /* The focus ring has to beat the rail, or a keyboard user loses it on the open row. */
+  .svc__radio:focus-visible + .svc__row { box-shadow: inset 0 0 0 2px var(--os-accent); }
+
+  /* It grows rather than appears. display cannot be animated and a height nobody measured
+     cannot be transitioned, but a grid row from 0fr to 1fr can, which is why there is an
+     inner wrapper to clip. All the padding lives on the inner one: padding on a zero
+     height row still takes up space. */
+  .svc__panel {
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows var(--t-base) var(--ease), background var(--t-fast);
+  }
+  /* The padding rides the same curve as the height. Without this it snapped off the
+     moment a service was unchecked, while the row was still shrinking, and the text
+     jumped left for the length of the close. */
+  .svc__inner { overflow: hidden; min-height: 0; transition: padding var(--t-base) var(--ease); }
+  .svc__radio:checked + .svc__row + .svc__panel { grid-template-rows: 1fr; }
+  /* Lined up under the name, past the number, rather than under the number. */
+  .svc__radio:checked + .svc__row + .svc__panel .svc__inner {
+    padding: 2px var(--space-3) var(--space-3) calc(var(--space-3) + 26px);
+  }
+
+  .svc__what { margin: 0 0 6px; color: var(--os-muted); font-size: 11.5px; line-height: 1.65; }
+  /* Timeframe and starting price, when there are any. Set in the accent because it is the
+     one line on the row a client scanning for budget is actually hunting for. */
+  .svc__anchor {
+    margin: 0 0 var(--space-3);
+    font: 10.5px var(--font-chrome); color: var(--os-muted);
+  }
+  .svc__label {
+    margin: 0 0 6px; font: 700 9px var(--font-chrome);
+    letter-spacing: .16em; text-transform: uppercase; color: var(--os-muted);
+  }
+  .svc__gets { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; font-size: 11.5px; }
+  /* A dash rather than a bullet or a tick. A tick implies a checklist someone is working
+     through, and these are things that already come with the job. In the accent now, so
+     the deliverables read as a block rather than as more of the same prose. */
+  .svc__gets li { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 6px; color: var(--os-ink); }
+  .svc__gets li::before { content: '\2013'; color: var(--os-accent); }
+
+  /* The contents arrive after the panel has finished making room for them, one behind the
+     other, so opening a service reads as one movement rather than a block appearing at
+     full size. Delays are small on purpose: this is a list somebody is scanning. */
+  @media (prefers-reduced-motion: no-preference) {
+    .svc__radio:checked + .svc__row + .svc__panel .svc__inner > * {
+      animation: svc-in var(--t-base) var(--ease) both;
+    }
+    .svc__radio:checked + .svc__row + .svc__panel .svc__label { animation-delay: 60ms; }
+    .svc__radio:checked + .svc__row + .svc__panel .svc__gets { animation-delay: 90ms; }
+    .svc__radio:checked + .svc__row + .svc__panel .svc__gets li {
+      animation: svc-in var(--t-base) var(--ease) both;
+    }
+    .svc__gets li:nth-child(1) { animation-delay: 110ms; }
+    .svc__gets li:nth-child(2) { animation-delay: 150ms; }
+    .svc__gets li:nth-child(3) { animation-delay: 190ms; }
+    .svc__gets li:nth-child(4) { animation-delay: 230ms; }
+    .svc__gets li:nth-child(5) { animation-delay: 270ms; }
+  }
+  @keyframes svc-in { from { opacity: 0; transform: translateY(4px); } }
+
+  @media (max-width: 640px) {
+    .svc__row { padding: 12px var(--space-3); flex-wrap: wrap; }
+    /* On a phone there is not room for a name, an outcome and a price on one line, and
+       squeezing them would truncate the outcome, which is the half that sells. The price
+       drops to its own line under them instead, still lined up with the name. */
+    .svc__name { flex: 1 1 100%; }
+    /* Price first, then the chevron at the far right, so the second line reads the way
+       the desktop row does. With the chevron first it sat to the left of the price. */
+    .svc__price { margin-left: 26px; order: 2; }
+    .svc__row :global(svg) { order: 3; margin-left: auto; }
+  }
+</style>

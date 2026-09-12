@@ -32,8 +32,32 @@ function placeWindow(win: HTMLElement) {
   win.style.top = `${px(p, '--window-top')}px`;
 }
 
+/**
+ * Take the fragment off the address bar without reloading, scrolling or adding a Back
+ * entry. `history.replaceState` with pathname + search is the documented way to do it;
+ * `location.hash = ''` is a fragment navigation, so it leaves a bare `#` behind and
+ * jumps the page to the top.
+ *
+ * Called whenever a window actually closes. The hash is how a case study is shared, so
+ * while the Work window is open it is true, and the moment the window goes away it stops
+ * being true: leaving it there meant a visitor could close Work, open the game, and
+ * still be reloaded back into Work on a stale case study.
+ *
+ * Deliberately not in syncFocus, which would be the tidier place: openWindow calls
+ * closeOthers BEFORE it marks the new window open, so a deep link would have its own
+ * hash wiped a moment before scripts/work.ts got to read it.
+ */
+const unhash = () => {
+  // pathname + search, spelled out. An empty string is tempting and the URL parser agrees
+  // with it (new URL('', '/#x') is '/'), but replaceState does not: given an empty url
+  // Chrome keeps the current one, fragment and all. Checked in the browser, not assumed.
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+};
+
 export function openWindow(id: string) {
-  const win = q(id); if (!win) return;
+  // An id with no window behind it still launches its app, if the APPS map has one.
+  // That is how a dock item can do something other than open a window.
+  const win = q(id); if (!win) { launch(id); return; }
   closeOthers(win);     // one at a time: opening anything puts away whatever was already up
   win.classList.add('is-open');
   placeWindow(win);     // every open: centred across, --window-top below the menu bar
@@ -45,16 +69,19 @@ export function openWindow(id: string) {
  * window is open at a time, and a click that lands outside it dismisses it.
  */
 function closeOthers(keep?: HTMLElement) {
-  openWindows().forEach((w) => { if (w !== keep) w.classList.remove('is-open', 'is-focused'); });
+  openWindows().forEach((w) => { if (w !== keep) { w.classList.remove('is-open', 'is-focused'); unhash(); } });
   syncFocus();
 }
 export function closeWindow(id: string) {
   const win = q(id); if (!win) return;
   win.classList.remove('is-open', 'is-focused');
+  unhash();
   syncFocus();
 }
 export function focusWindow(win: HTMLElement) {
-  document.querySelectorAll('.window').forEach((w) => w.classList.remove('is-focused'));
+  // The open ones, not every window on the page: is-focused is only ever put on a window
+  // that is open, and closing one takes both classes off together.
+  openWindows().forEach((w) => w.classList.remove('is-focused'));
   win.classList.add('is-focused');
   win.style.zIndex = String(++z);
   document.body.classList.add('has-focus');
@@ -71,11 +98,13 @@ export function focusWindow(win: HTMLElement) {
 function syncFocus() {
   const open = [...openWindows()];
   document.body.classList.toggle('has-window', open.length > 0);
-  if (!document.querySelector('.window.is-focused')) {
-    const top = open.sort((a, b) => (+a.style.zIndex || 0) - (+b.style.zIndex || 0)).pop();
-    if (top) top.classList.add('is-focused');
+  // One lookup, held, rather than asking the document the same question twice.
+  let on = document.querySelector('.window.is-focused');
+  if (!on) {
+    on = open.sort((a, b) => (+a.style.zIndex || 0) - (+b.style.zIndex || 0)).pop() || null;
+    on?.classList.add('is-focused');
   }
-  document.body.classList.toggle('has-focus', !!document.querySelector('.window.is-focused'));
+  document.body.classList.toggle('has-focus', !!on);
 }
 
 /** Select a desktop icon, the way a single click does on a real desktop. */
@@ -145,10 +174,19 @@ export function initWindowManager() {
      * The dismiss. Anything outside the open window puts it away, which is what makes the
      * desktop read as a modal overlay and keeps the visitor to one window.
      *
-     * A control that is about to open something is the exception: openWindow swaps the two
-     * on its own, and dismissing here first would flash the bare desktop between them.
+     * Three exceptions. A control that is about to open something, because openWindow
+     * swaps the two on its own and dismissing here first would flash the bare desktop
+     * between them. The menu bar, which is system chrome rather than the desktop:
+     * dragging the volume slider or picking a theme used to throw away whatever was open,
+     * which also stopped the soundtrack that the slider was there to adjust. macOS does
+     * not close a window when you use the menu bar either.
+     *
+     * And the unmute notice, for the same reason. It arrives unasked on top of whatever
+     * somebody is reading, so answering it, either way, threw that window away: the X
+     * dismissed the notice and the window under it, and Turn on did the same while
+     * turning the sound on. A notification is chrome, not the desktop.
      */
-    if (!fromWindow && !el.closest('.window') && !opens) closeOthers();
+    if (!fromWindow && !el.closest('.window, .menubar, .tray, .notice') && !opens) closeOthers();
 
     if (opens) openWindow(opens);
     else if (select) selectIcon(t);

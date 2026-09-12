@@ -1,0 +1,118 @@
+---
+/**
+ * One case study, laid out the way the approved wireframe draws it (direction B, the
+ * ClickUp card): a wide shot across the top, the title, the facts as a two column grid of
+ * label and value, a hairline, then the write up.
+ *
+ * Measurements come straight off the Figma frame `Desktop / B · ClickUp card` rather than
+ * from taste: 132px banner, 20px title, 74px label column, 13px section headings.
+ *
+ * Used in two places that hold the same thing: the pane inside the Work window, and the
+ * standalone /work/<id> page. The page used to render a bare line of facts and the
+ * content, so a shared link showed markedly less than the desktop did.
+ *
+ * The banner is a separate field from `cover`, because `cover` is a 96px icon that the
+ * sidebar uses at 20px. It cannot be stretched across a pane.
+ */
+import type { CollectionEntry } from 'astro:content';
+interface Props { p: CollectionEntry<'projects'> }
+const { p } = Astro.props;
+
+const FACTS: [string, string][] = [
+  ['Client', p.data.client],
+  ['Year', String(p.data.year)],
+  ['Role', p.data.role],
+  ['Built with', p.data.stack.join(', ')],
+];
+---
+<article class="cs">
+  {p.data.banner && (
+    /* alt is empty on purpose: the shot is decorative here, and every image that carries
+       meaning is inside the write up with a real description on it. */
+    <img class="cs__banner" src={p.data.banner} alt="" width="720" height="450" loading="lazy" decoding="async" />
+  )}
+
+  <div class="cs__inner">
+    <h3 class="cs__title">{p.data.title}</h3>
+
+    {/* Two columns of label and value, which is the whole point of this direction: a fact
+        is a labelled thing, not a pill that could be a date or a tool. */}
+    <dl class="cs__facts">
+      {FACTS.map(([label, value]) => (
+        <div class="cs__fact"><dt>{label}</dt><dd>{value}</dd></div>
+      ))}
+    </dl>
+
+    <hr class="cs__rule" />
+
+    <div class="cs__body"><slot /></div>
+
+    {p.data.url && (
+      <p class="cs__links">
+        <a href={p.data.url} target="_blank" rel="noopener noreferrer">Visit the live site</a>
+      </p>
+    )}
+  </div>
+</article>
+
+<style>
+  /* The banner has to reach the edges, so this component owns its own padding and the two
+     boxes it sits in give theirs up. Matched by what is inside rather than by window id,
+     so the standalone page needs no id of its own. */
+  :global(.window__body:has(> .cs)) { padding: 0; }
+
+  /* The pane is a sheet of paper next to a grey sidebar, which is the arrangement the
+     wireframe draws and what makes the plain write up below sit on something. */
+  .cs { display: block; min-height: 100%; background: var(--os-card); }
+
+  .cs__banner {
+    display: block; width: 100%; height: 132px;
+    /* Cropped from the middle, not the top. Every one of these shots has a browser title
+       bar drawn into it, and keeping the top put a second row of traffic lights directly
+       under the window's real ones. The middle is the content. */
+    object-fit: cover; object-position: center;
+    background: var(--os-recess);
+  }
+
+  .cs__inner { padding: var(--space-4); }
+  .cs__title { margin: 0 0 var(--space-3); font: 700 20px var(--font-chrome); }
+
+  .cs__facts {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px var(--space-3); margin: 0;
+  }
+  .cs__fact { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 8px; font-size: 12px; }
+  .cs__facts dt { color: var(--os-muted); }
+  .cs__facts dd { margin: 0; color: var(--os-ink); }
+
+  .cs__rule { height: 1px; margin: var(--space-3) 0; border: 0; background: var(--os-line); opacity: .45; }
+
+  /* The write up, plain on the sheet. Every direct child is a markdown element, so the
+     spacing is set here rather than asking anyone to write markdown differently. */
+  .cs__body { font-size: 13px; line-height: 1.65; }
+  .cs__body :global(> *) { margin: 0; }
+  .cs__body :global(> h2) {
+    margin-top: var(--space-3); font: 700 13px var(--font-chrome); color: var(--os-ink);
+  }
+  .cs__body :global(> h2:first-child) { margin-top: 0; }
+  .cs__body :global(> * + *) { margin-top: var(--space-2); }
+  .cs__body :global(> h2 + *) { margin-top: 6px; }
+  .cs__body :global(> p) { color: var(--os-muted); }
+
+  /* A screenshot in the markdown is a direct child, so it gets its own breathing room. */
+  .cs__body :global(> img) {
+    width: 100%; height: auto; margin-top: var(--space-3);
+    border: 1px solid var(--os-line); border-radius: var(--r-inner);
+  }
+
+  .cs__links { margin: var(--space-4) 0 0; font-size: 12px; }
+
+  @media (max-width: 640px) {
+    .cs__banner { height: 110px; }
+    .cs__inner { padding: var(--space-3); }
+    .cs__title { font-size: 18px; }
+    /* One column: two 74px labels beside their values do not fit a phone without the
+       values wrapping to two lines each. */
+    .cs__facts { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  }
+</style>

@@ -1,0 +1,95 @@
+/**
+ * What clients said. Every one of these is already published on yveskwameh.com, so the
+ * permission question is settled before it gets here.
+ *
+ * Three came through Upwork. Their `role` says so rather than naming a company, because
+ * the site labelled them "Contractor" and they are clients, not contractors.
+ *
+ * Nothing in this file is written by anyone but the person credited. If a quote ever
+ * needs shortening, cut whole sentences from the end and never rewrite the middle: a
+ * testimonial that has been edited for flow is not a testimonial any more.
+ *
+ * The star ratings are deliberately absent. Upwork does not expose review text or scores
+ * through its API and the site blocks scraping, so there is no honest source for a number
+ * next to these. The Job Success Score in `record` is the one measured figure available.
+ */
+export type Quote = {
+  name: string;
+  /** Job title and company, or how the work came about. */
+  role: string;
+  quote: string;
+  /**
+   * File in public/images/feedback, 96px square avif. Optional: a quote without one
+   * falls back to the person's initials rather than to a stock face.
+   */
+  avatar?: string;
+};
+
+export const feedback: Quote[] = [
+  {
+    name: 'Matthew Haimm',
+    role: 'Creative Dir. & Founder, Minerva Creative Co.',
+    avatar: 'matthew.avif',
+    quote: 'Yves joined us in our early-stage after a cold DM, and within a year he became the Swiss Army knife every startup needs.',
+  },
+  {
+    name: 'Richard Tamunotonye',
+    avatar: 'richard.avif',
+    role: 'Founder, Productsio',
+    quote: 'I have worked with Yves for over three years, and his skill, dedication, and problem-solving consistently stand out.',
+  },
+  {
+    name: 'Sid Jain',
+    avatar: 'sid.avif',
+    role: 'via Upwork',
+    quote: 'Working with Yves was effortless. He delivered everything assigned on schedule, communicated clearly, and ensured the final result exceeded expectations.',
+  },
+  {
+    name: 'Viktor Dimitrievski',
+    avatar: 'viktor.avif',
+    role: 'via Upwork',
+    quote: 'Yves transformed our webpage with a fresh, modern design that matched our requirements perfectly.',
+  },
+  {
+    name: 'Victory Achionye',
+    avatar: 'victory.avif',
+    role: 'via Upwork',
+    quote: 'Yves is genuinely brilliant! He got the job done and will definitely hire again!',
+  },
+  {
+    name: 'Samuel Sabastine',
+    avatar: 'samuel.avif',
+    role: 'Creative Director',
+    quote: 'Yves communicates clearly, brings fresh ideas, and stays patient under pressure.',
+  },
+];
+
+/**
+ * The record. The Job Success Score is Upwork's own figure, read off the profile on
+ * 11 September 2026, so it is exact and stays exact: never round it.
+ *
+ * The count is a floor rather than a total. Upwork counts 30, but that is only the work
+ * that came through Upwork, and Yves has delivered more than that elsewhere. "30+" is the
+ * honest way to say a number you can prove and a number you cannot: it claims the thirty
+ * that are evidenced and admits there are more without inventing a figure.
+ */
+export const record = [
+  ['100%', 'Job Success Score on Upwork'],
+  ['30+', 'jobs delivered'],
+] as const;
+
+/**
+ * Platform badges, exported from the Figma file as SVG with their text already converted
+ * to paths, so they carry no font dependency and stay crisp at any size.
+ *
+ * They live with the record above rather than among the quotes, because they are the same
+ * kind of thing: a number someone else awarded, not an opinion someone offered.
+ *
+ * These are other people's trademarks. They are here to show what Yves earned on those
+ * platforms, which is what the badges exist for, and nothing about the layout should imply
+ * Upwork or Behance endorse the site itself.
+ */
+export const badges = [
+  { src: '/images/badges/upwork-top-rated.svg', alt: 'Upwork Top Rated', width: 141, height: 25 },
+  { src: '/images/badges/behance.svg', alt: 'Behance, AI and Graphic Design', width: 140, height: 31 },
+] as const;

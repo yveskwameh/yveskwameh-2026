@@ -1,0 +1,275 @@
+---
+/**
+ * Feedback, as quote cards on a slowly drifting wall. Direction C from the Figma board for
+ * the cards, and the motion Yves picked out of the four in the artifact: the cards arrive in
+ * sequence when the window opens, then two columns drift in opposite directions for as long
+ * as it stays open, pausing the moment you point at them. On a phone it is one column doing
+ * the same thing, on his call: the drift lives on mobile too.
+ *
+ * Quote first on purpose. A card that opens with a name and a job title asks the reader to
+ * care who this is before telling them why they should, and nobody reads the sixth name.
+ *
+ * All of the motion is CSS. GSAP was considered and priced: its core is about 23KB gzipped
+ * against a 10,240 byte on-load budget for the entire desktop, which is more than twice the
+ * whole site to move six cards. It earns its keep for scrubbing, branching and physics, and
+ * none of that is this.
+ *
+ * Every picture in here is a CSS background rather than an <img>, and that is deliberate.
+ * A lazy <img> inside a window that was display:none at parse time is at the mercy of the
+ * browser's lazy-loading heuristics: measured across fresh loads it fetched all eight
+ * sometimes and none other times, leaving the badges invisible until a scroll that may never
+ * come. A background image has no such heuristic. It is fetched the first time the element
+ * is rendered, which is when the window opens, so it is still nothing on page load and it is
+ * reliable.
+ *
+ * Accessibility: the avatars are decorative, because the person's name sits in text beside
+ * them; the badges carry role="img" with a real label; and the duplicated cards that make
+ * the loop seamless are aria-hidden, so nobody hears all six quotes twice. The phone column
+ * is a third copy of the wall and is aria-hidden as a whole on desktop and vice versa, so a
+ * screen reader hears one wall whichever layout is showing.
+ */
+import { feedback, record, badges } from '../../data/feedback';
+
+/** First letter of the first two words. "Matthew Haimm" gives MH. */
+const initials = (name: string) =>
+  name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+/**
+ * Three columns in the markup, two of which show at a time.
+ *
+ * Desktop: two columns, alternating rather than split down the middle, so neighbours are
+ * never the same length and the wall does not read as two separate lists. Each quote stays
+ * in exactly one column, so a reader never sees the same one twice at once.
+ *
+ * Phone: one column holding all six, because two columns of cards do not fit at 390 and a
+ * single desktop column stacked on top of the other would drift as two separate lists with
+ * a seam between them. It is built-time HTML like everything else in a window (rule 3) and
+ * it is display: none on desktop, so it costs the desktop nothing but bytes in the gzipped
+ * page.
+ *
+ * Each column renders its cards FOUR times, and that number is arithmetic rather than
+ * taste. The drift travels exactly one cycle, one set of that column's cards. Everything
+ * above that cycle is what keeps the bottom of the viewport covered while the loop runs, so
+ * the rule is (copies - 1) * cycle >= the visible height of the wall. Two copies gave 420px
+ * of cover against a wall about 582px tall, so the end of the track came into view and left
+ * a gap before it restarted. Four covers the wall even on a tall monitor with the window
+ * dragged to full height, and on a phone the six-card cycle is taller still.
+ */
+const columns = [
+  { cards: feedback.filter((_, i) => i % 2 === 0), cls: '' },
+  { cards: feedback.filter((_, i) => i % 2 === 1), cls: 'fb__col--b' },
+  { cards: feedback, cls: 'fb__col--m' },
+];
+---
+<div class="fb">
+  {/* Numbers and badges together, because they are the same kind of evidence: something a
+      platform measured or awarded, as opposed to an opinion someone offered. On a desktop
+      the two figures sit side by side on the left and the two badges stack on the right;
+      on a phone the figures stack too. How Yves asked for it laid out. */}
+  <div class="fb__record">
+    <div class="fb__stats">
+      {record.map(([figure, label]) => (
+        <div class="fb__stat">
+          <span class="fb__figure">{figure}</span>
+          <span class="fb__label">{label}</span>
+        </div>
+      ))}
+    </div>
+    <div class="fb__badges">
+      {badges.map((b) => (
+        <span class="fb__badge" role="img" aria-label={b.alt}
+              style={`background-image:url('${b.src}');--dark-src:url('${b.src.replace('.svg', '-dark.svg')}');width:${b.width}px;height:${b.height}px`}></span>
+      ))}
+    </div>
+  </div>
+
+  <div class="fb__wall">
+    {columns.map((col, c) => (
+      <div class:list={['fb__col', col.cls]}>
+        {[0, 1, 2, 3].map((pass) => col.cards.map((f, i) => (
+          <figure class:list={['fb__card', pass > 0 && 'fb__card--clone']}
+                  aria-hidden={pass > 0 ? 'true' : undefined}
+                  style={`--i:${c === 2 ? i : c + i * 2}`}>
+            <blockquote class="fb__quote">&ldquo;{f.quote}&rdquo;</blockquote>
+            <figcaption class="fb__who">
+              {f.avatar
+                ? <span class="fb__avatar" style={`background-image:url('/images/feedback/${f.avatar}')`}></span>
+                : <span class="fb__avatar fb__avatar--initials">{initials(f.name)}</span>}
+              <span class="fb__names">
+                <span class="fb__name">{f.name}</span>
+                <span class="fb__role">{f.role}</span>
+              </span>
+            </figcaption>
+          </figure>
+        )))}
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  /* Full height like the Work and Tic Tac Toe windows, because a wall that drifts needs a
+     viewport to drift inside. Not important, so the resize grips still win. */
+  @media (min-width: 641px) {
+    :global(#win-testimonials) { height: calc(100% - var(--window-top) - var(--window-bottom)); }
+    :global(#win-testimonials .window__body) { overflow: hidden; }
+  }
+
+  .fb { display: flex; flex-direction: column; gap: var(--space-3); height: 100%; }
+
+  .fb__record {
+    flex: none;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: var(--space-3) var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: var(--os-card); border-radius: var(--r-window);
+  }
+  /* The two figures, side by side on a desktop. The phone stacks them, below. */
+  .fb__stats { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); }
+  .fb__stat { display: grid; gap: 2px; }
+  .fb__figure { font: 700 24px var(--font-chrome); color: var(--os-ink); line-height: 1.1; }
+  .fb__label { font-size: 11px; color: var(--os-muted); }
+  /* The two badges, one over the other, mirroring the figures on the left. Left aligned
+     so the two wordmarks start on the same line. */
+  .fb__badges { display: grid; gap: 10px; justify-items: start; }
+  .fb__badge { display: block; max-width: 100%; background: center left / contain no-repeat; }
+  /* The badges are background images, so they cannot take currentColor, and their ink
+     stayed black on every dark surface. A blanket filter: invert(1) was the first idea
+     and it is wrong: these are not flat marks. Upwork carries its green and a blue,
+     Behance an orange and two gradients, and inverting turns the green magenta. So there
+     is a second file per badge with only the greys and blacks moved, built by
+     tools/../badge_dark.py, and only a visitor on a dark theme ever fetches it.
+
+     Written against both routes into dark, the explicit choice and the system default,
+     the same way tokens.css has to be. The URL is set inline per badge from the data, so
+     these rules can only swap the whole layer, which is why the src is rebuilt here. */
+  :global(html[data-mode='dark']) .fb__badge,
+  :global(html[data-mode='dark']) .fb__avatar { color-scheme: dark; }
+  :global(html[data-mode='dark']) .fb__badge { background-image: var(--dark-src) !important; }
+  @media (prefers-color-scheme: dark) {
+    :global(html:not([data-mode='light'])) .fb__badge { background-image: var(--dark-src) !important; }
+  }
+
+  /* Scrolls by default. Only the drifting version clips, because only the drifting version
+     brings the content back round by itself. Someone who has asked for reduced motion gets
+     six still cards and a scrollbar, rather than six still cards with the last two cut off
+     and no way to reach them: the window body's overflow is hidden on desktop, so if this
+     did not scroll, nothing would. */
+  .fb__wall {
+    flex: 1; min-height: 0; overflow: auto;
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-2);
+    /* start, not the default stretch. A stretched column is as tall as the taller of the
+       two, and the drift moves by a percentage of the column's own height, so a stretched
+       column travels the wrong distance and the seam shows. */
+    align-content: start; align-items: start;
+  }
+  /* No gap here on purpose. The spacing lives on the card as a bottom margin instead, so
+     the track is exactly four identical blocks tall and the travel is an exact quarter.
+     With a gap there are only (n - 1) of them between n cards, so a clean fraction of the
+     height always lands half a gap out and the join is visible. */
+  .fb__col { display: grid; align-content: start; }
+  /* The phone column is not for the desktop. */
+  .fb__col--m { display: none; }
+
+  .fb__card {
+    margin: 0 0 var(--space-2); display: grid; gap: var(--space-3);
+    padding: var(--space-3);
+    background: var(--os-card); border-radius: var(--r-window);
+    /* The ring is drawn transparent rather than added on hover, so the card never grows
+       under the pointer and nudges the column it is drifting in. */
+    box-shadow: inset 0 0 0 1px transparent;
+    transition: box-shadow var(--t-fast) var(--ease);
+  }
+  /* The wall pauses when you point at it, which is easy to miss when nothing under the
+     pointer changes. The ring says which card you have hold of, and that pointing was
+     the thing that stopped everything.
+
+     Inset, and one pixel at half strength. An outset ring sat outside the card, and the
+     wall clips horizontally because it is a viewport with a mask, so the ring was sliced
+     off down both outer columns. Drawn inside the card there is nothing to clip, and the
+     card still does not change size. */
+  .fb__card:hover,
+  .fb__card:focus-within {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--os-accent) 55%, transparent);
+  }
+  .fb__quote { margin: 0; font-size: 12px; line-height: 1.6; color: var(--os-ink); }
+  .fb__who { display: flex; align-items: center; gap: 10px; padding-top: var(--space-3); border-top: 1px solid var(--os-hairline); }
+  .fb__avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--os-recess) center / cover no-repeat; }
+  .fb__avatar--initials { display: grid; place-items: center; color: var(--os-muted); font: 700 12px var(--font-chrome); }
+  .fb__names { display: grid; min-width: 0; }
+  .fb__name { font: 700 12px var(--font-chrome); color: var(--os-ink); }
+  .fb__role { font-size: 10px; color: var(--os-muted); line-height: 1.4; }
+
+  /* The copies exist only to make the loop seamless, so they are not rendered anywhere the
+     loop does not run, which now means only for anyone who has asked for less movement. */
+  .fb__card--clone { display: none; }
+
+  @keyframes fb-rise { from { opacity: 0; transform: translateY(12px); } }
+  /* Exactly one quarter of the track, which is exactly one cycle of that column's cards,
+     because the track is four identical copies and the spacing is inside each card. No
+     correction term, no fractional percentage, nothing to round. */
+  @keyframes fb-drift { to { transform: translateY(-25%); } }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* The entrance. Once, on both layouts. */
+    .fb__record { animation: fb-rise .5s cubic-bezier(.2,.7,.3,1) both; }
+    .fb__card:not(.fb__card--clone) {
+      animation: fb-rise .5s cubic-bezier(.2,.7,.3,1) both;
+      animation-delay: calc(var(--i) * 70ms);
+    }
+
+    /* The drift, on both layouts. */
+    .fb__card--clone { display: grid; }
+    /* Now it is a viewport rather than a scroller, and the edges fade so a card leaving
+       the wall dissolves instead of being sliced off by the window. */
+    .fb__wall {
+      overflow: hidden;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+      mask-image: linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+    }
+    /* Delayed a second so the cards have landed before the wall starts moving. The two
+       never fight over the same pixels: the entrance transforms the card, the drift
+       transforms the column it sits in. */
+    .fb__col { animation: fb-drift 40s linear 1s infinite; }
+    .fb__col--b { animation-direction: reverse; }
+    /* Six cards is twice the cycle, so the same speed would look half as fast. */
+    .fb__col--m { animation-duration: 80s; }
+    /* Pointing at a column is a request to read that column, not to stop the wall. Per
+       column rather than per wall, because a pointer can only be in one of them at a
+       time: the one you are reading holds still and the other carries on. focus-within
+       covers the keyboard. */
+    .fb__col:hover,
+    .fb__col:focus-within { animation-play-state: paused; }
+  }
+
+  @media (max-width: 640px) {
+    /* One column, the phone one, and the two desktop columns go away. In the record the
+       figures stack one over the other here, so both sides read as a column at 390. */
+    .fb__wall { grid-template-columns: minmax(0, 1fr); }
+    .fb__col:not(.fb__col--m) { display: none; }
+    .fb__col--m { display: grid; }
+    /* Two columns here, the same as the desktop: figures stacked on the left, badges
+       stacked on the right. It used to wrap into one column because the long label did
+       not leave room for the badges, so the label breaks after "Score" instead. 17ch is
+       exactly "Job Success Score", so "on Upwork" goes to the second line together. */
+    .fb__record { gap: var(--space-3); flex-wrap: nowrap; align-items: flex-start; }
+    .fb__stats { display: grid; gap: var(--space-3); }
+    /* On the label, not the block: ch is measured in the element's own font, and the
+       block's is 13px while the label's is 11px, so 17ch there let "on" onto line one. */
+    .fb__label { max-width: 17ch; }
+    .fb__badges { flex: none; }
+  }
+  @media (max-width: 640px) and (prefers-reduced-motion: reduce) {
+    /* No drift, so the sheet scrolls the way every other window does. */
+    .fb { height: auto; }
+    .fb__wall { overflow: visible; }
+  }
+  @media (max-width: 640px) and (prefers-reduced-motion: no-preference) {
+    /* The sheet sizes to its content and a drifting column needs a viewport, so the wall
+       takes a fixed share of the phone's height. The sheet's own cap keeps the record and
+       the wall inside the screen. */
+    .fb { height: auto; }
+    .fb__wall { height: 62dvh; flex: none; }
+  }
+</style>

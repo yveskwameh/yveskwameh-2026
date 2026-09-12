@@ -7,30 +7,67 @@ import DesktopIcon from './DesktopIcon.astro';
 import Window from '../windows/Window.astro';
 import AboutApp from '../apps/AboutApp.astro';
 import ProjectsApp from '../apps/ProjectsApp.astro';
-import MusicApp from '../apps/MusicApp.astro';
 import GameApp from '../apps/GameApp.astro';
 import ColophonApp from '../apps/ColophonApp.astro';
 import MailApp from '../apps/MailApp.astro';
+import ServicesApp from '../apps/ServicesApp.astro';
+import TestimonialsApp from '../apps/TestimonialsApp.astro';
 import { desktopItems } from '../../data/desktop';
+import Prints from './Prints.astro';
 ---
 <main class="desktop" id="desktop">
   {desktopItems.map((item) => <DesktopIcon {...item} />)}
+  {/* After the icons and before the windows, so it paints over the one and under the
+      other with no z-index arguments. Its own file explains the rest. */}
+  <Prints />
 
-  <Window id="about" title="About Yves" filename="about-yves.txt"><AboutApp /></Window>
+  {/* 860 like Work and the game. The bio is a 330px column and the nine photographs are
+      three across beside it, and at the old 560 the wall came out too small to be worth
+      showing. */}
+  <Window id="about" title="About Yves" filename="about-yves.txt" width={860}><AboutApp /></Window>
   {/* Explicitly sized, unlike the other windows. The browser inside it is a two column
       layout whose panes fill their side and scroll themselves, and `height: 100%` against
       a window that sizes to its content collapses to the height of the sidebar. */}
-  <Window id="projects" title="Work" filename="work.folder" width={860} height={600}><ProjectsApp /></Window>
-  <Window id="music" title="Music" filename="playlist.spotify" width={420}><MusicApp /></Window>
+  <Window id="projects" title="Work" filename="work.folder" width={860}><ProjectsApp /></Window>
   {/* No height prop: GameApp.astro opens this one at the full height the desktop allows,
       so the thread has the most room it can get. Wider than the 400 column it holds on
       purpose: the margins either side are the layout. */}
   <Window id="game" title="Tic Tac Toe" filename="tictactoe.app" width={860}><GameApp /></Window>
   <Window id="colophon" title="About this site" filename="readme.txt" width={520}><ColophonApp /></Window>
   {/* Anchored bottom right and slides up, like Gmail compose. See the compose variant in
-      Window.astro. Sized to the shorter, wider shape a compose panel wants. */}
-  <Window id="contact" title="Send Yves a message" filename="new-message.eml" width={460} height={430} variant="compose"><MailApp /></Window>
-  <!-- Add: services, testimonials, trash -->
+      Window.astro. Sized to the shorter, wider shape a compose panel wants. 700 rather
+      than 460 since direction B put a note from Yves beside the fields: 268 for the note
+      leaves the fields 432, which is close to the 460 the whole window used to be. */}
+  <Window id="contact" title="Send Yves a message" filename="new-message.eml" width={700} height={430} variant="compose"><MailApp /></Window>
+  {/* 640 because the disclosure list is one column of prose and six rows, and wider than
+      this just makes the lines harder to read. */}
+  <Window id="services" title="Services" filename="services.prefs" width={640}><ServicesApp /></Window>
+  {/* 760 to fit two quote cards across. One column below 640, handled in the app. The id
+      is testimonials rather than feedback because that is what data/desktop.ts opens. */}
+  <Window id="testimonials" title="Feedback" filename="feedback.txt" width={760}><TestimonialsApp /></Window>
+
+  {/* The unmute notice. One line, once, and only to somebody who is missing something.
+
+      Every condition is in the selector at the bottom of this file rather than in a
+      script: sound off, lock screen already dismissed, not already waved away. The 45
+      second wait is the animation's delay, and `both` holds the first keyframe until it
+      elapses, which is what keeps the pill hidden and unclickable while it waits.
+
+      "Turn on" is a real button because the speaker is a <summary> now and cannot be
+      driven by a <label for>. scripts/panel.ts picks it up, and by the time this shows
+      it has been loaded since the first pointer move. */}
+  <div class="notice" role="status">
+    {/* Inside the notice, not beside it. Clicking a <label for> makes the browser forward
+        a second click to the input it names, and the dismiss below is a click-outside
+        rule: with the checkbox outside the pill, that forwarded click read as a click on
+        the desktop and threw away whatever window was open. The selector that hides the
+        notice is :has() on body, so this can sit anywhere. */}
+    <input class="notice__x" id="notice-x" type="checkbox" hidden />
+    <span class="notice__glyph" aria-hidden="true"></span>
+    <span class="notice__text">Sound is off</span>
+    <button class="notice__go" type="button" data-vol="60">Turn on</button>
+    <label class="notice__close" for="notice-x" tabindex="0" role="button" aria-label="Dismiss">&times;</label>
+  </div>
 
   {/* Pushes the desktop back behind whatever is open. Still pointer-events: none, even
       though window-manager.ts now dismisses on a click outside: swallowing the click here
@@ -83,7 +120,7 @@ import { desktopItems } from '../../data/desktop';
   .desktop { position: fixed; inset: var(--menubar-h) 0 0 0; }
   /* Refresh blinks the icons out and back. It is the only visible sign that the desktop
      redrew, since nothing else about it changes. */
-  .desktop.is-refreshing :global(.icon) { opacity: 0; }
+  .desktop.is-refreshing :global(.icon), .desktop.is-refreshing :global(.print) { opacity: 0; }
 
   /* z-index 5: above the icons, which have none, and below the windows, which start at 10
      from focusWindow. It sits inside .desktop so the dock and the menu bar stay crisp,
@@ -96,12 +133,18 @@ import { desktopItems } from '../../data/desktop';
   }
   /* window-manager.ts puts has-window on the body whenever anything is open. */
   :global(body.has-window) .scrim { opacity: 1; }
+  /* And the icons stop answering the pointer while it is up. The scrim itself stays
+     pointer-events: none on purpose, so a click still reaches the desktop and dismisses
+     the window, but an icon underneath a blur has no business lighting up and playing a
+     sound when the pointer passes over it. Taking the icons out of hit testing rather
+     than the whole desktop is what keeps the dismiss working. */
+  :global(body.has-window) :global(.icon), :global(body.has-window) :global(.print) { pointer-events: none; }
 
   .ctx {
     position: fixed; z-index: 950; min-width: 190px; padding: 6px;
     background: var(--os-menu);
     -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
-    border: 1px solid rgba(0,0,0,.12); border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
+    border: 1px solid var(--os-edge); border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
   }
   .ctx[hidden] { display: none; }
   .ctx button {
@@ -109,7 +152,7 @@ import { desktopItems } from '../../data/desktop';
     padding: 6px 10px; border-radius: var(--r-inner); cursor: var(--cur-hand);
     font: 12px var(--font-chrome); color: var(--os-ink);
   }
-  .ctx button:hover { background: var(--os-accent); color: #fff; }
+  .ctx button:hover { background: var(--os-accent); color: var(--os-on-accent); }
 
   /* ------------------------------------------------------------------
      Live cursors.
@@ -164,14 +207,14 @@ import { desktopItems } from '../../data/desktop';
   #me-chip:hover { opacity: 1; }
   .chip--edit {
     position: fixed; z-index: 860; left: -999px; width: 130px; border: 0; text-align: center;
-    background: var(--os-accent); color: #fff; font: 10px var(--font-chrome);
+    background: var(--os-accent); color: var(--os-on-accent); font: 10px var(--font-chrome);
     padding: 4px 9px; border-radius: var(--r-pill);
   }
   .chip--edit:focus { outline: 2px solid #fff; outline-offset: 1px; }
 
   .react {
     position: fixed; z-index: 860; left: -999px; display: flex; gap: 2px; padding: 4px;
-    background: var(--os-menu); border: 1px solid rgba(0,0,0,.12);
+    background: var(--os-menu); border: 1px solid var(--os-edge);
     border-radius: var(--r-pill); box-shadow: var(--os-shadow-sm);
     -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
   }
@@ -181,7 +224,7 @@ import { desktopItems } from '../../data/desktop';
     border-radius: 50%; cursor: var(--cur-hand); font-size: 15px; line-height: 1;
     transition: transform var(--t-fast), background var(--t-fast);
   }
-  .react button:hover { background: rgba(22,22,26,.08); transform: scale(1.25); }
+  .react button:hover { background: var(--os-hover); transform: scale(1.25); }
 
   /* The reaction emoji are styled in global.css, not here. They are created by
      presence.ts rather than written in this file's markup, and Astro scopes these styles
@@ -193,11 +236,83 @@ import { desktopItems } from '../../data/desktop';
     .peer, .me { will-change: auto; }
     .pop { animation-duration: 1ms; }
   }
-  .ctx hr { margin: 4px 6px; border: 0; border-top: 1px solid rgba(22,22,26,.12); }
+  /* ------------------------------------------------------------------
+     The unmute notice. A pill, which is the smallest thing that still offers the action.
+     ------------------------------------------------------------------ */
+  .notice {
+    position: fixed; z-index: 880;
+    top: calc(var(--menubar-h) + var(--space-2)); right: var(--space-2);
+    display: flex; align-items: center; gap: var(--space-2);
+    padding: 6px 8px 6px 14px; border-radius: var(--r-pill);
+    background: var(--os-menu); border: 1px solid var(--os-edge);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    box-shadow: var(--os-shadow-sm); color: var(--os-ink);
+    /* Hidden, and unreachable, until the animation below is both applied and finished
+       waiting. Visibility rather than display, because display cannot be animated and
+       opacity alone would leave an invisible pill swallowing clicks while it waits. */
+    visibility: hidden; opacity: 0;
+  }
+  .notice__glyph {
+    width: 13px; height: 13px; flex: none; border-radius: 2px;
+    background: var(--os-muted); opacity: .7;
+    clip-path: polygon(0 32%, 26% 32%, 55% 0, 55% 100%, 26% 68%, 0 68%);
+  }
+  /* Takes the slack, so the button and the close sit at the right hand end. On a desktop
+     the pill is only as wide as its contents and there is no slack to take; on a phone it
+     runs the width of the screen, and without this everything bunched at the left with the
+     close stranded in the middle of the pill. */
+  .notice__text { flex: 1; font: 12px var(--font-chrome); }
+  .notice__go {
+    all: unset; padding: 7px 13px; border-radius: var(--r-pill); cursor: var(--cur-hand);
+    background: var(--os-accent); color: var(--os-on-accent);
+    font: 700 11px var(--font-chrome);
+  }
+  .notice__go:hover { background: var(--os-accent-bright); }
+  .notice__go:focus-visible, .notice__close:focus-visible {
+    outline: 2px solid var(--os-accent); outline-offset: 2px;
+  }
+  .notice__close {
+    width: 22px; height: 22px; flex: none; display: grid; place-items: center;
+    border-radius: 50%; cursor: var(--cur-hand); color: var(--os-muted);
+    font: 15px/1 var(--font-chrome);
+  }
+  .notice__close:hover { background: var(--os-hover); color: var(--os-ink); }
+
+  /* Sound off, lock screen already dismissed, and not already waved away. #lock carries
+     is-open once the desktop has been entered, so the wait starts at the desktop rather
+     than at the lock screen, where the visitor has only just answered this question.
+
+     Twelve seconds, not the forty five it was. Long enough that it is not a popup landing
+     on somebody who has just arrived, short enough that they are still on their first
+     window when it comes, which is the moment the offer is worth anything. */
+  body:not(.snd-on):has(#lock.is-open):not(:has(#notice-x:checked)) .notice {
+    animation: notice-in .42s var(--ease) 12s both;
+  }
+  @keyframes notice-in {
+    0%   { opacity: 0; transform: translateX(22px); visibility: hidden; }
+    1%   { visibility: visible; }
+    100% { opacity: 1; transform: none; visibility: visible; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    @keyframes notice-in {
+      0%   { opacity: 0; visibility: hidden; }
+      1%   { visibility: visible; }
+      100% { opacity: 1; visibility: visible; }
+    }
+  }
+  @media (max-width: 640px) {
+    .notice { left: var(--space-2); right: var(--space-2); }
+  }
+
+  .ctx hr { margin: 4px 6px; border: 0; border-top: 1px solid var(--os-hairline); }
   @media (max-width: 640px) {
     /* phone home screen: icons flow in a grid, positions from data are ignored */
     .desktop { display: grid; grid-template-columns: repeat(4, 1fr); align-content: start; gap: var(--space-4) var(--space-2); padding: var(--space-4) var(--space-2) 120px; }
-    .desktop :global(.icon) { position: static !important; }
+    /* width: auto as well. An icon is 98px wide on a desktop, and four of those with the
+       gaps and padding come to 424px, which cut the fourth column off a 393px phone.
+       auto lets each one fill its column instead, 88px on that phone, and the label wraps
+       inside it. Measured in headless Chrome and on the iPhone 17 simulator. */
+    .desktop :global(.icon) { position: static !important; width: auto; }
   }
 </style>
 

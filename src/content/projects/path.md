@@ -5,7 +5,8 @@ year: 2024
 summary: "A product catalog rebuilt, and an audit that found the products missing from it."
 role: "Design and build"
 stack: ["Figma", "Webflow"]
-cover: "/images/projects/path.png"
+cover: "/images/projects/path.avif"
+banner: "/images/projects/path-1.avif"
 filename: "path-catalog.webflow"
 featured: false
 ---
@@ -19,8 +20,6 @@ A product catalog is only as good as the list behind it. This one had drifted: t
 products in the catalog that were not in the product list at all, so anything generated
 from that list came out incomplete.
 
-<img src="/images/projects/path-1.png" alt="The rebuilt catalog listing" width="720" height="450" loading="lazy" decoding="async" />
-
 ## What I did
 
 Rebuilt the catalog pages, and while I was in there went through the whole list against
@@ -28,7 +27,7 @@ the catalog rather than assuming it matched. Flagged every product that was in o
 the other and handed that back marked up, so the client could decide what belonged and
 what had been retired.
 
-<img src="/images/projects/path-2.png" alt="The audit: products in one list and not the other" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/path-2.avif" alt="The audit: products in one list and not the other" width="720" height="450" loading="lazy" decoding="async" />
 
 ## Result
 

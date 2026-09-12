@@ -72,7 +72,15 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
        purpose, so it opens tall enough to read the conversation in, and this is what
        keeps that from running off the bottom on a short screen. Sits above the dock. */
     max-height: calc(100% - var(--window-top) - var(--window-bottom));
-    min-width: 280px; min-height: 160px; display: none; flex-direction: column; overflow: hidden;
+    min-width: 280px; min-height: 160px; display: none; flex-direction: column;
+    /* clip, not hidden. An overflow: hidden box is still a scroll container, and the
+       browser will scroll it to bring a focused element into view, with no scrollbar and
+       no way for anybody to scroll it back. The Services rows are labels for hidden
+       checkboxes, and clicking one below the fold scrolled the whole window box: title
+       bar gone out of the top, a transparent band at the bottom, and it stayed that way.
+       overflow: clip clips exactly the same, corners included, and cannot be scrolled by
+       anything. */
+    overflow: clip;
     /* Deliberately no background. The title bar is glass, and glass needs something
        behind it, so the surface colour moved down onto .window__body. Same split macOS
        makes: chrome is vibrant, content is solid, because a case study has to stay
@@ -88,7 +96,7 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
        worth keeping. */
     background: var(--os-titlebar);
     -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
-    border-bottom: 1px solid rgba(0,0,0,.12);
+    border-bottom: 1px solid var(--os-edge);
     cursor: var(--cur-grab); touch-action: none; user-select: none;
   }
   /* Both states. :active covers holding the bar down, and .is-dragging is what

@@ -2,11 +2,12 @@
 title: "YvesOS"
 client: "Personal"
 year: 2026
-summary: "This site. A portfolio that behaves like an operating system, and still loads under 10KB of JavaScript."
+summary: "This site. A portfolio built as a desktop, with a lock screen, a dock, and windows you open yourself."
 role: "Design and build"
 stack: ["Astro", "TypeScript", "Cloudflare"]
 url: "https://yveskwameh.2026-portfolio.workers.dev"
-cover: "/images/projects/yves-os.png"
+cover: "/images/projects/yves-os.avif"
+banner: "/images/projects/yves-os-1.avif"
 filename: "yves-os.astro"
 featured: false
 ---
@@ -15,8 +16,6 @@ featured: false
 
 A design portfolio that describes how someone thinks about interfaces, in paragraphs, is
 asking to be taken on trust. I would rather the site be the argument.
-
-<img src="/images/projects/yves-os-1.png" alt="The desktop, with a window open" width="720" height="450" loading="lazy" decoding="async" />
 
 ## What I did
 
@@ -28,9 +27,9 @@ The rule I set was that nothing loads that the visitor did not ask for. Each app
 fetched the first time its window opens, so the desktop arrives with only the desktop.
 Music builds its Spotify player on click and never before.
 
-<img src="/images/projects/yves-os-2.png" alt="The Work browser, laid out like System Settings" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/yves-os-2.avif" alt="The Work browser, laid out like System Settings" width="720" height="450" loading="lazy" decoding="async" />
 
 ## Result
 
-Under 10KB of JavaScript on arrival, for the whole thing, measured on every build rather
-than guessed at. Everything else is fetched when it is opened.
+It is the argument rather than a description of one. Someone can drag the icons, open the
+windows, lose at the game, and judge the work by using it instead of reading about it.

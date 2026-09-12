@@ -26,7 +26,15 @@ html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0; min-height: 100dvh; overflow: hidden;
-  background: var(--os-desktop) var(--wallpaper) center / cover no-repeat fixed;
+  /* Two layers, longhand: the wash sits over the wallpaper and both sit on the flat
+     colour that shows while the avif loads. Shorthand cannot express two layers
+     over one background-color without repeating the colour into a layer. */
+  background-color: var(--os-desktop);
+  background-image: var(--wallpaper-wash), var(--wallpaper);
+  background-position: center, center;
+  background-size: cover, cover;
+  background-repeat: no-repeat, no-repeat;
+  background-attachment: fixed, fixed;
   color: var(--os-ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
 }
 
@@ -65,8 +73,8 @@ img, svg, video { display: block; max-width: 100%; }
   min-height: 32px;               /* short panels still leave room for the ridges */
   background-image: repeating-linear-gradient(
     to bottom,
-    rgba(22, 22, 26, .30) 0 1px,
-    rgba(255, 255, 255, .75) 1px 2px,
+    var(--os-ridge-shadow) 0 1px,
+    var(--os-ridge-light) 1px 2px,
     transparent 2px 4px
   );
   background-size: 7px 10px;      /* three ridges at a 4px pitch, last gap trimmed */
@@ -191,7 +199,7 @@ a { color: var(--os-accent); }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 9px 18px; border: 1px solid transparent; border-radius: var(--r-pill);
-  background: var(--os-accent); color: #fff;
+  background: var(--os-accent); color: var(--os-on-accent);
   font: 12px var(--font-chrome); letter-spacing: .02em; text-decoration: none;
   cursor: var(--cur-hand); transition: background var(--t-fast), border-color var(--t-fast);
 }
@@ -200,7 +208,7 @@ a { color: var(--os-accent); }
 
 .btn--secondary { background: none; color: var(--os-ink); border-color: var(--os-line); }
 .btn--secondary:hover { background: none; }
-.btn--secondary:active { background: rgba(22,22,26,.12); }
+.btn--secondary:active { background: var(--os-hairline); }
 
 .btn--icon { padding: 0; width: 34px; height: 34px; border-radius: 50%; }
 

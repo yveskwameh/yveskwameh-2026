@@ -5,7 +5,8 @@ year: 2025
 summary: "A marketing site designed in Figma and built in Webflow, handed over ready to edit."
 role: "Design and build"
 stack: ["Figma", "Webflow"]
-cover: "/images/projects/compass.png"
+cover: "/images/projects/compass.avif"
+banner: "/images/projects/compass-1.avif"
 filename: "compass.webflow"
 featured: false
 ---
@@ -17,8 +18,6 @@ featured: false
 The site had to explain what the company does to people who had never heard of them, and
 it had to do it before anyone scrolled.
 
-<img src="/images/projects/compass-1.png" alt="The home page, built from the shared section types" width="720" height="450" loading="lazy" decoding="async" />
-
 ## What I did
 
 Designed it in Figma first so the structure was settled before anything was built, then
@@ -26,7 +25,7 @@ built it in Webflow. Kept the component set small on purpose: a handful of secti
 reused down the page, so a new page can be assembled out of parts that already exist
 rather than designed from scratch.
 
-<img src="/images/projects/compass-2.png" alt="A second page assembled from the same parts" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/compass-2.avif" alt="A second page assembled from the same parts" width="720" height="450" loading="lazy" decoding="async" />
 
 ## Result
 

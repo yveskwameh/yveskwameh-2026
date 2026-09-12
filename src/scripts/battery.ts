@@ -9,15 +9,17 @@
  */
 export function initBattery() {
   const el = document.getElementById('batt');
+  const pct = document.getElementById('batt-pct');
   const nav = navigator as any;
   if (!el || !nav.getBattery) return;
 
   nav.getBattery().then((b: any) => {
     const draw = () => {
       const p = Math.round(b.level * 100);
-      // The number rides on a data attribute and CSS prints it with content: attr().
-      // Cheaper than a second element and a second lookup.
-      el.dataset.pct = p + '%';
+      // A real element rather than content: attr() on ::after. The battery carries a
+      // tooltip now, and that also lives on ::after, so the two were fighting over one
+      // pseudo-element and the tooltip won. The number simply vanished.
+      if (pct) pct.textContent = p + '%';
       el.style.setProperty('--lvl', p + '%');
       el.classList.toggle('is-charging', b.charging);
       el.classList.toggle('is-low', p < 21 && !b.charging);

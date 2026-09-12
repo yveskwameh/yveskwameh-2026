@@ -1,25 +1,15 @@
 import { lock } from './lock';
+import { tidy } from './lazy';
 
 /**
  * Menu bar actions, the [data-action] buttons in the View menu.
+ *
+ * Clean Up Desktop used to live here and moved to scripts/context.ts, which is lazy, when
+ * it grew a second job (putting renamed icons back to their names) and the on-load budget
+ * had 34 bytes left. Nobody can clean up a desktop before they have moved a pointer, and
+ * the context module is a few hundred bytes fetched on the first right click or the first
+ * clean up, whichever comes first. lazy.ts owns the import, as it owns every other one.
  */
-
-/**
- * Clean Up Desktop: send every icon back to the position it started at, which each one
- * carries in data-home-x / data-home-y. Icons are animated back rather than snapped, and
- * the transition is added only for the trip so dragging stays instant.
- */
-export function tidyDesktop() {
-  const icons = document.querySelectorAll<HTMLElement>('.icon');
-  icons.forEach((icon) => {
-    const { homeX, homeY } = icon.dataset;
-    icon.classList.add('is-tidying');
-    icon.classList.remove('is-selected');
-    icon.style.left = `${homeX}px`;
-    icon.style.top = `${homeY}px`;
-  });
-  setTimeout(() => icons.forEach((i) => i.classList.remove('is-tidying')), 400);
-}
 
 /**
  * Put back any desktop icon the visitor renamed, within this tab session.
@@ -46,10 +36,10 @@ export function initActions() {
   document.addEventListener('click', (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
     switch (btn?.dataset.action) {
-      case 'tidy': tidyDesktop(); break;
+      case 'tidy': tidy(); break;
       case 'lock': lock(); break;
-      // 'theme' is still a stub. The palette is an open decision in docs/BRIEF.md, so
-      // there is nothing to switch between yet.
+      // Not a fourth surface. The swatches live in Control Center, so this opens that.
+      case 'theme': (document.getElementById('cc') as HTMLDetailsElement).open = true; break;
     }
   });
 }

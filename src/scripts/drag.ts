@@ -60,6 +60,16 @@ export function init(selector: string) {
       dragging = false;
       if (handle.hasPointerCapture(e.pointerId)) handle.releasePointerCapture(e.pointerId);
       target.classList.remove('is-dragging');
+      /* A print that was picked up stays on top. Prints stack in DOM order and carry no
+         z-index, so moving the dropped one to the end of its layer is the whole of it.
+         Only prints: icons have nothing to stack over and windows run their own z-index
+         through focusWindow. */
+      if (moved && target.classList.contains('print')) {
+        target.parentElement?.appendChild(target);
+        /* Where it was let go, for scripts/prints.ts, which decides whether that was on
+           the Images icon in the dock. This file does not know what a dock is. */
+        target.dispatchEvent(new CustomEvent('print-drop', { bubbles: true, detail: { x: e.clientX, y: e.clientY } }));
+      }
       // 400ms is far longer than the gap between a release and its own click, and far
       // shorter than a person deciding to click something else.
       blockUntil = suppress && moved ? e.timeStamp + 400 : 0;

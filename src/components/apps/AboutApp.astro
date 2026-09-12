@@ -1,44 +1,129 @@
 ---
 /**
- * About Yves. The short version of who he is, in his own voice.
+ * About Yves. A profile header, the bio under it, and a reel of six photographs of him
+ * filling whatever height is left.
  *
- * This is a draft built only from things already true in the repo (his role and location
- * in data/site.ts, the tools in data/dock.ts). Nothing here is invented: no client names,
- * no numbers, no war stories. Replace it with the real thing whenever you like.
+ * Top to bottom, on his call. The header is the identity in one row: avatar, name, role
+ * and the availability dot on the left, the one action on the right, which is where a
+ * profile page keeps it and where somebody who has already decided goes looking. The four
+ * paragraphs run in two columns under that, because 828px is far too wide a measure for
+ * 13px type and one narrow column would leave half the window empty.
+ *
+ * The window opens at the full height the desktop allows, the same rule the game uses,
+ * and the reel takes everything under the text. The photographs are as tall as that
+ * space, which on a normal desktop is around 300px, three times what a grid gave them.
+ * They run right to left without end: the track holds the six twice and slides by exactly
+ * one set, so the seam never shows. Hovering pauses it, so a photograph can be looked at,
+ * and reduced motion stops it, so it is a still row.
+ *
+ * The photographs are the ones from the About section of his previous site, because
+ * those are the ones with his face in them. The nine he took of Port Harcourt live on the
+ * desktop (see os/Prints.astro): a photograph he took is something he made, not
+ * something about him.
+ *
+ * The copy is his, word for word. No script and no state.
  */
 import { site } from '../../data/site';
+import { portraits } from '../../data/photos';
+
+const photo = (p: (typeof portraits)[number], hidden = false) => ({
+  src: `/images/about/${p.slug}-320.avif`,
+  srcset: `/images/about/${p.slug}-320.avif 320w, /images/about/${p.slug}-800.avif 800w`,
+  sizes: '(max-width: 640px) 44vw, 320px',
+  alt: hidden ? '' : p.alt,
+  width: 320,
+  height: 320,
+  loading: 'lazy' as const,
+  decoding: 'async' as const,
+  ...(hidden ? { 'aria-hidden': 'true' } : {}),
+});
 ---
 <div class="about">
-  <img src={site.avatar} alt={site.name} width="88" height="88" loading="eager" decoding="async" />
-  <div class="about__text">
-    <p class="about__name">{site.name}</p>
-    <p class="about__role">{site.role}</p>
-
-    <p>I design interfaces and I build them. Usually that means the design in Figma and the
-    build in Webflow or Framer, so the thing that ships is the thing that was designed.</p>
-
-    <p>I work from {site.location}, and I work to my clients' hours rather than mine.</p>
-
-    <p class="about__status"><span class="about__dot" aria-hidden="true"></span>{site.status}</p>
-
+  <header class="about__head">
+    <img src={site.avatar} alt={site.name} width="56" height="56" loading="eager" decoding="async" />
+    <div class="about__who">
+      <p class="about__name">{site.name}</p>
+      <p class="about__role">{site.role}</p>
+      <p class="about__status"><span class="about__dot" aria-hidden="true"></span>{site.status}</p>
+    </div>
     <button class="btn" type="button" data-open="contact">Send me a message</button>
+  </header>
+
+  <div class="about__text">
+    <p>I’m Yves Kwameh, a UX/UI designer and no-code developer. I design digital products
+    and build websites in Webflow and Framer. I start by understanding what the business
+    needs and what people are trying to do, then work out how the design can help.</p>
+
+    <p>I enjoy taking a project from the first idea through to a working website. I’m
+    curious about how things are built, so I keep learning beyond design. That
+    understanding also helps me explain what I need when I’m working with someone else.</p>
+
+    <p>Clients describe me as reliable. I care about the relationships behind the work, and
+    I want the people I work with to know they can count on me to show up and follow
+    through.</p>
+
+    <p>Outside work, I’m usually cooking, watching a film, playing a game, or taking
+    photographs. I’m drawn to streets, landscapes, and nature. I like making things even
+    when there’s no brief, just something I want to try.</p>
+  </div>
+
+  {/* The six, then the six again. The second set is decoration to the reader, so it is
+      hidden from assistive tech and its alt text is empty. The track slides by 50%, which
+      is exactly one set because every image carries its own margin rather than the track
+      using gap, so the last gap of set one is inside that 50% too. */}
+  <div class="about__reel" aria-label="Six photographs of Yves">
+    <div class="about__track">
+      {portraits.map((p) => <img {...photo(p)} />)}
+      {portraits.map((p) => <img {...photo(p, true)} />)}
+    </div>
   </div>
 </div>
 
 <style>
-  .about { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--space-3); align-items: start; }
-  .about img { border-radius: 16px; }
-  .about__text { display: grid; gap: var(--space-2); font-size: 13px; line-height: 1.6; }
-  .about__text p { margin: 0; }
-  .about__name { font-family: var(--font-chrome); font-size: 14px; font-weight: 700; }
-  .about__role { color: var(--os-muted); font-size: 12px; }
-  .about__status { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--os-muted); }
-  .about__dot { width: 7px; height: 7px; border-radius: 50%; background: #35d07f; box-shadow: 0 0 0 3px rgba(53,208,127,.22); }
-  /* The button is the only grid item that should not stretch across the column. */
-  .about .btn { justify-self: start; margin-top: var(--space-1); }
+  .about { display: flex; flex-direction: column; gap: var(--space-4); height: 100%; min-height: 0; }
 
+  .about__head { flex: none; display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+  .about__head img { border-radius: 16px; }
+  .about__who { display: grid; gap: 2px; }
+  .about__who p { margin: 0; }
+  .about__name { font-family: var(--font-chrome); font-size: 15px; font-weight: 700; }
+  .about__role { color: var(--os-muted); font-size: 11px; line-height: 1.45; }
+  .about__status { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: var(--os-muted); }
+  .about__dot { width: 7px; height: 7px; border-radius: 50%; background: #35d07f; box-shadow: 0 0 0 3px rgba(53,208,127,.22); }
+
+  /* Two columns, filled top to bottom, so the first two paragraphs sit left and the last
+     two right. break-inside keeps a paragraph from splitting across the fold. */
+  .about__text { flex: none; columns: 2; column-gap: var(--space-4); font-size: 13px; line-height: 1.6; }
+  .about__text p { margin: 0 0 var(--space-2); break-inside: avoid; }
+  .about__text p:last-child { margin-bottom: 0; }
+
+  /* The reel. It takes whatever is left, clips at its own edges, and the images are as
+     tall as it is. Squares, so their width follows. */
+  .about__reel { flex: 1 1 auto; min-height: 120px; overflow: hidden; }
+  .about__track { display: flex; width: max-content; height: 100%; animation: reel 48s linear infinite; }
+  .about__track img {
+    display: block; height: 100%; width: auto; margin-right: 12px;
+    border-radius: var(--r-inner); background: var(--os-recess);
+  }
+  @keyframes reel { to { transform: translateX(-50%); } }
+  .about__reel:hover .about__track { animation-play-state: paused; }
+
+  /* The full height the desktop allows, the same calc Window.astro uses as every window's
+     cap. Not important, for the reason GameApp.astro gives: the resize grips write a pixel
+     height inline and an important rule here would defeat them. */
+  @media (min-width: 641px) {
+    :global(#win-about) { height: calc(100% - var(--window-top) - var(--window-bottom)); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .about__track { animation: none; }
+  }
   @media (max-width: 640px) {
-    /* 88px of photo plus a text column does not fit at 320px, so the photo goes on top. */
-    .about { grid-template-columns: minmax(0, 1fr); }
+    /* The button drops under the name, the text goes to one column, and the reel gets a
+       fixed height because a bottom sheet has no spare height to give it. */
+    .about__head { grid-template-columns: 56px minmax(0, 1fr); }
+    .about__head .btn { grid-column: 1 / -1; justify-self: start; }
+    .about__text { columns: 1; }
+    .about__reel { flex: none; height: 44vw; }
   }
 </style>

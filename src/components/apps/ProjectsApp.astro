@@ -1,20 +1,25 @@
 ---
 /**
- * Work, laid out like macOS System Settings. Sidebar of case studies on the left, one
- * case study on the right, with its facts in grouped cards above the write-up.
+ * Work, laid out like macOS System Settings. A rail of case studies on the left, one case
+ * study on the right.
  *
- * The switching is CSS. Every row is a radio and every pane is the element directly after
- * that radio's label, so `radio:checked + label + pane` picks exactly one. That means the
- * window works the instant it opens rather than when a script lands, it keeps working if
- * the script never arrives, arrow keys move between rows for free because it is a real
- * radio group, and none of it is charged against the JS budget. The price is that the
- * rows cannot sit inside a <nav> or a <ul>, because a wrapper breaks the adjacency, so
- * the sidebar's background is painted on the grid instead of on a wrapper. A <fieldset>
- * is the right grouping element for a radio set anyway.
+ * The switching is still CSS, and still costs nothing on load. What changed is how the
+ * CSS reaches things. It used to rely on adjacency, `radio:checked + label + pane`, which
+ * bought cheap selectors at the price of a fixed DOM order: radio, label, pane, over and
+ * over, with no wrapper allowed anywhere because a wrapper breaks adjacency.
  *
- * Every pane is rendered at build time, per rule 3. Nothing is fetched when you switch.
+ * The phone now needs the rows gathered into one menu, so that price stopped being worth
+ * paying. Every radio is declared first, then the picker, then the panes, and the rules
+ * that join them are generated per case study with `:has()`. Four short rules each, built
+ * at the bottom of this file. That buys back a wrapper, which is what lets the rows sit
+ * inside a floating menu on a phone and inside the rail on a desktop.
+ *
+ * Still a real radio group, so arrow keys move between rows for free. Still every pane
+ * rendered at build time, per rule 3. Nothing is fetched when you switch.
  */
 import { getCollection, render } from 'astro:content';
+import CaseStudy from './CaseStudy.astro';
+import Icon from '../os/Icon.astro';
 
 const projects = (await getCollection('projects')).sort(
   (a, b) => Number(b.data.featured) - Number(a.data.featured) || b.data.year - a.data.year,
@@ -22,69 +27,100 @@ const projects = (await getCollection('projects')).sort(
 const panes = await Promise.all(
   projects.map(async (p) => ({ p, Content: (await render(p)).Content })),
 );
+
+/**
+ * One case study, four rules. Generated rather than written out because they are the
+ * same four every time and only the id changes, and because a case study is a markdown
+ * file someone drops in a folder: nobody should have to remember to add CSS for it.
+ *
+ * These are deliberately global and deliberately outside the scoped block below. Astro
+ * scopes a <style> by adding an attribute to the elements it can see at build time, and
+ * it cannot see into a string. Ids do the narrowing instead.
+ */
+const rules = panes.map(({ p }) => `
+.settings:has(#w-${p.id}:checked) [for="w-${p.id}"]{background:var(--os-accent);color:var(--os-on-accent)}
+.settings:has(#w-${p.id}:checked) #pane-${p.id}{display:block}
+.settings:has(#w-${p.id}:checked) .settings__pick-name[data-for="${p.id}"]{display:grid}
+.settings:has(#w-${p.id}:focus-visible) [for="w-${p.id}"]{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--os-accent)}
+`).join('');
 ---
 <fieldset class="settings">
   <legend class="sr-only">Case studies</legend>
 
+  {/* Every radio first. Everything else is reached from here, so nothing downstream has
+      to sit in a particular place. */}
+  {projects.length === 0 && <input class="settings__radio" type="radio" name="work" id="w-none" disabled />}
+  {panes.map(({ p }) => (
+    <input class="settings__radio" type="radio" name="work" id={`w-${p.id}`} value={p.id} />
+  ))}
+
+  {/* Open state for the phone menu. A checkbox because a checkbox remembers, and because
+      a label pointed at it opens the menu with no script. scripts/work.ts closes it again
+      once a case study is picked; with the script blocked the menu simply stays open,
+      which is untidy rather than broken. */}
+  <input class="settings__toggle" type="checkbox" id="work-open" />
+
+  {/* display: contents on a desktop, so the menu is a grid item of .settings and this
+      wrapper is not there at all. On a phone it becomes the sticky header the menu hangs
+      from. */}
+  <div class="settings__picker">
+    <label class="settings__pick" for="work-open">
+      {/* Every title is here and exactly one is shown, which is how the trigger knows
+          what is picked without a script. Same icon and same line as the row it came
+          from, so tapping it feels like the row moved up here. */}
+      <span class="settings__pick-label">
+        {projects.length === 0 && (
+          <span class="settings__pick-name">
+            <span class="settings__icon settings__icon--blank"></span>
+            <span class="settings__name">Nothing here yet</span>
+          </span>
+        )}
+        {panes.map(({ p }) => (
+          <span class="settings__pick-name" data-for={p.id}>
+            <img class="settings__icon" src={p.data.cover} alt="" width="20" height="20" loading="lazy" decoding="async" />
+            <span class="settings__name">{p.data.title}</span>
+          </span>
+        ))}
+      </span>
+      <Icon name="chevron-down" size={16} />
+    </label>
+
+    <div class="settings__menu">
+      {projects.length === 0 && (
+        /* Keeps the chrome rather than replacing it, so the window still reads as the two
+           column thing it is. A real radio like any other, just disabled, so the "show the
+           first one" rule below still lights it up. */
+        <label class="settings__row" for="w-none">
+          <span class="settings__icon settings__icon--blank"></span>
+          <span class="settings__name">Nothing here yet</span>
+        </label>
+      )}
+      {/* One line of text next to a small icon, the way a Settings sidebar reads. The
+          client and the year are facts about the project, so they live in the pane with
+          the other facts rather than making the list heavy. */}
+      {panes.map(({ p }) => (
+        <label class="settings__row" for={`w-${p.id}`}>
+          <img class="settings__icon" src={p.data.cover} alt="" width="20" height="20" loading="lazy" decoding="async" />
+          <span class="settings__name">{p.data.title}</span>
+        </label>
+      ))}
+    </div>
+  </div>
 
   {projects.length === 0 && (
-    /* Keeps the chrome rather than replacing it, so the window still reads as the two
-       column thing it is. A real radio like any other, just disabled, so the DOM shape
-       stays identical and the "show the first pane" rule below still lights it up. */
-    <Fragment>
-      <input class="settings__radio" type="radio" name="work" id="w-none" disabled />
-      <label class="settings__row" for="w-none">
-        <span class="settings__icon settings__icon--blank"></span>
-        <span class="settings__name">Nothing here yet</span>
-      </label>
-      <article class="settings__pane">
-        <header class="pane__hero">
-          <span class="pane__hero-icon pane__hero-icon--blank"></span>
-          <h3 class="pane__title">No case studies yet</h3>
-          <p class="pane__blurb">Add a markdown file to src/content/projects and it shows up here, and at its own URL.</p>
-        </header>
-      </article>
-    </Fragment>
+    <article class="settings__pane" id="pane-none">
+      <div class="pane__empty">
+        <h3>No case studies yet</h3>
+        <p>Add a markdown file to src/content/projects and it shows up here, and at its own URL.</p>
+      </div>
+    </article>
   )}
-
   {panes.map(({ p, Content }) => (
-    <Fragment>
-      <input class="settings__radio" type="radio" name="work" id={`w-${p.id}`} value={p.id} />
-      {/* One line of text next to a small icon, the way a Settings sidebar reads. The
-          client and the year used to sit under the title on a second line and made the
-          list heavy; they are facts about the project, so they live in the pane with the
-          other facts instead. */}
-      <label class="settings__row" for={`w-${p.id}`}>
-        <img class="settings__icon" src={p.data.cover} alt="" width="20" height="20" loading="lazy" decoding="async" />
-        <span class="settings__name">{p.data.title}</span>
-      </label>
-
-      <article class="settings__pane">
-        <header class="pane__hero">
-          <img class="pane__hero-icon" src={p.data.cover} alt="" width="72" height="72" loading="lazy" decoding="async" />
-          <h3 class="pane__title">{p.data.title}</h3>
-          <p class="pane__blurb">{p.data.summary}</p>
-        </header>
-
-        <dl class="pane__facts">
-          <div class="pane__fact"><dt>Client</dt><dd>{p.data.client}</dd></div>
-          <div class="pane__fact"><dt>Year</dt><dd>{p.data.year}</dd></div>
-          <div class="pane__fact"><dt>Role</dt><dd>{p.data.role}</dd></div>
-          <div class="pane__fact"><dt>Built with</dt><dd>{p.data.stack.join(', ')}</dd></div>
-        </dl>
-
-        <div class="pane__body"><Content /></div>
-
-        {/* The "open as its own page" link is gone: this window already IS the case study,
-            and sending someone out of it was the odd move. /work/<id> still exists as a
-            real, indexable URL and still links back here. */}
-        {p.data.url && (
-          <p class="pane__links">
-            <a href={p.data.url} target="_blank" rel="noopener noreferrer">Visit the live site</a>
-          </p>
-        )}
-      </article>
-    </Fragment>
+    <article class="settings__pane" id={`pane-${p.id}`}>
+      {/* Everything inside the pane is CaseStudy.astro, which the standalone /work/<id>
+          page renders too, so a shared link shows what the window shows. */}
+      <CaseStudy p={p}><Content /></CaseStudy>
+    </article>
   ))}
 </fieldset>
 
@@ -103,125 +139,109 @@ const panes = await Promise.all(
     background: var(--os-recess);
   }
 
-  /* Out of flow so it takes no grid slot, but still focusable and still a real radio, so
-     the browser's own arrow-key navigation through the group keeps working.
-     display: none would take that away. */
-  .settings::before { content: ''; position: absolute; z-index: -1; inset: var(--work-inset) auto var(--work-inset) var(--work-inset); width: calc(var(--side) - var(--work-inset)); background: var(--os-chrome); border: 1px solid var(--os-line); border-radius: var(--panel-radius); }
+  /* The rail. A light sheet floating in a recessed gutter, with no line around it.
+     It used to be --os-chrome with a 1px --os-line border, and the border was doing the
+     separating. Now the gutter does it, so the rail can be the same paper as the pane and
+     the only thing the eye has to read is the gap. Out of flow so it takes no grid slot.
+
+     The gutter is the same ten on all four sides, which is what makes it read as a gutter
+     rather than as an edge. Subtracting one inset instead of two put the rail's right edge
+     exactly on the column line the pane starts at, so the two sheets touched and the gap
+     the whole direction rests on was not there. It also left the rows sitting 8px from the
+     rail on the left and 18px on the right. */
+  .settings::before { content: ''; position: absolute; z-index: -1; inset: var(--work-inset) auto var(--work-inset) var(--work-inset); width: calc(var(--side) - var(--work-inset) * 2); background: var(--os-card); border-radius: var(--panel-radius); }
+
   .settings__radio { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .settings__toggle { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+  /* On a desktop the wrapper is not there: the menu becomes the grid item it used to be
+     and the picker never renders. */
+  .settings__picker { display: contents; }
+  .settings__pick { display: none; }
+  .settings__menu { grid-column: 1; min-width: 0; }
 
   .settings__row {
-    grid-column: 1;
     display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 10px;
     margin: 2px calc(var(--work-inset) + var(--space-2)); padding: 9px var(--space-2);
     border-radius: var(--r-inner); cursor: var(--cur-hand);
     font: 12px var(--font-chrome); color: var(--os-ink);
   }
   .settings__icon { width: 20px; height: 20px; border-radius: 5px; object-fit: cover; }
-  .settings__icon--blank { display: block; background: rgba(22,22,26,.12); }
+  .settings__icon--blank { display: block; background: var(--os-hairline); }
   /* One line, and it stays one line: a long title gets an ellipsis rather than wrapping
      and making its row taller than the others. */
   .settings__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .settings__row:hover { background: rgba(22,22,26,.06); }
-  .settings__radio:checked + .settings__row { background: var(--os-accent); color: #fff; }
-  .settings__radio:focus-visible + .settings__row { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--os-accent); }
+  .settings__row:hover { background: var(--os-track); }
   /* A disabled row is not going anywhere, so it should not pretend to be clickable. */
-  .settings__radio:disabled + .settings__row { cursor: var(--cur-arrow); }
-  .settings__radio:disabled + .settings__row:hover { background: none; }
+  [for="w-none"] { cursor: var(--cur-arrow); }
+  [for="w-none"]:hover { background: none; }
 
   /* Absolutely positioned rather than spanning grid rows, so the pane never has to know
-     how many case studies there are. It fills the whole right side whatever the sidebar
-     is doing, and it scrolls itself, the way the real thing does. */
+     how many case studies there are. It fills the whole right side whatever the rail is
+     doing, top to bottom, and it scrolls itself. */
+  /* No padding: CaseStudy.astro owns its own, because the banner across its top has to
+     reach the edges of this box. */
   .settings__pane {
     position: absolute; inset: 0; left: var(--side);
-    display: none; overflow: auto; padding: var(--space-4);
+    display: none; overflow: auto;
   }
-  .settings__radio:checked + .settings__row + .settings__pane { display: block; }
-
-  /* The header and the facts are cards on a recessed background, which is the pattern the
-     whole of System Settings is built from. */
-  .pane__hero {
-    display: grid; justify-items: center; gap: 6px; text-align: center;
-    padding: var(--space-5) var(--space-4);
-    background: var(--os-card); border-radius: var(--r-window);
-  }
-  .pane__hero-icon { width: 72px; height: 72px; border-radius: 18px; margin-bottom: 4px; }
-  .pane__hero-icon--blank { display: block; background: rgba(22,22,26,.12); }
-  .pane__title { margin: 0; font: 700 23px var(--font-chrome); }
-  .pane__blurb { margin: 0; max-width: 44ch; color: var(--os-muted); font-size: 12px; line-height: 1.55; }
-
-  .pane__facts {
-    margin: var(--space-3) 0 0; padding: 0 var(--space-3);
-    background: var(--os-card); border-radius: var(--r-window);
-  }
-  .pane__fact {
-    display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: var(--space-3);
-    padding: 9px 0; font-size: 12px;
-  }
-  /* Divider between rows but not under the last one, same as a Settings group. */
-  .pane__fact + .pane__fact { border-top: 1px solid rgba(22,22,26,.08); }
-  .pane__facts dt { color: var(--os-muted); }
-  .pane__facts dd { margin: 0; }
-
-  /* One card per section, the way Settings stacks separate groups down a page.
-     Done in CSS rather than by cutting the markdown up at build time: a heading opens a
-     card and whatever sits before the next heading closes it, so it works for any case
-     study without changing how case studies are written. */
-  .pane__body { margin-top: var(--space-3); font-size: 13px; line-height: 1.65; }
-  .pane__body :global(> *) {
-    margin: 0; padding: 0 var(--space-4);
-    background: var(--os-card);
-  }
-  .pane__body :global(> h2) {
-    margin-top: var(--space-3); padding-top: var(--space-3);
-    border-radius: var(--r-window) var(--r-window) 0 0;
-    font: 700 10px var(--font-chrome); letter-spacing: .16em; text-transform: uppercase;
-    color: var(--os-muted);
-  }
-  .pane__body :global(> h2:first-child) { margin-top: 0; }
-  .pane__body :global(> h2 + *) { padding-top: var(--space-2); }
-  /* The last element of a section, and the last of the whole body, close their card. */
-  .pane__body :global(> :has(+ h2)),
-  .pane__body :global(> :last-child) {
-    padding-bottom: var(--space-3);
-    border-radius: 0 0 var(--r-window) var(--r-window);
-  }
-  /* Space between paragraphs inside a card, without breaking the card open. */
-  .pane__body :global(> p + p) { padding-top: var(--space-2); }
-
-  /* Case study screenshots. A raw <img> in the markdown is a direct child of the body, so
-     it is a card in its own right, which is exactly right: the picture gets its own panel
-     the way a Settings group does. */
-  .pane__body :global(> img) {
-    width: 100%; height: auto; padding: 0;
-    border-radius: var(--r-window);
-  }
-  .pane__body :global(> img + *) { margin-top: var(--space-3); }
-
-  /* A card too, so it stops reading as text floating under the stack. */
-  .pane__links {
-    display: flex; flex-wrap: wrap; gap: var(--space-3);
-    margin: var(--space-3) 0 0; padding: 12px var(--space-4);
-    background: var(--os-card); border-radius: var(--r-window);
-    font-size: 12px;
-  }
+  .pane__empty { padding: var(--space-4); }
+  .pane__empty h3 { margin: 0 0 var(--space-2); font: 700 15px var(--font-chrome); }
+  .pane__empty p { margin: 0; font-size: 13px; color: var(--os-muted); }
 
   /* Before anything is picked, show the first one, the way Settings opens on General.
-     Doing this in CSS rather than with a checked attribute in the markup is what lets the
-     phone open as a plain list instead of pre-expanded. */
+     Scoped to the radios on purpose: #work-open is a checkbox in the same fieldset, and a
+     bare :checked would count opening the phone menu as picking a case study. */
+  .settings:not(:has(.settings__radio:checked)) .settings__pane:first-of-type { display: block; }
+  .settings:not(:has(.settings__radio:checked)) .settings__row:first-of-type { background: var(--os-accent); color: var(--os-on-accent); }
+  .settings:not(:has(.settings__radio:checked)) .settings__pick-name:first-of-type { display: grid; }
+
+  /* Same height as the Tic Tac Toe window: the full space the desktop allows. Not
+     important, because the resize grips write a pixel height inline and an important rule
+     would silently defeat them. The id already outranks .window. */
   @media (min-width: 641px) {
-    .settings:not(:has(:checked)) > .settings__pane:first-of-type { display: block; }
-    .settings:not(:has(:checked)) > .settings__row:first-of-type { background: var(--os-accent); color: #fff; }
+    :global(#win-projects) { height: calc(100% - var(--window-top) - var(--window-bottom)); }
   }
 
   @media (max-width: 640px) {
-    /* Under 640px the window is already a bottom sheet, and a two-column browser is
-       unusable at 320px. So the pane drops in under its own row rather than beside it,
-       which is what a phone settings list does. A hidden pane leaves the flow entirely,
-       so the open one always lands directly beneath the row that opened it. */
-    .settings { grid-template-columns: minmax(0, 1fr); background: var(--os-recess); height: auto; padding: 0; }
+    /* A phone gets one column and a dropdown rather than a list it has to scroll past to
+       reach the writing. The picker is sticky, so the case study can be read all the way
+       down and the next one is still one tap away. */
+    .settings { grid-template-columns: minmax(0, 1fr); height: auto; padding: 0; }
     .settings::before { display: none; }
     :global(#win-projects .window__body) { overflow: auto; padding-bottom: var(--dock-clear); }
-    .settings__row { margin: 0; border-radius: 0; border-bottom: 1px solid rgba(22,22,26,.08); background: var(--os-chrome); }
-    .settings__pane { position: static; grid-column: 1; padding: var(--space-3); overflow: visible; }
+
+    .settings__picker {
+      display: block; order: -1; position: sticky; top: 0; z-index: 20;
+      padding: var(--space-2); background: var(--os-chrome);
+      border-bottom: 1px solid var(--os-hairline);
+    }
+    .settings__pick {
+      display: grid; grid-template-columns: minmax(0, 1fr) 16px; align-items: center; gap: 10px;
+      padding: 10px var(--space-2); cursor: var(--cur-hand);
+      background: var(--os-card); color: var(--os-ink);
+      border: 1px solid var(--os-line); border-radius: var(--r-inner);
+      font: 700 13px var(--font-chrome);
+    }
+    .settings__pick-label { min-width: 0; }
+    .settings__pick-name { display: none; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 10px; }
+    .settings__pick :global(svg) { transition: transform var(--t-fast) var(--ease); }
+    .settings:has(#work-open:checked) .settings__pick :global(svg) { transform: rotate(180deg); }
+
+    /* The menu. Same surface as the menu bar dropdowns and the right click menus, because
+       it is the same kind of thing. Hangs off the sticky picker, so it travels with it. */
+    .settings__menu {
+      display: none; position: absolute; top: 100%; left: var(--space-2); right: var(--space-2);
+      padding: 6px; z-index: 30;
+      background: var(--os-menu);
+      -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+      border: 1px solid var(--os-edge); border-radius: var(--r-window); box-shadow: var(--os-shadow-sm);
+    }
+    .settings:has(#work-open:checked) .settings__menu { display: block; }
+    .settings__row { margin: 0; padding: 9px 10px; border-radius: var(--r-inner); }
+
+    .settings__pane { position: static; grid-column: 1; overflow: visible; }
   }
 </style>
+
+<style is:inline set:html={rules}></style>

@@ -1,0 +1,179 @@
+---
+/**
+ * A pile of prints on the desk, and the Quick Look panel that opens them.
+ *
+ * Yves's own photographs of Port Harcourt, nine of them, in one loose pile with a white
+ * paper border, the way a stack of prints sits on a real desk once somebody has spread
+ * it out to see what is there. A short label under the pile says what it is, the way
+ * every other thing on this desktop has a name under it.
+ *
+ * Hover one and it opens in a Quick Look panel, the macOS space bar preview: a small
+ * floating window with the file name in its bar, the photograph at a proper size, and a
+ * close light. Move away and it goes. Click a print and the panel stays until it is
+ * closed, so it can be looked at without holding the mouse still. Escape closes it too.
+ * The panel sits where the windows sit, up at --window-top and centred, rather than in
+ * the middle of the screen, so it reads as one of them.
+ *
+ * Pick a print up and it comes out of the pile and stays where it is dropped. That rides
+ * the same lazy drag module as the icons (scripts/drag.ts), which moves a dropped print to
+ * the end of this layer so the last one picked up is on top. Prints stack in DOM order.
+ *
+ * The panel is build-time HTML, per rule 3. scripts/quicklook.ts only swaps its src, its
+ * title and its hidden attribute, and is fetched on the first pointer movement alongside
+ * drag. Nothing in the 1400 set is requested until a print is actually hovered.
+ *
+ * Backgrounds rather than <img> for the pile, for the reason DesktopIcon.astro gives: an
+ * <img> starts a native drag that steals the pointer. The alt text is on the role="img".
+ *
+ * Under 640px the layer is gone. The phone desktop is a grid of icons with drag switched
+ * off, there is no hover, and a background inside display: none is never fetched, so the
+ * phone does not download the set either.
+ */
+import { prints } from '../../data/photos';
+---
+<div class="prints is-empty" aria-label="Photographs by Yves. Click Images in the dock to lay them out on the desk, hover one to look at it, drag one back to put it away.">
+  {prints.map((p) => (
+    <div class="print is-stowed" role="img" aria-label={p.alt} tabindex="0"
+         data-slug={p.slug} data-w={p.w} data-h={p.h}
+         style={`--hx:calc(var(--pile-x) + ${p.dx}px * var(--kx, 1)); --hy:calc(var(--pile-y) + ${p.dy}px * var(--ky, 1)); --r:${p.r}deg; --ar:${p.w} / ${p.h}`}>
+      <span class="print__art" style={`background-image:url('/images/prints/${p.slug}-240.avif')`} aria-hidden="true"></span>
+    </div>
+  ))}
+  <p class="prints__label" aria-hidden="true">Port Harcourt, on my phone</p>
+
+  {/* The Quick Look panel. One for all nine: the script points it at whichever print is
+      under the pointer. width and height are placeholders the script overwrites with the
+      real ones before it sets src, so the box never resizes after the file lands. */}
+  <div class="ql" id="ql" role="dialog" aria-label="Preview" hidden>
+    <div class="ql__bar">
+      <button class="ql__close" type="button" data-ql-close aria-label="Close preview"></button>
+      <span class="ql__title" id="ql-title"></span>
+    </div>
+    <img class="ql__img" id="ql-img" alt="" width="1050" height="1400" decoding="async">
+  </div>
+</div>
+
+<style>
+  /* The layer takes no pointer of its own, so a click between prints still lands on the
+     desktop and deselects, exactly as it did before the prints were there. z-index 1 is
+     above the icons, which have none, and below the scrim at 5 and the windows at 10.
+
+     The pile's origin: the top left of the print at the centre of the spread. Measured
+     from the right edge, not as a percentage, so the pile hugs the right of the desk on
+     every width and stays clear of the Quick Look panel, which opens centred and about
+     550px wide. The offsets in data/photos.ts run from -70 to +94 across, so the
+     rightmost print ends 16px from the edge and the leftmost starts 316px in. Measured
+     in headless Chrome with the panel open: clear by 118px at 1280x800 and by 174px at
+     1440x900, and clear by a few pixels at 1024x768, which is where the 246 comes from.
+     Pixels down so the top print clears the menu bar and the bottom one clears the dock. */
+  .prints { position: absolute; inset: 0; z-index: 1; pointer-events: none; --pile-x: calc(100% - 246px); --pile-y: 250px; }
+
+  .print {
+    /* Home is two custom properties rather than inline left and top on purpose. A drag
+       writes left and top inline and wins; clearing those two puts the print back here.
+       With home itself inline there was nothing to fall back to, and a print sent home
+       landed in the top left corner of the desk. */
+    position: absolute; left: var(--hx); top: var(--hy);
+    width: 136px; aspect-ratio: var(--ar);
+    padding: 4px; background: var(--print-paper); border-radius: 3px;
+    box-shadow: var(--os-shadow-sm);
+    transform: rotate(var(--r));
+    pointer-events: auto; cursor: var(--cur-hand); touch-action: none; user-select: none;
+    transition: transform var(--t-fast), box-shadow var(--t-fast), opacity var(--t-fast);
+    -webkit-user-drag: none;
+  }
+  .print__art { display: block; width: 100%; height: 100%; background: var(--os-recess) center / cover no-repeat; border-radius: 1px; }
+
+  /* Hovered: it lifts a little and comes to the front of the pile while the pointer is on
+     it. Not straightened, a print you touch on a desk keeps its angle. */
+  .print:hover, .print:focus-visible { transform: rotate(var(--r)) scale(1.04); z-index: 3; outline: none; }
+  .print:focus-visible { box-shadow: var(--os-shadow-sm), 0 0 0 2px var(--os-accent); }
+  /* Lifted: bigger shadow, a touch larger, and above every other print while it moves.
+     Still under the scrim, so it can never float over an open window. */
+  :global(.print.is-dragging) {
+    transform: rotate(var(--r)) scale(1.06); box-shadow: var(--os-shadow); z-index: 4; transition: none;
+  }
+
+  /* ---- In the stack ----
+     A stowed print is at its own place on the desk, translated to the Images icon and
+     scaled to nothing, so taking the class off is the flight out and putting it on is the
+     flight in. --sx and --sy are the vector to the icon, written by scripts/prints.ts,
+     because the icon is wherever the dock happens to be. visibility waits for the flight
+     in to finish and drops instantly on the way out. Last, so it beats the hover rule. */
+  .print.is-stowed {
+    transform: translate(var(--sx, 0px), var(--sy, 0px)) rotate(var(--r)) scale(.06);
+    opacity: 0; visibility: hidden; pointer-events: none;
+  }
+  .print { transition: transform .56s var(--ease), opacity .4s, visibility 0s .56s, box-shadow var(--t-fast); }
+  .print:not(.is-stowed) { transition: transform .56s var(--ease), opacity .4s, visibility 0s, box-shadow var(--t-fast); }
+  .print:hover:not(.is-stowed) { transition-duration: var(--t-fast); transition-delay: 0s; }
+  /* The label goes with the last print. */
+  .prints__label { transition: opacity .4s; }
+  .prints.is-empty .prints__label { opacity: 0; }
+
+  /* Under the lowest print, centred on the spread. Set exactly like an icon's label so it
+     reads as the pile's name rather than as a caption. It stays put when prints are
+     dragged away: the name is the place on the desk, not the prints. */
+  .prints__label {
+    position: absolute; margin: 0;
+    left: calc(var(--pile-x) + 80px); top: calc(var(--pile-y) + 420px); transform: translateX(-50%);
+    font: 10px var(--font-chrome); color: #fff; white-space: nowrap;
+    text-shadow: 0 0 3px rgba(0,0,0,.85), 0 1px 3px rgba(0,0,0,.65);
+  }
+
+  /* ---- Quick Look ----
+     Placed like a window: centred across, and down at --window-top rather than in the
+     middle of the screen. Its size did not change when it moved up: sized by the
+     photograph's height, so a near-square one comes out a little wider and a 3:4 one a
+     little taller, and the bar follows whatever width that gives. The animation restarts
+     on every open because hidden toggles display, the documented idiom here. */
+  .ql {
+    position: absolute; left: 50%; top: var(--window-top); translate: -50% 0; z-index: 4;
+    width: max-content; max-width: min(80vw, 100%);
+    background: var(--os-surface); border: 1px solid var(--os-line); border-radius: var(--r-window);
+    box-shadow: var(--os-shadow); overflow: hidden; pointer-events: auto;
+    animation: ql-in var(--t-base) var(--ease) both;
+  }
+  .ql[hidden] { display: none; }
+  @keyframes ql-in { from { opacity: 0; transform: scale(.94); } }
+  .ql__bar {
+    height: var(--titlebar-h); display: flex; align-items: center; gap: var(--space-2); padding: 0 10px;
+    background: var(--os-titlebar); border-bottom: 1px solid var(--os-edge); backdrop-filter: blur(18px);
+  }
+  .ql__close {
+    all: unset; width: 12px; height: 12px; border-radius: 50%; flex: none; cursor: var(--cur-hand);
+    background: var(--light-close); box-shadow: inset 0 0 0 1px var(--light-close-line);
+  }
+  .ql__close:focus-visible { box-shadow: inset 0 0 0 1px var(--light-close-line), 0 0 0 2px var(--os-accent); }
+  .ql__title {
+    flex: 1; text-align: center; margin-right: 20px;
+    font: 11px var(--font-chrome); color: var(--os-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* The same size it had when it sat in the middle. Only the position moved up. */
+  .ql__img { display: block; height: min(68vh, 640px); width: auto; max-width: 80vw; background: var(--os-recess); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .print, .print:not(.is-stowed), .prints__label { transition: none; }
+    .print:hover { transform: rotate(var(--r)); }
+    .ql { animation: none; }
+  }
+  /* ---- Phone ----
+     The layer used to be display: none here, from when the pile sat loose on the desk
+     and had no place in a grid of icons. Now the Images icon is the way in, so hiding
+     the layer made the icon do nothing on a phone. The pile lives under the icon grid
+     instead, centred, in smaller prints. There is no drag on a phone (drag.ts stays out
+     under 640) and no hover, so a tap on a print pins Quick Look and a tap elsewhere
+     closes it, the same as a click does on a desktop. The panel is sized by width here,
+     because a 3:4 photograph 68vh tall is wider than the screen. */
+  @media (max-width: 640px) {
+    /* The same offsets, scaled: --kx and --ky multiply them in the inline style, so the
+       pile keeps its shape and shrinks to the strip of desk between the icon grid, which
+       ends near 300px, and the dock, which starts near 600 on a 740px viewport. The
+       label goes above the pile here because below it is the dock. */
+    .prints { --pile-x: calc(50% - 48px); --pile-y: 388px; --kx: .8; --ky: .4; }
+    .print { width: 96px; }
+    .prints__label { left: calc(var(--pile-x) + 48px); top: calc(var(--pile-y) - 108px); }
+    .ql { max-width: calc(100vw - 32px); }
+    .ql__img { height: auto; width: min(calc(100vw - 34px), 420px); max-width: none; }
+  }
+</style>

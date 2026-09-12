@@ -11,9 +11,19 @@
  * as the lock screen copy: string literals are not minified, so copy in JS is charged
  * against the JS budget while copy in markup rides along in the gzipped HTML.
  *
+ * Direction B from the Figma board (section 301:17, frame 301:43), picked by Yves off the
+ * live artifact. A note from him sits beside the fields: who answers, and that it does not
+ * have to be about work. Savor, Oevra and Aave all do this and every one of them reads
+ * warmer than a bare form for it. The fields themselves are untouched.
+ *
+ * The note also retires the To pill. Both said the same thing, who this reaches, and the
+ * note says it with a face and a sentence rather than a chip, so keeping both would have
+ * been saying it twice.
+ *
  * One structural rule to know before adding anything: the sent state hides
- * `.compose > :not(.compose__done)`, which is DIRECT children only. A new block nested
- * inside a wrapper would stay on screen after sending.
+ * `.compose > :not(.compose__done)`, which is DIRECT children only. There are now exactly
+ * three: the hidden key, the note, and the column holding every field. A fourth block
+ * belongs inside one of those, not beside them.
  */
 import { site } from '../../data/site';
 import { contact } from '../../data/contact';
@@ -27,17 +37,19 @@ if (!contact.accessKey) {
 <form class="compose" method="post" action={contact.endpoint}>
   <input type="hidden" name="access_key" value={contact.accessKey} />
 
-  {/* The recipient as a pill, not an address. It says who this reaches without publishing
-      the mailbox to every visitor and every scraper that reads the page. Display only:
-      there is no field here, because Web3Forms routes on the access key above. */}
-  <div class="compose__field">
-    <span class="compose__label">To</span>
-    <span class="compose__pill">
-      <img src={site.avatar} alt="" width="26" height="26" loading="lazy" decoding="async" />
-      {site.name}
-    </span>
-  </div>
+  {/* Who this reaches, said with a face and a sentence. It replaces the To pill that used
+      to sit above the fields, and like that pill it publishes no address: Web3Forms routes
+      on the access key above, so there is nothing here for a scraper to take. */}
+  <aside class="compose__note">
+    <img class="compose__face" src={site.avatar} alt="" width="44" height="44" loading="lazy" decoding="async" />
+    <p class="compose__who">{site.name}</p>
+    <p class="compose__where">{site.location}, {site.availability.toLowerCase()}</p>
+    <p>Tell me what you need. A sentence is enough, and it does not have to be about work.</p>
+    <p class="compose__reply">I answer everything that comes through here.</p>
+    <p class="compose__status"><span class="compose__dot" aria-hidden="true"></span>{site.status}</p>
+  </aside>
 
+  <div class="compose__form">
   <label class="compose__field">
     <span class="compose__label">From</span>
     <input class="compose__input" type="email" name="email" required
@@ -77,6 +89,7 @@ if (!contact.accessKey) {
       <span class="compose__send-busy">Sending</span>
     </button>
   </div>
+  </div>
 
   <div class="compose__done" role="status">
     <p class="compose__done-title">Message sent.</p>
@@ -86,36 +99,58 @@ if (!contact.accessKey) {
 </form>
 
 <style>
-  /* Flex rather than a fixed grid template: three of these rows show and hide with the
-     send state, and a row template would have to be rewritten every time one did. */
-  .compose { display: flex; flex-direction: column; min-height: 0; font-size: 13px; }
+  /* A row on a desktop: the note, then the column of fields. Flex rather than a grid
+     template because the sent state hides both of them and shows a third block, and a
+     template would have to be rewritten for every state. */
+  .compose { display: flex; min-height: 0; font-size: 13px; }
+  .compose__form { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; }
+  /* Sent replaces everything with one centred block, which wants the column direction
+     back. */
+  .compose[data-state='sent'] { flex-direction: column; }
+
+  /* ------------------------------------------------------------------
+     The note. 268px because the paragraphs want about 34 characters a line at 11.5px,
+     and because the fields need the rest: at 700 wide that leaves them 432, which is
+     close to the 460 the whole window used to be.
+     ------------------------------------------------------------------ */
+  .compose__note {
+    flex: none; width: 268px; padding: var(--space-4) var(--space-3);
+    background: var(--os-recess); border-right: 1px solid var(--os-hairline);
+    font-size: 11.5px; line-height: 1.55;
+  }
+  .compose__note p { margin: 0 0 var(--space-3); }
+  .compose__face { display: block; width: 44px; height: 44px; border-radius: 14px; margin-bottom: 10px; }
+  .compose__who { font-size: 13px; font-weight: 700; margin-bottom: 0 !important; }
+  .compose__where { color: var(--os-muted); font-size: 10px; }
+  .compose__status {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 10px; color: var(--os-muted); margin: 0 !important;
+  }
+  .compose__dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #35d07f;
+    box-shadow: 0 0 0 3px rgba(53,208,127,.22);
+  }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
   /* 76px for the label column: "Subject" in Space Mono at 12px is about 50px wide and the
      column also carries 16px of left padding, so anything narrower runs the two together. */
   .compose__field {
     display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: center;
-    border-bottom: 1px solid rgba(22,22,26,.10);
+    border-bottom: 1px solid var(--os-hairline);
     transition: background var(--t-fast);
   }
   /* Bold, so the label reads as the label and the field reads as what was typed. That
      weight difference is the only thing separating them, since neither has a box. */
   .compose__label { padding-left: var(--space-3); font-size: 12px; font-weight: 700; }
   .compose__field--body { grid-template-columns: minmax(0, 1fr); flex: 1; min-height: 0; border-bottom: 0; }
-  /* Focus, without a box. A ring drawn around the field is not what a mail composer should
-     feel like, so the whole row lifts instead and the caret does the rest. */
-  .compose__field:focus-within { background: rgba(255,255,255,.72); }
+  /* Focus, without a box and now without a wash either. A ring around the field is not
+     what a mail composer should feel like, and the pale fill the row used to take was
+     worse: it lit a whole band of the window every time the caret moved.
 
-  /* The recipient chip: a rounded pill with the avatar tucked into its left end, sized so
-     it reads as one object rather than a picture next to some text. justify-self: start so
-     it hugs the name instead of stretching across the row the way a grid item otherwise
-     would. */
-  .compose__pill {
-    justify-self: start; display: inline-flex; align-items: center; gap: 9px;
-    margin: 8px 0; padding: 5px 16px 5px 5px; border-radius: var(--r-pill);
-    background: rgba(22,22,26,.08); font-size: 13px; line-height: 1;
-  }
-  .compose__pill img { width: 26px; height: 26px; border-radius: 50%; }
+     A bar down the leading edge instead, which is the same shape the invalid state uses a
+     few lines below and the same rail the Services rows open with, so the window has one
+     way of saying "this one" rather than three. */
+  .compose__field:focus-within { box-shadow: inset 3px 0 0 var(--os-accent); }
 
   /* Targeted resets, deliberately NOT `all: unset`. On a textarea that also resets
      white-space from the UA's pre-wrap back to normal, which collapses every newline the
@@ -140,7 +175,7 @@ if (!contact.accessKey) {
   /* Cancel on the left, Send on the right, the way the reference has it. */
   .compose__actions {
     display: flex; align-items: center; gap: var(--space-2);
-    padding: 10px var(--space-3); border-top: 1px solid rgba(22,22,26,.10);
+    padding: 10px var(--space-3); border-top: 1px solid var(--os-hairline);
   }
   .compose__send { margin-left: auto; }
   .compose__trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
@@ -164,4 +199,26 @@ if (!contact.accessKey) {
   }
   .compose__done p { margin: 0; }
   .compose__done-title { font-weight: 700; }
+
+  @media (max-width: 640px) {
+    /* The sheet is height: auto on a phone, so flex: 1 on the message row had nothing to
+       fill and the textarea fell back to its own two rows. Pinning the sheet to the space
+       it actually has gives the message everything the note and the fields do not use,
+       which is the same fix and the same calc GameApp.astro uses for its thread. */
+    :global(#win-contact) {
+      height: calc(100dvh - var(--menubar-h) - var(--window-top) - var(--window-bottom)) !important;
+    }
+    /* The note goes above the fields, and loses the line about answering: a phone sheet
+       has one screen before the keyboard takes half of it, and the message box is worth
+       more than a second sentence. */
+    .compose { flex-direction: column; }
+    /* It takes what it needs and no more, so everything left goes to the message. */
+    .compose__note { flex: none; }
+    .compose__note {
+      width: auto; padding: var(--space-3);
+      border-right: 0; border-bottom: 1px solid var(--os-hairline);
+    }
+    .compose__note p { margin-bottom: var(--space-2); }
+    .compose__reply { display: none; }
+  }
 </style>
