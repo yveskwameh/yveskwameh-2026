@@ -62,7 +62,20 @@ export function init() {
   };
 
   // Click: everything out if anything is in, otherwise everything in.
-  const toggle = () => { const s = stowed(); if (s.length) flyOut(); else stow(prints()); };
+  //
+  // Guarded two ways, because a double click on this icon is the most natural thing on
+  // a desktop where every other icon opens on one, and two toggles in a row is out and
+  // straight back in, which to the eye is nothing happening. The second click of a
+  // double click arrives with detail 2 and is ignored, and so is any click that lands
+  // while the last flight is still in the air.
+  let last = 0;
+  const toggle = (e?: MouseEvent) => {
+    if (e && e.detail > 1) return;
+    const now = performance.now();
+    if (now - last < FLIGHT + STAGGER * 8) return;
+    last = now;
+    const s = stowed(); if (s.length) flyOut(); else stow(prints());
+  };
   icon.addEventListener('click', toggle);
   toggle();
 
