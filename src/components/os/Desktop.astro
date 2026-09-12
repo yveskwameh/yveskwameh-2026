@@ -35,8 +35,10 @@ import Prints from './Prints.astro';
   <Window id="game" title="Tic Tac Toe" filename="tictactoe.app" width={860}><GameApp /></Window>
   <Window id="colophon" title="About this site" filename="readme.txt" width={520}><ColophonApp /></Window>
   {/* Anchored bottom right and slides up, like Gmail compose. See the compose variant in
-      Window.astro. Sized to the shorter, wider shape a compose panel wants. */}
-  <Window id="contact" title="Send Yves a message" filename="new-message.eml" width={460} height={430} variant="compose"><MailApp /></Window>
+      Window.astro. Sized to the shorter, wider shape a compose panel wants. 700 rather
+      than 460 since direction B put a note from Yves beside the fields: 268 for the note
+      leaves the fields 432, which is close to the 460 the whole window used to be. */}
+  <Window id="contact" title="Send Yves a message" filename="new-message.eml" width={700} height={430} variant="compose"><MailApp /></Window>
   {/* 640 because the disclosure list is one column of prose and six rows, and wider than
       this just makes the lines harder to read. */}
   <Window id="services" title="Services" filename="services.prefs" width={640}><ServicesApp /></Window>
