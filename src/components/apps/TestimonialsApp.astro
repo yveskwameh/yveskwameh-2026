@@ -64,8 +64,8 @@ const columns = [
 <div class="fb">
   {/* Numbers and badges together, because they are the same kind of evidence: something a
       platform measured or awarded, as opposed to an opinion someone offered. The two
-      figures stack on the left, the two badges sit side by side on the right, which is how
-      Yves asked for it laid out. */}
+      figures stack on the left and the two badges stack on the right, one over the other
+      on both sides, which is how Yves asked for it laid out. */}
   <div class="fb__record">
     <div class="fb__stats">
       {record.map(([figure, label]) => (
@@ -129,8 +129,9 @@ const columns = [
   .fb__stat { display: grid; gap: 2px; }
   .fb__figure { font: 700 24px var(--font-chrome); color: var(--os-ink); line-height: 1.1; }
   .fb__label { font-size: 11px; color: var(--os-muted); }
-  /* The two badges, side by side, on the same baseline. */
-  .fb__badges { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); }
+  /* The two badges, one over the other, mirroring the figures on the left. Left aligned
+     so the two wordmarks start on the same line. */
+  .fb__badges { display: grid; gap: 10px; justify-items: start; }
   .fb__badge { display: block; max-width: 100%; background: center left / contain no-repeat; }
   /* The badges are background images, so they cannot take currentColor, and their ink
      stayed black on every dark surface. A blanket filter: invert(1) was the first idea
