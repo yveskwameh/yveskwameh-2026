@@ -63,9 +63,9 @@ const columns = [
 ---
 <div class="fb">
   {/* Numbers and badges together, because they are the same kind of evidence: something a
-      platform measured or awarded, as opposed to an opinion someone offered. The two
-      figures stack on the left and the two badges stack on the right, one over the other
-      on both sides, which is how Yves asked for it laid out. */}
+      platform measured or awarded, as opposed to an opinion someone offered. On a desktop
+      the two figures sit side by side on the left and the two badges stack on the right;
+      on a phone the figures stack too. How Yves asked for it laid out. */}
   <div class="fb__record">
     <div class="fb__stats">
       {record.map(([figure, label]) => (
@@ -124,8 +124,8 @@ const columns = [
     padding: var(--space-3) var(--space-4);
     background: var(--os-card); border-radius: var(--r-window);
   }
-  /* The two figures, one over the other. */
-  .fb__stats { display: grid; gap: var(--space-3); }
+  /* The two figures, side by side on a desktop. The phone stacks them, below. */
+  .fb__stats { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); }
   .fb__stat { display: grid; gap: 2px; }
   .fb__figure { font: 700 24px var(--font-chrome); color: var(--os-ink); line-height: 1.1; }
   .fb__label { font-size: 11px; color: var(--os-muted); }
@@ -244,12 +244,13 @@ const columns = [
   }
 
   @media (max-width: 640px) {
-    /* One column, the phone one, and the two desktop columns go away. The record keeps
-       its shape: figures stacked on the left, badges together on the right. */
+    /* One column, the phone one, and the two desktop columns go away. In the record the
+       figures stack one over the other here, so both sides read as a column at 390. */
     .fb__wall { grid-template-columns: minmax(0, 1fr); }
     .fb__col:not(.fb__col--m) { display: none; }
     .fb__col--m { display: grid; }
     .fb__record { gap: var(--space-3); }
+    .fb__stats { display: grid; gap: var(--space-3); }
   }
   @media (max-width: 640px) and (prefers-reduced-motion: reduce) {
     /* No drift, so the sheet scrolls the way every other window does. */
