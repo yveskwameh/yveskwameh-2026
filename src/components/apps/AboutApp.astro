@@ -1,30 +1,36 @@
 ---
 /**
- * About Yves. The bio on the left, six photographs of him on the right.
+ * About Yves. A profile header, the bio under it, six photographs of him under that.
+ *
+ * Top to bottom rather than side by side, on his call. The header is the identity in one
+ * row: avatar, name, role and the availability dot on the left, and the one action on the
+ * right, which is where a profile page keeps it (Portrait, read.cv, GitHub) and where
+ * somebody who has already decided goes looking for it. The four paragraphs run in two
+ * columns under that, because 828px is far too wide a measure for 13px type and a single
+ * narrow column would leave the right half of the window empty.
  *
  * The photographs are the ones from the About section of his previous site, because
- * those are the ones with his face in them. The nine he took of Port Harcourt used to be
- * here and moved out to the desktop (see os/Prints.astro): a photograph he took is
- * something he made, not something about him, and he wanted the two kept apart.
+ * those are the ones with his face in them. The nine he took of Port Harcourt live on the
+ * desktop (see os/Prints.astro): a photograph he took is something he made, not
+ * something about him. All six are square, so six across in one row is exact.
  *
- * Three across at the square ratio they came in, six on screen at once, and the window
- * never scrolls. The copy is his, word for word.
- *
- * No script and no state. Six images and a button.
+ * The copy is his, word for word. No script and no state.
  */
 import { site } from '../../data/site';
 import { portraits } from '../../data/photos';
 ---
 <div class="about">
-  <div class="about__text">
-    <div class="about__head">
-      <img src={site.avatar} alt={site.name} width="56" height="56" loading="eager" decoding="async" />
-      <div>
-        <p class="about__name">{site.name}</p>
-        <p class="about__role">{site.role}</p>
-      </div>
+  <header class="about__head">
+    <img src={site.avatar} alt={site.name} width="56" height="56" loading="eager" decoding="async" />
+    <div class="about__who">
+      <p class="about__name">{site.name}</p>
+      <p class="about__role">{site.role}</p>
+      <p class="about__status"><span class="about__dot" aria-hidden="true"></span>{site.status}</p>
     </div>
+    <button class="btn" type="button" data-open="contact">Send me a message</button>
+  </header>
 
+  <div class="about__text">
     <p>I’m Yves Kwameh, a UX/UI designer and no-code developer. I design digital products
     and build websites in Webflow and Framer. I start by understanding what the business
     needs and what people are trying to do, then work out how the design can help.</p>
@@ -40,10 +46,6 @@ import { portraits } from '../../data/photos';
     <p>Outside work, I’m usually cooking, watching a film, playing a game, or taking
     photographs. I’m drawn to streets, landscapes, and nature. I like making things even
     when there’s no brief, just something I want to try.</p>
-
-    <p class="about__status"><span class="about__dot" aria-hidden="true"></span>{site.status}</p>
-
-    <button class="btn" type="button" data-open="contact">Send me a message</button>
   </div>
 
   <div class="about__wall">
@@ -51,7 +53,7 @@ import { portraits } from '../../data/photos';
       <img
         src={`/images/about/${p.slug}-320.avif`}
         srcset={`/images/about/${p.slug}-320.avif 320w, /images/about/${p.slug}-800.avif 800w`}
-        sizes="(max-width: 640px) 29vw, 151px"
+        sizes="(max-width: 640px) 29vw, 131px"
         alt={p.alt}
         width="320"
         height="320"
@@ -63,24 +65,32 @@ import { portraits } from '../../data/photos';
 </div>
 
 <style>
-  .about { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: var(--space-4); align-items: start; }
-  .about__text { display: grid; gap: var(--space-2); font-size: 13px; line-height: 1.6; }
-  .about__text p { margin: 0; }
-  .about__head { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 14px; align-items: center; }
+  .about { display: grid; gap: var(--space-4); }
+
+  .about__head { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 14px; align-items: center; }
   .about__head img { border-radius: 16px; }
+  .about__who { display: grid; gap: 2px; }
+  .about__who p { margin: 0; }
   .about__name { font-family: var(--font-chrome); font-size: 15px; font-weight: 700; }
   .about__role { color: var(--os-muted); font-size: 11px; line-height: 1.45; }
-  .about__status { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--os-muted); }
+  .about__status { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: var(--os-muted); }
   .about__dot { width: 7px; height: 7px; border-radius: 50%; background: #35d07f; box-shadow: 0 0 0 3px rgba(53,208,127,.22); }
-  /* The button is the only grid item that should not stretch across the column. */
-  .about .btn { justify-self: start; margin-top: var(--space-1); }
 
-  .about__wall { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  /* Two columns, filled top to bottom, so the first two paragraphs sit left and the last
+     two right. break-inside keeps a paragraph from splitting across the fold. */
+  .about__text { columns: 2; column-gap: var(--space-4); font-size: 13px; line-height: 1.6; }
+  .about__text p { margin: 0 0 var(--space-2); break-inside: avoid; }
+  .about__text p:last-child { margin-bottom: 0; }
+
+  .about__wall { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
   .about__wall img { display: block; width: 100%; height: auto; border-radius: var(--r-inner); background: var(--os-recess); }
 
   @media (max-width: 640px) {
-    /* A 330px column of text and a wall of photographs do not both fit at 390, so the
-       text goes on top and the wall keeps its three columns underneath. */
-    .about { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+    /* The button drops under the name, the text goes to one column, and six across
+       becomes three across, twice. */
+    .about__head { grid-template-columns: 56px minmax(0, 1fr); }
+    .about__head .btn { grid-column: 1 / -1; justify-self: start; }
+    .about__text { columns: 1; }
+    .about__wall { grid-template-columns: repeat(3, 1fr); }
   }
 </style>

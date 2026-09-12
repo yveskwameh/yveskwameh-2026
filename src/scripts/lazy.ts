@@ -93,6 +93,8 @@ export function initWarm() {
     pulled = true;
     import('./drag').then((m) => m.init('.icon, .print, .window__titlebar'));
     import('./dock-drag').then((m) => m.init());
+    /* Quick Look for the pile of prints. Hover is a pointer thing, so it lands with drag. */
+    import('./quicklook').then((m) => m.init());
     /* The menu bar panels ride the same trigger. A pointer has to travel to the bar
        before it can hover the speaker, and a window has to be opened before a soundtrack
        can start, so this always lands first. It is not gated on the sound answer the way
