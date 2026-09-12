@@ -105,6 +105,27 @@ import Icon from './Icon.astro';
   }
   .dock__count[hidden] { display: none; }
   .dock__system:global(.is-target) { transform: scale(1.18); transition: transform var(--t-fast) var(--ease); }
+
+  /* The hint. Nine photographs start inside this icon, and the red badge alone does not
+     say that pressing it does anything, so the icon lifts twice, once, a few seconds
+     after the desktop is entered. macOS bounces a dock icon that wants attention and this
+     is the smallest version of it.
+
+     Every condition is in the selector, so nothing runs on load. #lock carries is-open
+     once the desktop has been entered, so it never bounces behind the lock screen, and
+     .prints keeps is-empty only while the stack is full, so it stops the moment they are
+     out and never comes back. The ancestors are :global because they belong to
+     LockScreen.astro and Prints.astro; the button is this file's own. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(body:has(#lock.is-open):has(.prints.is-empty)) .dock__system[data-open='images'] {
+      animation: dock-hint 1s var(--ease) 4s 2;
+    }
+  }
+  @keyframes dock-hint {
+    0%, 30%, 100% { transform: none; }
+    12% { transform: translateY(-9px); }
+    21% { transform: translateY(-2px); }
+  }
   .dock__drawn {
     width: 100%; height: 100%; display: block;
     /* The drawn icons only fill about 73% of their own canvas, the rest is transparent
