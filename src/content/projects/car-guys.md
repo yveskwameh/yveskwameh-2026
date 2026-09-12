@@ -6,8 +6,8 @@ summary: "A car service site rebuilt so the thing people came to do is the first
 role: "Design and build"
 stack: ["Figma", "Webflow"]
 url: "https://thecarguysinc.com/"
-cover: "/images/projects/car-guys.png"
-banner: "/images/projects/car-guys-1.png"
+cover: "/images/projects/car-guys.avif"
+banner: "/images/projects/car-guys-1.avif"
 filename: "car-guys.webflow"
 featured: true
 ---
@@ -28,7 +28,7 @@ people actually look for it rather than leaving it at the bottom of the page. Cu
 number of pages back so each one answers a single question. Set the whole thing up so the
 client can edit copy and swap images without coming back to me.
 
-<img src="/images/projects/car-guys-2.png" alt="The booking flow, two steps instead of a hunt" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/car-guys-2.avif" alt="The booking flow, two steps instead of a hunt" width="720" height="450" loading="lazy" decoding="async" />
 
 ## Result
 

@@ -6,8 +6,8 @@ summary: "This site. A portfolio built as a desktop, with a lock screen, a dock,
 role: "Design and build"
 stack: ["Astro", "TypeScript", "Cloudflare"]
 url: "https://yveskwameh.2026-portfolio.workers.dev"
-cover: "/images/projects/yves-os.png"
-banner: "/images/projects/yves-os-1.png"
+cover: "/images/projects/yves-os.avif"
+banner: "/images/projects/yves-os-1.avif"
 filename: "yves-os.astro"
 featured: false
 ---
@@ -27,7 +27,7 @@ The rule I set was that nothing loads that the visitor did not ask for. Each app
 fetched the first time its window opens, so the desktop arrives with only the desktop.
 Music builds its Spotify player on click and never before.
 
-<img src="/images/projects/yves-os-2.png" alt="The Work browser, laid out like System Settings" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/yves-os-2.avif" alt="The Work browser, laid out like System Settings" width="720" height="450" loading="lazy" decoding="async" />
 
 ## Result
 

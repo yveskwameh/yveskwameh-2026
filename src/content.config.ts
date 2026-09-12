@@ -15,7 +15,9 @@ const projects = defineCollection({
     role: z.string(),
     stack: z.array(z.string()),
     url: z.string().url().optional(),
-    cover: z.string(),            // /images/projects/xxx.webp, a 96px icon
+    /* /images/projects/xxx.avif, a 96px icon. avif or webp per rule 4: drop a PNG in
+       and run tools/project-images.py, which converts it and rewrites these paths. */
+    cover: z.string(),
     /* A wide shot for the top of the pane. `cover` is a 96px icon and cannot do this
        job. Optional, so a case study without one simply starts at its title. */
     banner: z.string().optional(),

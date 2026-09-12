@@ -6,7 +6,7 @@ summary: One line on what changed for the client.
 role: UX/UI design, Webflow build
 stack: [Figma, Webflow]
 url: https://example.com
-cover: /images/projects/example.webp
+cover: /images/projects/example.avif
 filename: example-project.webflow
 featured: true
 ---

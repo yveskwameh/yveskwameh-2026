@@ -5,8 +5,8 @@ year: 2024
 summary: "A product catalog rebuilt, and an audit that found the products missing from it."
 role: "Design and build"
 stack: ["Figma", "Webflow"]
-cover: "/images/projects/path.png"
-banner: "/images/projects/path-1.png"
+cover: "/images/projects/path.avif"
+banner: "/images/projects/path-1.avif"
 filename: "path-catalog.webflow"
 featured: false
 ---
@@ -27,7 +27,7 @@ the catalog rather than assuming it matched. Flagged every product that was in o
 the other and handed that back marked up, so the client could decide what belonged and
 what had been retired.
 
-<img src="/images/projects/path-2.png" alt="The audit: products in one list and not the other" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/path-2.avif" alt="The audit: products in one list and not the other" width="720" height="450" loading="lazy" decoding="async" />
 
 ## Result
 
