@@ -53,19 +53,22 @@ export const portraits: Portrait[] = [
 ];
 
 /*
- * The pile, spread. Offsets run about 340px across and 380px down for 136px prints, so
- * each one shows most of itself and still touches its neighbours. Later entries sit on
- * top: the two in the middle go first so they sit behind, and the ones on the edges,
- * which have the most room to be seen, go last.
+ * The pile, spread tall rather than wide. Offsets run about 165px across and 415px down
+ * for 136px prints, which makes the whole spread 300 wide by 600 tall. That width is the
+ * point: the Quick Look panel opens centred and about 550 wide, and the pile has to sit
+ * entirely to the right of it or the panel covers prints the visitor is trying to reach.
+ * The origin in os/Prints.astro is measured from the right edge for the same reason.
+ * Later entries sit on top: the two in the middle go first so they sit behind, and the
+ * ones on the edges, which have the most room to be seen, go last.
  */
 export const prints: Print[] = [
-  { slug: 'sunset-on-the-main-road', alt: 'Sunset over a main road, with a billboard frame above the buildings', w: 1268, h: 1400, dx: -30,  dy: -40,  r: 2 },
-  { slug: 'roofline-at-dusk',        alt: 'The roofline of a building against a dusk sky',                       w: 1050, h: 1400, dx: -40,  dy: 40,   r: -4 },
-  { slug: 'sky-over-the-wires',      alt: 'Clouds over low rooftops, with a power line crossing the sky',        w: 1050, h: 1400, dx: -80,  dy: -190, r: -3 },
-  { slug: 'market-day',              alt: 'A market street crowded with umbrellas, buses and people',            w: 1050, h: 1400, dx: 80,   dy: -150, r: 5 },
-  { slug: 'bridge',                  alt: 'A bridge over water with a yellow railing running the length of it', w: 1050, h: 1400, dx: -170, dy: 10,   r: -6 },
-  { slug: 'bird-on-the-water',       alt: 'A dark bird on rippled open water',                                   w: 1054, h: 1400, dx: 60,   dy: 0,    r: 6 },
-  { slug: 'hibiscus',                alt: 'A red hibiscus held in a hand',                                       w: 1050, h: 1400, dx: 170,  dy: 60,   r: -8 },
-  { slug: 'palm-avenue',             alt: 'A dirt path running between two lines of palm trees',                w: 1050, h: 1400, dx: -140, dy: 160,  r: 4 },
-  { slug: 'cormorant',               alt: 'A cormorant standing on a post at the edge of a field',               w: 1054, h: 1400, dx: 20,   dy: 190,  r: -2 },
+  { slug: 'sunset-on-the-main-road', alt: 'Sunset over a main road, with a billboard frame above the buildings', w: 1268, h: 1400, dx: 10,  dy: -20,  r: 2 },
+  { slug: 'roofline-at-dusk',        alt: 'The roofline of a building against a dusk sky',                       w: 1050, h: 1400, dx: 0,   dy: 90,   r: -4 },
+  { slug: 'sky-over-the-wires',      alt: 'Clouds over low rooftops, with a power line crossing the sky',        w: 1050, h: 1400, dx: -70, dy: -200, r: -3 },
+  { slug: 'market-day',              alt: 'A market street crowded with umbrellas, buses and people',            w: 1050, h: 1400, dx: 80,  dy: -160, r: 5 },
+  { slug: 'bridge',                  alt: 'A bridge over water with a yellow railing running the length of it', w: 1050, h: 1400, dx: -60, dy: -60,  r: -6 },
+  { slug: 'bird-on-the-water',       alt: 'A dark bird on rippled open water',                                   w: 1054, h: 1400, dx: 94,  dy: 10,   r: 6 },
+  { slug: 'hibiscus',                alt: 'A red hibiscus held in a hand',                                       w: 1050, h: 1400, dx: 70,  dy: 130,  r: -8 },
+  { slug: 'palm-avenue',             alt: 'A dirt path running between two lines of palm trees',                w: 1050, h: 1400, dx: -50, dy: 200,  r: 4 },
+  { slug: 'cormorant',               alt: 'A cormorant standing on a post at the edge of a field',               w: 1054, h: 1400, dx: 60,  dy: 215,  r: -2 },
 ];

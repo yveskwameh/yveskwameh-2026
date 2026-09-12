@@ -58,11 +58,15 @@ import { prints } from '../../data/photos';
      desktop and deselects, exactly as it did before the prints were there. z-index 1 is
      above the icons, which have none, and below the scrim at 5 and the windows at 10.
 
-     The pile's origin: the top left of the print at the centre of the spread. A
-     percentage across so the pile stays right of centre on any width, pixels down so
-     the top print clears the menu bar and the bottom one clears the dock on a short
-     screen. The offsets in data/photos.ts run from -190 to +190 around it. */
-  .prints { position: absolute; inset: 0; z-index: 1; pointer-events: none; --pile-x: 68%; --pile-y: 214px; }
+     The pile's origin: the top left of the print at the centre of the spread. Measured
+     from the right edge, not as a percentage, so the pile hugs the right of the desk on
+     every width and stays clear of the Quick Look panel, which opens centred and about
+     550px wide. The offsets in data/photos.ts run from -70 to +94 across, so the
+     rightmost print ends 16px from the edge and the leftmost starts 316px in. Measured
+     in headless Chrome with the panel open: clear by 118px at 1280x800 and by 174px at
+     1440x900, and clear by a few pixels at 1024x768, which is where the 246 comes from.
+     Pixels down so the top print clears the menu bar and the bottom one clears the dock. */
+  .prints { position: absolute; inset: 0; z-index: 1; pointer-events: none; --pile-x: calc(100% - 246px); --pile-y: 250px; }
 
   .print {
     position: absolute; width: 136px; aspect-ratio: var(--ar);
@@ -90,7 +94,7 @@ import { prints } from '../../data/photos';
      dragged away: the name is the place on the desk, not the prints. */
   .prints__label {
     position: absolute; margin: 0;
-    left: calc(var(--pile-x) + 68px); top: calc(var(--pile-y) + 400px); transform: translateX(-50%);
+    left: calc(var(--pile-x) + 80px); top: calc(var(--pile-y) + 420px); transform: translateX(-50%);
     font: 10px var(--font-chrome); color: #fff; white-space: nowrap;
     text-shadow: 0 0 3px rgba(0,0,0,.85), 0 1px 3px rgba(0,0,0,.65);
   }

@@ -32,6 +32,9 @@ const APPS: Record<string, () => Promise<App>> = {
   game: () => import('./game'),
 };
 
+/** Clean Up Desktop. Lives in context.ts with the rename it has to undo; see actions.ts. */
+export const tidy = () => import('./context').then((m) => m.tidyDesktop());
+
 const mods = new Map<string, Promise<App>>();
 const started = new Set<string>();
 

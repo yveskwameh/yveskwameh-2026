@@ -93,6 +93,30 @@ function reset(icon: HTMLElement) {
 }
 
 /**
+ * Clean Up Desktop: every icon goes back to where it started, which each one carries in
+ * data-home-x / data-home-y, and back to the name it shipped with if the visitor renamed
+ * it. Icons are animated back rather than snapped, and the transition is added only for
+ * the trip so dragging stays instant.
+ *
+ * Here rather than in actions.ts, where it used to live, because the name reset is the
+ * same `reset` the context menu uses and it writes the same store the rename writes. This
+ * file is lazy and actions.ts is not, so the move also took the whole function off the
+ * on-load budget. lazy.ts owns the import, as it owns every other one.
+ */
+export function tidyDesktop() {
+  const icons = document.querySelectorAll<HTMLElement>('.icon');
+  icons.forEach((icon) => {
+    const { homeX, homeY } = icon.dataset;
+    icon.classList.add('is-tidying');
+    icon.classList.remove('is-selected');
+    icon.style.left = `${homeX}px`;
+    icon.style.top = `${homeY}px`;
+    reset(icon);
+  });
+  setTimeout(() => icons.forEach((i) => i.classList.remove('is-tidying')), 400);
+}
+
+/**
  * Refresh, in the sense Windows means it on the desktop: redraw what is there, do not
  * reload the page. Selection clears, any renamed labels are re-read, and the icons blink
  * so it is visible that something happened.
