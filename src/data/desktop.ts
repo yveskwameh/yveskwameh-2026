@@ -12,14 +12,15 @@
  * that the third line is the exception. The window titles behind them stay short: the
  * label is the invitation, the title is the name of the room.
  *
- * Trash is deliberately not here. It lives in the dock only, the way macOS keeps it,
- * so the desktop stays for the things worth opening. Its window id is still 'trash'.
+ * Trash is not here, and as of now it is not in the dock either: it opened nothing, and a
+ * dock icon that does nothing is a promise the desktop does not keep. See data/dock.ts for
+ * what is kept ready for the day it has a window.
  */
 export type DesktopItem = {
   id: string;
   label: string;
   icon: string;
-  opens: 'about' | 'projects' | 'services' | 'testimonials' | 'contact' | 'trash' | 'game';
+  opens: 'about' | 'projects' | 'services' | 'testimonials' | 'contact' | 'game';
   x: number;
   y: number;
 };

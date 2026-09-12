@@ -11,7 +11,9 @@ import Icon from './Icon.astro';
         <StackIcon name={t.icon} label={t.name} size={48} />
       </li>
     ))}
-    <li class="dock__sep" role="separator"></li>
+    {/* Only drawn when there is something on the other side of it. A divider at the end
+        of a shelf divides the shelf from nothing. */}
+    {dockSystem.length > 0 && <li class="dock__sep" role="separator"></li>}
     {dockSystem.map((s) => (
       <li class="dock__item" data-label={s.name} data-quip={s.quip}>
         <button class="dock__system" type="button" data-open={s.opens} aria-label={s.name}>

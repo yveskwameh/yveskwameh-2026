@@ -21,14 +21,19 @@ export const dockTools = [
 ];
 
 /**
- * System items after the divider. `opens` names the window each should open. Neither
- * window exists yet, and the window manager ignores an id it cannot find, so these are
- * inert clicks until they do.
+ * System items after the divider. `opens` names what each one launches, which need not be
+ * a window: Images has no window at all, and the window manager hands an unknown id to the
+ * APPS map in scripts/lazy.ts, where `images` is the pile of prints on the desktop.
  *
  * `icon` is a drawn PNG in public/icons. `glyph` is a Pixelarticons fallback, kept for
  * any future item Yves has not drawn yet.
+ *
+ * Trash is out. It sat here opening nothing, which is worse than not being there: a dock
+ * icon is a promise that pressing it does something. Yves's call, and it comes back the
+ * day it has a window. Its artwork is still public/icons/trash.png, the glyph is still in
+ * tools/sync-icons.mjs, and docs/BRIEF.md still carries the idea for it, "things I don't
+ * do", so nothing has to be redrawn or rethought to put it back.
  */
 export const dockSystem = [
   { name: 'Images', icon: '/icons/images.png', opens: 'images', quip: 'That is where I keep everything.' },
-  { name: 'Trash',  icon: '/icons/trash.png',  opens: 'trash',  quip: 'You want to bin the bin?' },
 ] as { name: string; opens: string; icon?: string; glyph?: string; quip?: string }[];
