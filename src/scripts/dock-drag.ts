@@ -24,6 +24,12 @@ export function init() {
     const dx = e.clientX - sx, dy = e.clientY - sy;
     if (!ghost && Math.abs(dx) + Math.abs(dy) < 6) return;
     if (!ghost) {
+      /* Capture here, once a drag has actually begun, and not on the press. A captured
+         pointer makes the browser fire the click at the capturing element, which is the
+         whole dock, so a plain click on the Images or Trash button never reached the
+         button and nothing opened. Six pixels of travel is the line between a click and
+         a drag, and only a drag needs the capture. */
+      try { dock.setPointerCapture(e.pointerId); } catch {}
       origin = item.getBoundingClientRect();
       ghost = document.createElement('div');
       ghost.className = 'dock__ghost'; ghost.innerHTML = item.innerHTML;
@@ -73,7 +79,7 @@ export function init() {
        destination while the copy is in flight. */
     dock.classList.add('is-dragging');
     dock.querySelectorAll<HTMLElement>('.dock__item').forEach((i) => i.style.removeProperty('--size'));
-    try { dock.setPointerCapture(pointer); } catch {}
+    // No capture yet. See move(): a press that never travels has to stay a click.
   });
 
   document.addEventListener('pointermove', move, true);
