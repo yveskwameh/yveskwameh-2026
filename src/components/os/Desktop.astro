@@ -55,8 +55,13 @@ import Prints from './Prints.astro';
       "Turn on" is a real button because the speaker is a <summary> now and cannot be
       driven by a <label for>. scripts/panel.ts picks it up, and by the time this shows
       it has been loaded since the first pointer move. */}
-  <input class="notice__x" id="notice-x" type="checkbox" hidden />
   <div class="notice" role="status">
+    {/* Inside the notice, not beside it. Clicking a <label for> makes the browser forward
+        a second click to the input it names, and the dismiss below is a click-outside
+        rule: with the checkbox outside the pill, that forwarded click read as a click on
+        the desktop and threw away whatever window was open. The selector that hides the
+        notice is :has() on body, so this can sit anywhere. */}
+    <input class="notice__x" id="notice-x" type="checkbox" hidden />
     <span class="notice__glyph" aria-hidden="true"></span>
     <span class="notice__text">Sound is off</span>
     <button class="notice__go" type="button" data-vol="60">Turn on</button>
@@ -236,8 +241,8 @@ import Prints from './Prints.astro';
   .notice {
     position: fixed; z-index: 880;
     top: calc(var(--menubar-h) + var(--space-2)); right: var(--space-2);
-    display: flex; align-items: center; gap: var(--space-3);
-    padding: 6px 6px 6px 14px; border-radius: var(--r-pill);
+    display: flex; align-items: center; gap: var(--space-2);
+    padding: 6px 8px 6px 14px; border-radius: var(--r-pill);
     background: var(--os-menu); border: 1px solid var(--os-edge);
     -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
     box-shadow: var(--os-shadow-sm); color: var(--os-ink);
@@ -251,7 +256,11 @@ import Prints from './Prints.astro';
     background: var(--os-muted); opacity: .7;
     clip-path: polygon(0 32%, 26% 32%, 55% 0, 55% 100%, 26% 68%, 0 68%);
   }
-  .notice__text { font: 12px var(--font-chrome); }
+  /* Takes the slack, so the button and the close sit at the right hand end. On a desktop
+     the pill is only as wide as its contents and there is no slack to take; on a phone it
+     runs the width of the screen, and without this everything bunched at the left with the
+     close stranded in the middle of the pill. */
+  .notice__text { flex: 1; font: 12px var(--font-chrome); }
   .notice__go {
     all: unset; padding: 7px 13px; border-radius: var(--r-pill); cursor: var(--cur-hand);
     background: var(--os-accent); color: var(--os-on-accent);

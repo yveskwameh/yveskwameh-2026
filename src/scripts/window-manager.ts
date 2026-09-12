@@ -174,14 +174,19 @@ export function initWindowManager() {
      * The dismiss. Anything outside the open window puts it away, which is what makes the
      * desktop read as a modal overlay and keeps the visitor to one window.
      *
-     * Two exceptions. A control that is about to open something, because openWindow swaps
-     * the two on its own and dismissing here first would flash the bare desktop between
-     * them. And the menu bar, which is system chrome rather than the desktop: dragging the
-     * volume slider or picking a theme used to throw away whatever was open, which also
-     * stopped the soundtrack that the slider was there to adjust. macOS does not close a
-     * window when you use the menu bar either.
+     * Three exceptions. A control that is about to open something, because openWindow
+     * swaps the two on its own and dismissing here first would flash the bare desktop
+     * between them. The menu bar, which is system chrome rather than the desktop:
+     * dragging the volume slider or picking a theme used to throw away whatever was open,
+     * which also stopped the soundtrack that the slider was there to adjust. macOS does
+     * not close a window when you use the menu bar either.
+     *
+     * And the unmute notice, for the same reason. It arrives unasked on top of whatever
+     * somebody is reading, so answering it, either way, threw that window away: the X
+     * dismissed the notice and the window under it, and Turn on did the same while
+     * turning the sound on. A notification is chrome, not the desktop.
      */
-    if (!fromWindow && !el.closest('.window, .menubar, .tray') && !opens) closeOthers();
+    if (!fromWindow && !el.closest('.window, .menubar, .tray, .notice') && !opens) closeOthers();
 
     if (opens) openWindow(opens);
     else if (select) selectIcon(t);
