@@ -1,23 +1,19 @@
 ---
 /**
- * About Yves. The bio on the left, nine of his own photographs on the right.
+ * About Yves. The bio on the left, six photographs of him on the right.
  *
- * Direction A of three drawn in Figma (section 268:17) and picked by Yves off the live
- * artifact. Three across at the ratio each one was shot, so all nine are on screen at
- * once and the window never scrolls. The other two directions traded that away: one made
- * the photographs twice the size and pushed five rows under the fold, the other showed a
- * single large one with the rest as thumbnails, and Yves's objection to that was the
- * right one, that a strip running off the edge hides what is on the other side.
+ * The photographs are the ones from the About section of his previous site, because
+ * those are the ones with his face in them. The nine he took of Port Harcourt used to be
+ * here and moved out to the desktop (see os/Prints.astro): a photograph he took is
+ * something he made, not something about him, and he wanted the two kept apart.
  *
- * The copy is his, word for word. Earlier drafts of mine narrated how he got into design
- * and he cut all of it: the route in was context for knowing who he is, not content. What
- * is left says what he does, why he learns the next part rather than handing it off, and
- * what he makes when nobody is paying him, which is what the photographs are.
+ * Three across at the square ratio they came in, six on screen at once, and the window
+ * never scrolls. The copy is his, word for word.
  *
- * No script and no state. Nine images and a button.
+ * No script and no state. Six images and a button.
  */
 import { site } from '../../data/site';
-import { photos } from '../../data/photos';
+import { portraits } from '../../data/photos';
 ---
 <div class="about">
   <div class="about__text">
@@ -50,18 +46,15 @@ import { photos } from '../../data/photos';
     <button class="btn" type="button" data-open="contact">Send me a message</button>
   </div>
 
-  {/* Not a figure and not a list of links. It is a wall of photographs, so one container
-      of images is the honest markup. The alt text describes each one, because the copy
-      never names them. */}
   <div class="about__wall">
-    {photos.map((p) => (
+    {portraits.map((p) => (
       <img
-        src={`/images/about/${p.slug}-420.avif`}
-        srcset={`/images/about/${p.slug}-420.avif ${p.smallW}w, /images/about/${p.slug}.avif ${p.w}w`}
+        src={`/images/about/${p.slug}-320.avif`}
+        srcset={`/images/about/${p.slug}-320.avif 320w, /images/about/${p.slug}-800.avif 800w`}
         sizes="(max-width: 640px) 29vw, 151px"
         alt={p.alt}
-        width={p.smallW}
-        height={p.smallH}
+        width="320"
+        height="320"
         loading="lazy"
         decoding="async"
       />
@@ -82,15 +75,8 @@ import { photos } from '../../data/photos';
   /* The button is the only grid item that should not stretch across the column. */
   .about .btn { justify-self: start; margin-top: var(--space-1); }
 
-  .about__wall { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: start; }
-  /* height auto, and align-items: start above, so each photograph keeps the shape it was
-     shot in. Eight are 3:4 and the ninth is nearly square, so its cell is shorter than
-     its neighbours. That is the point of this direction rather than a bug in it, and it
-     is the last one so the short cell sits bottom right. */
-  .about__wall img {
-    display: block; width: 100%; height: auto;
-    border-radius: var(--r-inner); background: var(--os-recess);
-  }
+  .about__wall { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .about__wall img { display: block; width: 100%; height: auto; border-radius: var(--r-inner); background: var(--os-recess); }
 
   @media (max-width: 640px) {
     /* A 330px column of text and a wall of photographs do not both fit at 390, so the

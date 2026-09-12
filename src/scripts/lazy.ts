@@ -91,7 +91,7 @@ export function initWarm() {
   const pullDrag = () => {
     if (pulled) return;
     pulled = true;
-    import('./drag').then((m) => m.init('.icon, .window__titlebar'));
+    import('./drag').then((m) => m.init('.icon, .print, .window__titlebar'));
     import('./dock-drag').then((m) => m.init());
     /* The menu bar panels ride the same trigger. A pointer has to travel to the bar
        before it can hover the speaker, and a window has to be opened before a soundtrack

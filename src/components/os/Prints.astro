@@ -1,0 +1,66 @@
+---
+/**
+ * Nine prints left on the desk.
+ *
+ * Yves's own photographs of Port Harcourt, scattered across the desktop at slight angles
+ * with a white paper border, the way prints sit on a real desk. Pick one up and it comes
+ * to the top and stays where you drop it.
+ *
+ * They drag through the same lazy module as the icons and the window title bars
+ * (scripts/drag.ts, pulled by scripts/lazy.ts on the first pointer movement), so the
+ * behaviour costs the on-load budget one more class name in a selector string and nothing
+ * else. The one thing drag.ts does for a print that it does not do for an icon is move it
+ * to the end of this container when it is dropped, so the last one picked up is the one
+ * on top. Prints stack in DOM order and need no z-index of their own.
+ *
+ * Backgrounds rather than <img>, for the reason DesktopIcon.astro gives: an <img> starts a
+ * native drag that steals the pointer and offers Save image as. The alt text lives on the
+ * role="img" instead.
+ *
+ * Under 640px the layer is gone. The phone desktop is a grid of icons with drag switched
+ * off, a scatter has no place in it, and a background inside display: none is never
+ * fetched, so the phone does not download the set either.
+ */
+import { prints } from '../../data/photos';
+---
+<div class="prints" aria-label="Photographs by Yves, laid out on the desk. Drag them around.">
+  {prints.map((p) => (
+    <div class="print" role="img" aria-label={p.alt}
+         style={`left:${p.x}%; top:${p.y}px; --r:${p.r}deg; --ar:${p.w} / ${p.h}`}>
+      <span class="print__art" style={`background-image:url('/images/prints/${p.slug}-240.avif')`} aria-hidden="true"></span>
+    </div>
+  ))}
+</div>
+
+<style>
+  /* The layer takes no pointer of its own, so a click between prints still lands on the
+     desktop and deselects, exactly as it did before the prints were there. z-index 1 is
+     above the icons, which have none, and below the scrim at 5 and the windows at 10. */
+  .prints { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+
+  .print {
+    position: absolute; width: 112px; aspect-ratio: var(--ar);
+    padding: 4px; background: var(--print-paper); border-radius: 3px;
+    box-shadow: var(--os-shadow-sm);
+    transform: rotate(var(--r));
+    pointer-events: auto; cursor: var(--cur-hand); touch-action: none; user-select: none;
+    transition: transform var(--t-fast), box-shadow var(--t-fast), opacity var(--t-fast);
+    -webkit-user-drag: none;
+  }
+  .print__art { display: block; width: 100%; height: 100%; background: var(--os-recess) center / cover no-repeat; border-radius: 1px; }
+
+  .print:hover { transform: rotate(var(--r)) scale(1.03); }
+  /* Lifted: bigger shadow, a touch larger, and above every other print while it moves.
+     Still under the scrim, so it can never float over an open window. */
+  :global(.print.is-dragging) {
+    transform: rotate(var(--r)) scale(1.05); box-shadow: var(--os-shadow); z-index: 4; transition: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .print { transition: none; }
+    .print:hover { transform: rotate(var(--r)); }
+  }
+  @media (max-width: 640px) {
+    .prints { display: none; }
+  }
+</style>

@@ -55,6 +55,10 @@
      surface, and white on a bright accent is unreadable. One of the two has to move, so
      the text colour moves with the theme. */
   --os-on-accent: #fff;
+  /* The paper border on the prints scattered over the desktop (os/Prints.astro). Paper is
+     white on every theme, which is why this is the one surface with no dark override: a
+     print on a dark desk is still a white print. */
+  --print-paper: #fff;
 
   /* macOS traffic lights, exact */
   --light-close: #ff5f57;  --light-close-line: #e0443e;

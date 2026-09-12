@@ -13,9 +13,13 @@ import MailApp from '../apps/MailApp.astro';
 import ServicesApp from '../apps/ServicesApp.astro';
 import TestimonialsApp from '../apps/TestimonialsApp.astro';
 import { desktopItems } from '../../data/desktop';
+import Prints from './Prints.astro';
 ---
 <main class="desktop" id="desktop">
   {desktopItems.map((item) => <DesktopIcon {...item} />)}
+  {/* After the icons and before the windows, so it paints over the one and under the
+      other with no z-index arguments. Its own file explains the rest. */}
+  <Prints />
 
   {/* 860 like Work and the game. The bio is a 330px column and the nine photographs are
       three across beside it, and at the old 560 the wall came out too small to be worth
@@ -110,7 +114,7 @@ import { desktopItems } from '../../data/desktop';
   .desktop { position: fixed; inset: var(--menubar-h) 0 0 0; }
   /* Refresh blinks the icons out and back. It is the only visible sign that the desktop
      redrew, since nothing else about it changes. */
-  .desktop.is-refreshing :global(.icon) { opacity: 0; }
+  .desktop.is-refreshing :global(.icon), .desktop.is-refreshing :global(.print) { opacity: 0; }
 
   /* z-index 5: above the icons, which have none, and below the windows, which start at 10
      from focusWindow. It sits inside .desktop so the dock and the menu bar stay crisp,
@@ -128,7 +132,7 @@ import { desktopItems } from '../../data/desktop';
      the window, but an icon underneath a blur has no business lighting up and playing a
      sound when the pointer passes over it. Taking the icons out of hit testing rather
      than the whole desktop is what keeps the dismiss working. */
-  :global(body.has-window) :global(.icon) { pointer-events: none; }
+  :global(body.has-window) :global(.icon), :global(body.has-window) :global(.print) { pointer-events: none; }
 
   .ctx {
     position: fixed; z-index: 950; min-width: 190px; padding: 6px;
