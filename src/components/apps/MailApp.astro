@@ -143,9 +143,14 @@ if (!contact.accessKey) {
      weight difference is the only thing separating them, since neither has a box. */
   .compose__label { padding-left: var(--space-3); font-size: 12px; font-weight: 700; }
   .compose__field--body { grid-template-columns: minmax(0, 1fr); flex: 1; min-height: 0; border-bottom: 0; }
-  /* Focus, without a box. A ring drawn around the field is not what a mail composer should
-     feel like, so the whole row lifts instead and the caret does the rest. */
-  .compose__field:focus-within { background: rgba(255,255,255,.72); }
+  /* Focus, without a box and now without a wash either. A ring around the field is not
+     what a mail composer should feel like, and the pale fill the row used to take was
+     worse: it lit a whole band of the window every time the caret moved.
+
+     A bar down the leading edge instead, which is the same shape the invalid state uses a
+     few lines below and the same rail the Services rows open with, so the window has one
+     way of saying "this one" rather than three. */
+  .compose__field:focus-within { box-shadow: inset 3px 0 0 var(--os-accent); }
 
   /* Targeted resets, deliberately NOT `all: unset`. On a textarea that also resets
      white-space from the UA's pre-wrap back to normal, which collapses every newline the
@@ -196,10 +201,19 @@ if (!contact.accessKey) {
   .compose__done-title { font-weight: 700; }
 
   @media (max-width: 640px) {
+    /* The sheet is height: auto on a phone, so flex: 1 on the message row had nothing to
+       fill and the textarea fell back to its own two rows. Pinning the sheet to the space
+       it actually has gives the message everything the note and the fields do not use,
+       which is the same fix and the same calc GameApp.astro uses for its thread. */
+    :global(#win-contact) {
+      height: calc(100dvh - var(--menubar-h) - var(--window-top) - var(--window-bottom)) !important;
+    }
     /* The note goes above the fields, and loses the line about answering: a phone sheet
        has one screen before the keyboard takes half of it, and the message box is worth
        more than a second sentence. */
     .compose { flex-direction: column; }
+    /* It takes what it needs and no more, so everything left goes to the message. */
+    .compose__note { flex: none; }
     .compose__note {
       width: auto; padding: var(--space-3);
       border-right: 0; border-bottom: 1px solid var(--os-hairline);
