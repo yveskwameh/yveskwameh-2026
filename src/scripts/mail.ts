@@ -39,7 +39,7 @@ export function init() {
       // wrong in some other way: "no-at-sign" fails the pattern too, and being told it is
       // missing a .com is worse than being told it is missing an @.
       if (email.value && !email.validity.typeMismatch && email.validity.patternMismatch) {
-        email.setCustomValidity('That address is missing its ending, like .com');
+        email.setCustomValidity('Add the ending, like gmail.com');
       }
     };
     email.addEventListener('input', check);
