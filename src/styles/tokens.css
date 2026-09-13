@@ -266,13 +266,27 @@ html[data-mode='dark'][data-accent='violet'] { --os-accent: #c08ad6; --os-accent
   html:not([data-mode='light'])[data-accent='violet'] { --os-accent: #c08ad6; --os-accent-bright: #d2a6e3; }
 }
 
+/* On a phone a window is a bottom sheet: it reaches the bottom edge and covers the dock
+   rather than sitting above it, so nothing is reserved down there any more. 0px rather
+   than 0, because the property is registered <length> below and a bare 0 is not one.
+
+   This one value is what makes every window taller on a phone: Window.astro reads it for
+   both `bottom` and `max-height`, and the per-window height pins in GameApp and MailApp
+   read it too. */
 @media (max-width: 640px) {
-  :root { --window-top: 24px; --window-bottom: calc(var(--dock-clear) + 16px); }
+  :root { --window-top: 24px; --window-bottom: 0px; }
 }
 /* A phone in landscape, or a very short desktop window. The dock reserve is the tight
-   version here or there is no room left to work in. */
+   version here or there is no room left to work in.
+
+   Split in two, and the reserve scoped to 641 and up on purpose: a 600x450 window matches
+   both this and the block above, and as the later rule this one would have handed the
+   dock reserve back to a sheet that no longer wants it. */
 @media (max-height: 480px) {
-  :root { --window-top: 16px; --window-bottom: calc(var(--dock-clear) + 16px); }
+  :root { --window-top: 16px; }
+}
+@media (max-height: 480px) and (min-width: 641px) {
+  :root { --window-bottom: calc(var(--dock-clear) + 16px); }
 }
 /* Registered so a calc() value computes down to plain pixels. window-manager.ts and
    drag.ts read these two, which is what keeps opening, dragging and resizing on one

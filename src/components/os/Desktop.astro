@@ -133,6 +133,38 @@ import Prints from './Prints.astro';
   }
   /* window-manager.ts puts has-window on the body whenever anything is open. */
   :global(body.has-window) .scrim { opacity: 1; }
+  /* On a phone a window is a bottom sheet, so the scrim has to reach further than it does
+     on a desktop: over the dock at 800, under the menu bar at 900, which is the reach Yves
+     asked for and the same one iOS gives the status bar. It needs no new geometry, because
+     .desktop already spans from under the menu bar to the bottom edge.
+
+     And it answers the pointer here, which it never does on a desktop. Without that, a tap
+     where the dock is would fall through the scrim and open Images from behind the sheet.
+     Swallowing it instead dismisses, because a tap on .scrim matches none of the exceptions
+     in window-manager.ts and closeOthers() is already what happens. */
+  @media (max-width: 640px) {
+    /* Raise the whole desktop over the dock while a sheet is up, rather than the window
+       alone, because the two engines disagree about this element. `.desktop` is
+       position: fixed with z-index auto: Chrome leaves it out of the stacking order, so a
+       window's own z-index competes with the dock directly, but iOS Safari treats every
+       fixed element as a stacking context, which traps the window inside `.desktop` and
+       lets the dock at 800 paint straight over the sheet. Measured on the iPhone 17
+       simulator, where the dock was sitting on top of the About text.
+
+       Lifting the layer works on both, and it makes them agree: the scrim and the window
+       order themselves inside it, the menu bar at 900 still sits above the lot, and the
+       dock is behind the scrim where a sheet wants it. Only while something is open, so
+       the dock is a normal dock the rest of the time. */
+    :global(body.has-window) .desktop { z-index: 810; }
+    .scrim { z-index: 805; }
+    :global(body.has-window) .scrim { pointer-events: auto; }
+    /* Under the sheet, not over it. The notice is 880 so it can clear the dock on a
+       desktop, and once .desktop became a stacking context above that 880 started winning
+       against the sheet instead: it landed across the title bar. A sheet is modal, so the
+       suggestion waits behind it and is there again when the sheet closes. Not display:
+       none, which would restart its twelve second wait every time a window closed. */
+    .notice { z-index: 806; }
+  }
   /* And the icons stop answering the pointer while it is up. The scrim itself stays
      pointer-events: none on purpose, so a click still reaches the desktop and dismisses
      the window, but an icon underneath a blur has no business lighting up and playing a

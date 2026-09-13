@@ -14,6 +14,38 @@ export function init() {
   const form = document.querySelector<HTMLFormElement>('.compose');
   if (!form) return;
 
+  /**
+   * A readable message for a half-written address.
+   *
+   * The field carries a pattern as well as type="email", because the spec's own rule for
+   * type="email" accepts `test@test`. What the browser then says about it is "Please match
+   * the format requested", which tells the visitor nothing about what is wrong or how to
+   * fix it. This replaces that one sentence.
+   *
+   * Cleared first on every keystroke, because a custom message sticks: leave it set and
+   * the field stays invalid after it has been corrected. Only the pattern is handled here.
+   * Empty, missing @ and a space all get the browser's own wording, which is already
+   * specific and already translated into the visitor's language.
+   *
+   * On input and change, not on submit: a submit event never fires on an invalid form, so
+   * a listener there would be the one place this could never run. By the time anyone
+   * presses Send they have typed, and autofill fires change.
+   */
+  const email = form.querySelector<HTMLInputElement>('[name="email"]');
+  if (email) {
+    const check = () => {
+      email.setCustomValidity('');
+      // typeMismatch as well, or this steals the better message from an address that is
+      // wrong in some other way: "no-at-sign" fails the pattern too, and being told it is
+      // missing a .com is worse than being told it is missing an @.
+      if (email.value && !email.validity.typeMismatch && email.validity.patternMismatch) {
+        email.setCustomValidity('That address is missing its ending, like .com');
+      }
+    };
+    email.addEventListener('input', check);
+    email.addEventListener('change', check);
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (form.dataset.state === 'sending') return;

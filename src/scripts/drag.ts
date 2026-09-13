@@ -10,7 +10,12 @@
 import { px } from './window-manager';
 
 export function init(selector: string) {
-  if (window.matchMedia('(max-width: 640px)').matches) return;
+  // A phone has no window to drag and no corner to resize: a window is a bottom sheet
+  // there, and the only gesture it wants is the one that puts it away. Same file because
+  // it is the same thing, a pointer drag on a window's chrome, and because this module is
+  // already fetched on the first pointer move. A separate one would cost the on-load
+  // budget an import line for a feature only phones use.
+  if (window.matchMedia('(max-width: 640px)').matches) return initSheets();
 
   // A window dragged to the right edge must not be stranded there when the viewport
   // shrinks. Same bounds as the drag, so it lands exactly where a drag would have.
@@ -152,6 +157,72 @@ export function init(selector: string) {
     grip.addEventListener('pointerup', drop);
     grip.addEventListener('pointercancel', drop);
   });
+}
+
+/**
+ * Swipe a sheet down to dismiss it, on a phone.
+ *
+ * Bound to the document rather than to each window, because it has to keep working for a
+ * window that has not been opened yet and there are seven of them. The press only counts
+ * on the grab handle or the title bar: the body scrolls, and a sheet that slid away every
+ * time somebody flicked through a case study would be unusable.
+ *
+ * While the finger is down the sheet carries `is-swiping`, which turns its transition off
+ * so it tracks exactly, and an inline `translate` that is cleared on release. `translate`
+ * rather than `transform`, matching the CSS, so the two can never fight over a shorthand.
+ *
+ * Closing goes through the window's own close light, which is the same route the Escape
+ * key takes. Nothing new has to be exported from window-manager.ts and the close path
+ * stays one path.
+ */
+function initSheets() {
+  // Past a quarter of its own height, or a flick faster than this, and it goes. NUDGE is
+  // what keeps the second rule honest: a few pixels in a couple of milliseconds is a very
+  // high speed and not a flick, it is a thumb landing slightly off centre.
+  const FAR = 0.25, FAST = 0.5, NUDGE = 40;   // FAST is px per ms
+  let sheet: HTMLElement | null = null;
+  let id = -1, startY = 0, startAt = 0, dy = 0;
+
+  const put = (v: string) => { if (sheet) sheet.style.translate = v; };
+
+  const end = (e: PointerEvent) => {
+    if (!sheet || e.pointerId !== id) return;
+    const win = sheet, travelled = dy;
+    const speed = travelled / Math.max(1, e.timeStamp - startAt);
+    sheet = null; id = -1;
+    win.classList.remove('is-swiping');
+    if (travelled > win.offsetHeight * FAR || (travelled > NUDGE && speed > FAST)) {
+      // Let it finish leaving before the class comes off, or it would vanish mid-flight.
+      win.style.translate = '0 100%';
+      setTimeout(() => {
+        win.style.translate = '';
+        win.querySelector<HTMLElement>('[data-close]')?.click();
+      }, px(document.documentElement, '--t-base') || 200);
+      return;
+    }
+    win.style.translate = '';   // under the threshold: the CSS springs it back
+  };
+
+  document.addEventListener('pointerdown', (e) => {
+    if (sheet || e.button !== 0) return;
+    const grab = (e.target as HTMLElement).closest?.('.window__grab, .window__titlebar');
+    if (!grab) return;
+    // Not the traffic lights. Close is a button, and a press on it is not a swipe.
+    if ((e.target as HTMLElement).closest('button, a')) return;
+    sheet = grab.closest('.window');
+    if (!sheet) return;
+    id = e.pointerId; startY = e.clientY; startAt = e.timeStamp; dy = 0;
+    sheet.classList.add('is-swiping');
+  }, { passive: true });
+
+  document.addEventListener('pointermove', (e) => {
+    if (!sheet || e.pointerId !== id) return;
+    dy = Math.max(0, e.clientY - startY);   // down only: a sheet does not go up
+    put(`0 ${dy}px`);
+  }, { passive: true });
+
+  document.addEventListener('pointerup', end);
+  document.addEventListener('pointercancel', end);
 }
 
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
