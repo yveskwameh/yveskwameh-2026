@@ -209,7 +209,10 @@ const rules = panes.map(({ p }) => `
        down and the next one is still one tap away. */
     .settings { grid-template-columns: minmax(0, 1fr); height: auto; padding: 0; }
     .settings::before { display: none; }
-    :global(#win-projects .window__body) { overflow: auto; padding-bottom: var(--dock-clear); }
+    /* A normal bottom padding now. It used to be --dock-clear, about 98px, so the last of
+       a case study cleared the dock; the sheet covers the dock instead, and the window
+       itself already pads for the home indicator. */
+    :global(#win-projects .window__body) { overflow: auto; padding-bottom: var(--space-4); }
 
     .settings__picker {
       display: block; order: -1; position: sticky; top: 0; z-index: 20;

@@ -36,6 +36,10 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
   aria-labelledby={`win-${id}-title`}
   style={`--w:${width}px;${height ? `--h:${height}px;` : ''}`}
 >
+  {/* The sheet's grab handle. Nothing above 640px, where a window is a window and the
+      title bar is what you drag. On a phone it is the thing a thumb reaches for, and
+      scripts/drag.ts hangs the swipe-to-dismiss off it and the title bar together. */}
+  <div class="window__grab" aria-hidden="true"></div>
   <div class="window__titlebar">
     <div class="window__lights">
       {closeHref
@@ -105,6 +109,10 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
   .window.is-dragging .window__titlebar { cursor: var(--cur-grabbing); }
   .window__lights { display: flex; gap: 8px; }
   /* display: block so this works as an <a> as well as a <button>, for closeHref above. */
+  /* Nothing on a desktop: a window is dragged by its title bar there, and a grab handle
+     on a thing that does not lift off the bottom of the screen would be a lie. The phone
+     block at the end of this file is the only place it exists. */
+  .window__grab { display: none; }
   .light { display: block; width: 12px; height: 12px; border-radius: 50%; padding: 0; cursor: var(--cur-hand); border: 1px solid; }
   .light--close { background: var(--light-close); border-color: var(--light-close-line); }
   /* The inactive pair. Same grey the whole set goes when the window is not focused. */
@@ -175,13 +183,57 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
   .window--compose .window__body { padding: 0; overflow: hidden; display: grid; }
   @keyframes compose-in { from { opacity: 0; transform: translateY(8px) scale(.98); } }
 
+  /* ------------------------------------------------------------------
+     The phone. A window stops being a window and becomes a bottom sheet: it rises from
+     the bottom edge, covers the dock instead of stepping around it, and the scrim behind
+     it dims everything but the menu bar.
+
+     --window-bottom is 0 here (tokens.css), so `bottom` and `max-height` below both
+     follow from that one value, as do the per-window height pins in GameApp and MailApp.
+     ------------------------------------------------------------------ */
   @media (max-width: 640px) {
     .window {
       top: auto !important; bottom: var(--window-bottom); left: 0 !important;
       width: 100vw !important; height: auto !important;
       max-height: calc(100dvh - var(--menubar-h) - var(--window-top) - var(--window-bottom));
-      border-radius: var(--r-window);
+      /* Top corners only. A sheet has no bottom corners, it has an edge of the screen. */
+      border-radius: var(--r-window) var(--r-window) 0 0;
+      /* The dock is z-index 800 and .desktop creates no stacking context, so a window
+         competes with it directly. It has to win, or the dock draws over the sheet.
+         !important because focusWindow writes an inline z-index, and a fixed value is
+         safe because closeOthers keeps exactly one window open at a time. */
+      z-index: 810 !important;
+      /* The sheet reaches the true bottom edge, so on a phone with a home indicator the
+         last row of content would sit under it. The dock already does this at Dock.astro. */
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
+    /* Slides in AND out, with no script. `display` cannot be transitioned on its own, so
+       allow-discrete holds the element visible for the length of the exit, and
+       @starting-style gives the entrance somewhere to come from. A browser without either
+       simply snaps, which is exactly what every window did here before today. */
+    .window {
+      translate: 0 100%;
+      transition: opacity var(--t-fast),
+                  translate var(--t-base) var(--ease),
+                  display var(--t-base) allow-discrete;
+    }
+    .window.is-open { translate: 0 0; }
+    @starting-style { .window.is-open { translate: 0 100%; } }
+    /* While a finger is on it, drag.ts writes `translate` inline every frame and the
+       transition has to be out of the way or the sheet lags behind the thumb. */
+    .window.is-swiping { transition: none; }
+
+    .window__grab {
+      display: grid; place-items: center; flex: none; height: 18px;
+      background: var(--os-titlebar); cursor: grab; touch-action: none;
+    }
+    .window__grab::after {
+      content: ''; display: block; width: 36px; height: 4px; border-radius: var(--r-pill);
+      background: var(--os-line);
+    }
+    /* The title bar is the other half of the grab area, so a thumb landing anywhere in
+       the chrome starts the gesture rather than only on a 4px pill. */
+    .window__titlebar { touch-action: none; }
     .window__grip { display: none; }
   }
 </style>

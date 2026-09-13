@@ -7,6 +7,21 @@
  * for nothing. And the form carries a real action, so with the script blocked the browser
  * posts it the ordinary way rather than doing nothing.
  *
+ * The address field carries a `pattern` on top of type="email", and that is not belt and
+ * braces. The HTML standard's own rule for type="email" does not require a dot in the
+ * domain, so `test@test`, `yves@gmail` and `a@b` are all valid to a browser and all used
+ * to submit, which meant an enquiry Yves could not reply to. The pattern adds the one
+ * thing the spec leaves out, a dot and a real TLD, and nothing else: type="email" is
+ * already rejecting spaces, a missing @ and a doubled dot by the time it is consulted,
+ * and both constraints have to pass. Checked against ten real addresses, including plus
+ * addressing, subdomains, an apostrophe, .museum and an internationalised domain, with
+ * none broken.
+ *
+ * What it cannot catch is a typo inside a well-formed address, `yves@gmial.com`, which
+ * needs a confirmation email and therefore a server. And it is not security: anyone can
+ * POST to the form service directly and always could. The inbox is protected by that
+ * service's own filtering and by the honeypot below, not by this.
+ *
  * Every string the states need lives here rather than in the script, for the same reason
  * as the lock screen copy: string literals are not minified, so copy in JS is charged
  * against the JS budget while copy in markup rides along in the gzipped HTML.
@@ -52,7 +67,11 @@ if (!contact.accessKey) {
   <div class="compose__form">
   <label class="compose__field">
     <span class="compose__label">From</span>
+    {/* pattern as well as type, because type="email" alone lets through an address that
+        cannot receive mail. See the note at the top of this file. */}
     <input class="compose__input" type="email" name="email" required
+           pattern="[^@]+@[^@]+\.[A-Za-z]{2,}"
+           title="Use a complete address, like name@example.com"
            autocomplete="email" maxlength="120" placeholder="your email address" />
   </label>
 
