@@ -6,20 +6,25 @@ import type { APIRoute } from 'astro';
  * static file is the usual way this breaks: it keeps pointing at the old host for months
  * because nobody remembers a file that never changes.
  *
- * Worth knowing before editing, and it is more than a footnote: Cloudflare serves a
- * managed robots.txt of its own on this account and appends it to ours. Checked against
- * the live site on 2026-09-14, their half is not only comments and content signals. It
- * carries `Content-Signal: search=yes,ai-train=no,use=reference` and nine explicit
- * `Disallow: /` groups, for GPTBot, ClaudeBot, CCBot, Google-Extended, Applebot-Extended,
- * Bytespider, meta-externalagent, Amazonbot and Cloudflare's own renderer.
+ * This file is the whole answer again, but it was not always, and that is worth knowing
+ * before editing.
  *
- * So BLOCK_AI_TRAINING below does not decide the answer on its own. This file currently
- * ships zero Disallow lines and the live robots.txt has nine, all of them Cloudflare's.
- * Yves asked for nothing to be blocked, and until that is turned off in the zone's AI
- * Crawl Control settings, the edge is still saying no on his behalf.
+ * Cloudflare can serve a managed robots.txt of its own and prepend it to this one. It was
+ * on. On 2026-09-14 this file shipped zero Disallow lines while the live robots.txt had
+ * nine, none of them ours: GPTBot, ClaudeBot, CCBot, Google-Extended, Applebot-Extended,
+ * Bytespider, meta-externalagent, Amazonbot and Cloudflare's own renderer, plus
+ * `Content-Signal: search=yes,ai-train=no,use=reference`. So flipping BLOCK_AI_TRAINING
+ * below changed nothing anyone could see, and the reason was two settings away in the
+ * dashboard rather than anywhere in this repo.
  *
- * Which means: after any change here, `curl https://yveskwameh.com/robots.txt` and read
- * both halves. The origin file is only half the answer.
+ * Turned off the same day, in the zone's Security settings: `is_robots_txt_managed` to
+ * false under "Manage your robots.txt", and `ai_bots_protection` to disabled under
+ * "Block AI bots". Verified after: zero Disallow lines, no Content-Signal, and GPTBot,
+ * ClaudeBot, CCBot, Google-Extended and PerplexityBot all served 200 at the edge.
+ *
+ * The lesson survives the fix. After any change here, `curl https://yveskwameh.com/robots.txt`
+ * and read what actually ships. If a block reappears that is not in this file, it came
+ * from the zone, not from Astro.
  */
 
 /**
