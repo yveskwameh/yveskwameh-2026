@@ -62,8 +62,15 @@ and a folder of 2880px masters is not something visitors should be able to downl
 
 Usage
 -----
+    npm run build
+    zsh tools/shoot-project-images.sh          # capture what can be captured from a URL
     python3 tools/project-images.py            # report only, changes nothing
     python3 tools/project-images.py --write    # generate the files and rewrite the markdown
+
+tools/shoot-project-images.sh writes the masters this reads. Do not take screenshots with
+`chrome --headless --window-size=393,850` directly: Chrome clamps the window to about 500px
+wide, lays out at 500, and then screenshots the 393 you asked for, so the right hand side of
+every phone shot is missing. That harness exists to work around it and says so.
 
 sips is the converter, the same one behind the wallpaper and the prints. ffprobe reads
 dimensions back, because the markdown carries explicit width and height and a wrong ratio
