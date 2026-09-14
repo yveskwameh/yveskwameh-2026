@@ -11,8 +11,7 @@ filename: "path-catalog.webflow"
 featured: false
 ---
 
-<!-- DRAFT. The catalog audit is the real story here. Yves to fill in the counts and the
-     client's own framing. -->
+[//]: # (DRAFT. The catalog audit is the real story here. Yves to fill in the counts and the client's own framing. This note does not render, so it cannot be read from the published HTML.)
 
 ## The problem
 

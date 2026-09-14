@@ -11,7 +11,7 @@ filename: "compass.webflow"
 featured: false
 ---
 
-<!-- DRAFT. Replace the specifics with the real brief and outcome. -->
+[//]: # (DRAFT. Replace the specifics with the real brief and outcome. This note does not render, so it cannot be read from the published HTML.)
 
 ## The problem
 

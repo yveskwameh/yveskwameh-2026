@@ -4,7 +4,9 @@ wallpaper.avif   the desktop background (export 2560px wide, under 400KB)
 avatar.avif      Yves's photo, same as the favicon, 144x144
 about/           six photographs of Yves, in the About window, 320 and 800 wide
 prints/          nine photographs by Yves, the pile on the desktop, 240 and 1400 wide
-projects/        case study covers (96x96) and shots (720x450)
+projects/        case study covers (96x96) and shots (720x450), named <slug>.avif for
+                 the cover, <slug>-1.avif for the banner, then -2 upward for each shot
+                 in the body, in the order they appear
 badges/          Upwork and Behance, SVG, with a -dark variant each
 feedback/        client avatars
 
