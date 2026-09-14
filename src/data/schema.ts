@@ -74,7 +74,7 @@ export function website(base: URL | string) {
     '@type': 'WebSite',
     '@id': ids.website(base),
     name: site.name,
-    alternateName: 'YvesOS',
+    alternateName: 'Yves Desktop',
     url: new URL('/', base).href,
     description:
       'The portfolio of Yves Kwameh, built as a retro operating system. Open the windows ' +

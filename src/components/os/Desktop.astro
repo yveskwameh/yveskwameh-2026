@@ -14,6 +14,7 @@ import ServicesApp from '../apps/ServicesApp.astro';
 import TestimonialsApp from '../apps/TestimonialsApp.astro';
 import { desktopItems } from '../../data/desktop';
 import Prints from './Prints.astro';
+import Icon from './Icon.astro';
 ---
 <main class="desktop" id="desktop">
   {desktopItems.map((item) => <DesktopIcon {...item} />)}
@@ -28,7 +29,16 @@ import Prints from './Prints.astro';
   {/* Explicitly sized, unlike the other windows. The browser inside it is a two column
       layout whose panes fill their side and scroll themselves, and `height: 100%` against
       a window that sizes to its content collapses to the height of the sidebar. */}
-  <Window id="projects" title="Work" filename="work.folder" width={860}><ProjectsApp /></Window>
+  <Window id="projects" title="Work" filename="work.folder" width={860} zoomable>
+    {/* The sidebar toggle, in the title bar because that is where a Mac keeps one. It
+        points at a checkbox inside ProjectsApp: a label reaches across the document, so
+        the control can live out here while the state it flips lives in there. */}
+    <label class="work-rail-toggle" slot="toolbar" for="work-rail" title="Hide the case study list">
+      <Icon name="layout" size={15} />
+      <span class="sr-only">Show or hide the case study list</span>
+    </label>
+    <ProjectsApp />
+  </Window>
   {/* No height prop: GameApp.astro opens this one at the full height the desktop allows,
       so the thread has the most room it can get. Wider than the 400 column it holds on
       purpose: the margins either side are the layout. */}
@@ -118,6 +128,22 @@ import Prints from './Prints.astro';
 
 <style>
   .desktop { position: fixed; inset: var(--menubar-h) 0 0 0; }
+
+  /* The Work sidebar toggle. Pushed to the right of the title bar with auto margin, the
+     way a Mac toolbar button sits opposite the traffic lights. It renders into the
+     toolbar slot in Window.astro, so it is inside .window__titlebar and has to opt out of
+     the drag the bar starts. */
+  .work-rail-toggle {
+    margin-left: auto; display: grid; place-items: center;
+    width: 22px; height: 22px; border-radius: var(--r-inner);
+    color: var(--os-muted); cursor: var(--cur-hand);
+  }
+  .work-rail-toggle:hover { background: var(--os-hover); color: var(--os-ink); }
+  /* Checked means the rail is hidden, so the control is showing its "on" state. */
+  :global(.window:has(#work-rail:checked)) .work-rail-toggle { background: var(--os-press); color: var(--os-ink); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  /* No rail to collapse on a phone, so no control for it. */
+  @media (max-width: 640px) { .work-rail-toggle { display: none; } }
   /* Refresh blinks the icons out and back. It is the only visible sign that the desktop
      redrew, since nothing else about it changes. */
   .desktop.is-refreshing :global(.icon), .desktop.is-refreshing :global(.print) { opacity: 0; }

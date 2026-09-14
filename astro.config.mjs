@@ -10,11 +10,14 @@ export default defineConfig({
      canonical pointing at the wrong host tells Google to index that host instead, and an
      og:image on the wrong host shows a broken card.
 
-     Deliberately NOT yveskwameh.com: that domain is live on Netlify serving the previous
-     site, so anything built from it would point at pages showing something else. Change
-     this the day the domain moves and everything above follows in one build. The rest of
-     that day is written down in docs/DOMAIN-MOVE.md. */
-  site: 'https://yveskwameh.2026-portfolio.workers.dev',
+     The domain has moved. yveskwameh.com is served by Cloudflare and returns this site,
+     confirmed by fetching it, so this is now the host every generated URL should name.
+     It was left on workers.dev while yveskwameh.com still pointed at the Netlify site,
+     and for a while after the move it was stale: the real domain was serving these pages
+     while telling search engines the canonical copy lived somewhere else. That is the
+     exact failure docs/DOMAIN-MOVE.md was written to prevent, and step 1 of that runbook
+     is this line. The rest of that day is still in the file. */
+  site: 'https://yveskwameh.com',
 
   // Fully static build. No adapter needed for Cloudflare Workers static assets.
   output: 'static',

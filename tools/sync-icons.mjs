@@ -13,6 +13,8 @@ const ICONS = [
   // window chrome + actions
   'close', 'minus', 'plus', 'zoom-in', 'external-link', 'arrow-right', 'chevron-down',
   'drag-and-drop', 'lock', 'power',
+  // the sidebar toggle in the Work title bar: two panels, the left one the rail
+  'layout',
   // apps
   'folder', 'file-text', 'notes', 'mail', 'music', 'play', 'pause', 'trash', 'user', 'briefcase',
   'image', 'search', 'reload', 'check',

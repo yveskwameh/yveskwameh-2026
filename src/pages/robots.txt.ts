@@ -13,12 +13,18 @@ import type { APIRoute } from 'astro';
  */
 
 /**
- * Search and answer engines are allowed. Crawlers whose only job is collecting training
- * data are not. Yves asked for the block; the split is what keeps it from costing him
- * anything, because the same companies run separate crawlers for the two jobs and
- * document which is which.
+ * Every crawler is allowed, training ones included.
  *
- * Allowed on purpose, and it matters that they stay allowed:
+ * There used to be a split here: search and answer engines allowed, training-only crawlers
+ * blocked. The split worked, because the same companies run separate crawlers for the two
+ * jobs and document which is which. It came off because Yves decided being in the models
+ * is worth more to him than withholding the pages from them.
+ *
+ * The names below are kept as the record of which crawler does which job, since that is
+ * the part that is tedious to work out again and easy to get wrong. They are only written
+ * into the file when BLOCK_AI_TRAINING is true.
+ *
+ * Never blocked in either mode, and it matters that they stay that way:
  *   Googlebot, Bingbot, Applebot, DuckDuckBot   ordinary search
  *   OAI-SearchBot                               ChatGPT search results
  *   ChatGPT-User                                someone in ChatGPT opening this site
@@ -27,9 +33,16 @@ import type { APIRoute } from 'astro';
  * These are how the site gets cited in an AI answer at all. Blocking them would be
  * blocking the referral, not the training.
  *
- * Flip this to false to allow everything, and delete nothing.
+ * Currently false: nothing is blocked. Yves asked for the block to come off entirely, so
+ * the training crawlers are allowed as well as the search and answer ones. He knows what
+ * that means, that his writing and images can end up in a training set and that a crawl
+ * cannot be recalled later, and he wants to be in the models as well as in the answers.
+ *
+ * The list below stays because the switch is the point: flip this back to true and the
+ * block returns exactly as it was, with the documentation intact. Nothing has to be
+ * rewritten from memory.
  */
-const BLOCK_AI_TRAINING = true;
+const BLOCK_AI_TRAINING = false;
 
 /** Verified against each vendor's own crawler documentation, 2026-09-09. */
 const AI_TRAINING = [
