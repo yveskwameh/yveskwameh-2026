@@ -43,7 +43,7 @@ const schema = [
       window on this same case study. */}
   <Window id={p.id} title={p.data.title} filename={p.data.filename} open main width={760}
           closeHref={`/#work-${p.id}`}>
-    <CaseStudy p={p}><Content /></CaseStudy>
+    <CaseStudy p={p} eager><Content /></CaseStudy>
     <p class="back"><a href={`/#work-${p.id}`}>Back to the desktop</a></p>
   </Window>
 </Base>

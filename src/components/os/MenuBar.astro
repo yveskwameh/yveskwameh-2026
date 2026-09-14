@@ -155,7 +155,7 @@ const accents = [
         that opened it and the whole surface costs one <details>. */}
     <div class="anchor anchor--cc">
       <details class="menu menu--cc" id="cc" data-menu>
-        <summary id="clock-sum"><span id="clock"></span></summary>
+        <summary id="clock-sum"><span id="clock"><span></span><span></span></span></summary>
       </details>
 
       <div class="tray tray--cc" role="group" aria-label="Control Center">
@@ -254,6 +254,27 @@ const accents = [
           <a class="sp__link" href="https://open.spotify.com/playlist/6vjBKgpH5qrt7DW06uJYgL" target="_blank" rel="noopener noreferrer">
             Open in Spotify <span aria-hidden="true">&rarr;</span>
           </a>
+        </div>
+
+        {/* The social links, on a phone only.
+
+            In the bar they are four 15px glyphs in a row that, with the speaker, the
+            battery and the clock, took 321 of a 393px screen and pushed the clock onto a
+            second line. Down here they are rows with names on them, which is both easier
+            to hit and easier to understand than an unlabelled mark. Same `site.socials`,
+            so the bar and this cannot drift apart.
+
+            Rendered always and hidden above 640 rather than built conditionally: the
+            markup costs a few bytes in a gzipped page, and a conditional would mean the
+            desktop and the phone disagreeing about what exists. */}
+        <div class="cc__tile cc__socials">
+          <div class="cc__head"><strong>Elsewhere</strong></div>
+          {site.socials.map((so) => (
+            <a class="cc__social" href={so.url} target="_blank" rel="noopener noreferrer">
+              <Icon name={so.glyph} size={15} />
+              <span>{so.name}</span>
+            </a>
+          ))}
         </div>
 
         <div class="cc__pair">
@@ -464,6 +485,19 @@ const accents = [
   }
   /* Nothing hovers on a touch screen, so a tip there can only ever be a flash on tap. */
   @media (hover: none) { .tip::after, .tip::before { display: none; } }
+
+  /* The Control Center socials tile is a phone thing. Above 640 the links live in the bar
+     where there is room for them, and this would be the same four links twice. */
+  .cc__socials { display: none; }
+  .cc__social {
+    display: grid; grid-template-columns: 15px minmax(0, 1fr); align-items: center; gap: 10px;
+    padding: 9px var(--space-2); margin: 2px 0;
+    border-radius: var(--r-inner); color: var(--os-ink); text-decoration: none;
+    font: 12px var(--font-chrome); cursor: var(--cur-hand);
+  }
+  .cc__social:hover { background: var(--os-hover); }
+  /* The two halves of the clock. Both always render; the phone hides one. */
+  #clock { display: inline-flex; gap: 6px; align-items: baseline; }
 
   /* ==================================================================
      The two panels.
@@ -748,6 +782,24 @@ const accents = [
        they are the only way to reach the volume and the theme. */
     .menubar__name, .notch { display: none; }
     .menu:not(.menu--brand):not(.menu--snd):not(.menu--cc) { display: none; }
+
+    /* ----------------------------------------------------------------
+       The bar, cut down to what a status bar should be.
+
+       It carried the speaker, four social glyphs, the battery and a clock showing weekday,
+       day, month and time. That came to 321 of a 393px screen, and below 375 the clock
+       wrapped to a second line, which is what Yves photographed. Every phone OS shows the
+       time alone up there and keeps the date one tap away, so this does the same.
+
+       The date is still one tap away: Control Center has it in full at the top, and the
+       social links are now a labelled list down there too. Nothing is lost, it moves.
+       ---------------------------------------------------------------- */
+    #clock > :first-child { display: none; }
+    /* a.menubar__link, not .menubar__link. The speaker is a <summary> carrying the same
+       class for the same box, and hiding it would take the volume and the theme with it,
+       which is the one thing the comment at the top of this block says must not happen. */
+    a.menubar__link { display: none; }
+    .cc__socials { display: block; }
     /* Anchored under an icon that is now near the edge, so the panel is clamped to the
        viewport instead. position: fixed rather than absolute, because an absolute box
        cannot be measured against the screen. */

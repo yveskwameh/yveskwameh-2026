@@ -15,8 +15,20 @@
  * sidebar uses at 20px. It cannot be stretched across a pane.
  */
 import type { CollectionEntry } from 'astro:content';
-interface Props { p: CollectionEntry<'projects'> }
-const { p } = Astro.props;
+interface Props {
+  p: CollectionEntry<'projects'>;
+  /**
+   * Load the banner eagerly instead of lazily.
+   *
+   * The same component serves two surfaces with opposite needs. Inside the Work window it
+   * is one of six panes, five of them hidden, so lazy is right and eager would fetch six
+   * banners to show one. On the standalone /work/<id> page it is the topmost thing on the
+   * screen and an LCP candidate, and lazy there means the largest element on the page is
+   * deliberately fetched late. Only that page passes this.
+   */
+  eager?: boolean;
+}
+const { p, eager = false } = Astro.props;
 
 const FACTS: [string, string][] = [
   ['Client', p.data.client],
@@ -29,7 +41,10 @@ const FACTS: [string, string][] = [
   {p.data.banner && (
     /* alt is empty on purpose: the shot is decorative here, and every image that carries
        meaning is inside the write up with a real description on it. */
-    <img class="cs__banner" src={p.data.banner} alt="" width="720" height="450" loading="lazy" decoding="async" />
+    <img class="cs__banner" src={p.data.banner} alt="" width="720" height="450"
+         loading={eager ? 'eager' : 'lazy'}
+         fetchpriority={eager ? 'high' : undefined}
+         decoding="async" />
   )}
 
   <div class="cs__inner">
