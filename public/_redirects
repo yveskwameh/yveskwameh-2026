@@ -1,0 +1,17 @@
+# Cloudflare static assets reads this file the same way Pages does, so it is served from
+# the assets binding before the Worker ever runs.
+#
+# Every line here exists because a URL that was once live stopped being live. A case study
+# that 404s is worse than one that moved: the link is in someone's message thread, or in
+# Google's index, and neither of those get to be updated.
+
+# YvesOS became Yves Desktop, so the slug moved with the name.
+/work/yves-os/   /work/yves-desktop/   301
+/work/yves-os    /work/yves-desktop/   301
+
+# Compass and Path Catalog are gone. There is no closer page than the desktop itself,
+# which is where the Work window lives.
+/work/compass/   /   301
+/work/compass    /   301
+/work/path/      /   301
+/work/path       /   301

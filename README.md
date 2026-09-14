@@ -1,4 +1,4 @@
-# YvesOS
+# Yves Desktop
 
 Yves Kwameh's portfolio, built as a retro operating system. A lock screen, a desktop you
 can drag icons around, windows that open, a dock, right-click menus, and everyone on the

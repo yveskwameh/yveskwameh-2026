@@ -15,7 +15,7 @@ featured: true
 Files starting with `_` are ignored (see the pattern in content.config.ts). Copy this one,
 drop the underscore, and write the case study in plain markdown.
 
-The shape, set by car-guys.md and yves-os.md: open on the problem, then a section per
+The shape, set by car-guys.md and yves-desktop.md: open on the problem, then a section per
 thing you actually made, then the result. Four or five `##` headings, and a shot under
 each of the middle ones. It is a design case study, so the pictures carry as much of it
 as the writing does.

@@ -28,7 +28,15 @@
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["Room"] }
   ],
+  // Written by the Cloudflare dashboard, so keep it as it is or the next dashboard change
+  // will fight this file. Invocation logs on, traces off.
   "observability": {
-    "enabled": true
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": false
+    }
   }
 }
