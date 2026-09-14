@@ -4,7 +4,7 @@ client: "BOH Financial"
 year: 2026
 summary: "Accounting for creators and talent, on a site that names who it is for before it names what it does."
 role: "Design and build"
-stack: ["Figma"]
+stack: ["Figma", "Webflow"]
 cover: "/images/projects/boh.avif"
 banner: "/images/projects/boh-1@720.avif"
 bannerSrcset: "/images/projects/boh-1@720.avif 720w, /images/projects/boh-1@1440.avif 1440w"
@@ -13,8 +13,6 @@ featured: false
 ---
 
 [//]: # (No `url` on purpose, and this is settled rather than pending. Yves has confirmed that boh-cfo.com as it stands today is not his work: it is a later light redesign headlined "Your back of house, handled." Every shot in this case study comes from the recording of the dark site he delivered. Linking the domain would send people to somebody else's design under his name, so it stays off unless that changes.)
-
-[//]: # (Yves to confirm: `stack`. The recording gives away no platform, so only Figma is claimed here. Add Webflow if that is what it was built in.)
 
 ## The problem
 
