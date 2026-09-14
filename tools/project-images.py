@@ -30,7 +30,7 @@ re-shot one project at a time rather than all at once.
 The ladder depends on how wide the image is actually allowed to get, which is a CSS fact
 in CaseStudy.astro, not a guess:
 
-    no class    the pane, up to 1438px            720, 1440, 2160
+    no class    the pane, up to 1438px            720, 1440, 2880
     .tall       capped at min(100%, 420px)        420, 840
     .tall-lg    capped at min(100%, 560px)        560, 1120
 
@@ -90,7 +90,12 @@ WRITE = '--write' in sys.argv
 # Width ladder and the `sizes` that goes with it, keyed by the class on the tag. These
 # mirror the caps in CaseStudy.astro. If that CSS changes, change this with it.
 LADDERS = {
-    '':        ([720, 1440, 2160], '(max-width: 640px) 100vw, min(100vw, 1440px)'),
+    # The top rung is 2880 rather than a rounder 2160 because that is the exact number the
+    # widest case actually needs: the pane reaches 1438 CSS pixels once the window is zoomed
+    # and the rail collapsed, which on a 2x screen is 2876 device pixels. 2160 left a 1.33x
+    # upscale in precisely the state a designer is most likely to look at. The masters are
+    # 2880 wide, so nothing is invented to fill it.
+    '':        ([720, 1440, 2880], '(max-width: 640px) 100vw, min(100vw, 1440px)'),
     'tall':    ([420, 840],        '(max-width: 640px) 100vw, 420px'),
     'tall-lg': ([560, 1120],       '(max-width: 640px) 100vw, 560px'),
 }

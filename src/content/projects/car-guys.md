@@ -8,7 +8,7 @@ stack: ["Figma", "Webflow"]
 url: "https://thecarguysinc.com/"
 cover: "/images/projects/car-guys.avif"
 banner: "/images/projects/car-guys-1@720.avif"
-bannerSrcset: "/images/projects/car-guys-1@720.avif 720w, /images/projects/car-guys-1@1440.avif 1440w, /images/projects/car-guys-1@2160.avif 2160w"
+bannerSrcset: "/images/projects/car-guys-1@720.avif 720w, /images/projects/car-guys-1@1440.avif 1440w, /images/projects/car-guys-1@2880.avif 2880w"
 filename: "car-guys.webflow"
 featured: true
 ---
@@ -68,11 +68,11 @@ then How It Works as three steps, then the form. Someone who lands on Sell Your 
 search reads the same structure as someone who came through the home page, so the site only
 has to be learned once.
 
-<img src="/images/projects/car-guys-6@720.avif" alt="Buy or lease a new car, the first of the three service pages" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/car-guys-6@720.avif 720w, /images/projects/car-guys-6@1440.avif 1440w, /images/projects/car-guys-6@2160.avif 2160w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
+<img src="/images/projects/car-guys-6@720.avif" alt="Buy or lease a new car, the first of the three service pages" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/car-guys-6@720.avif 720w, /images/projects/car-guys-6@1440.avif 1440w, /images/projects/car-guys-6@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
-<img src="/images/projects/car-guys-7@720.avif" alt="Sell your car, the same shape with its own three steps" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/car-guys-7@720.avif 720w, /images/projects/car-guys-7@1440.avif 1440w, /images/projects/car-guys-7@2160.avif 2160w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
+<img src="/images/projects/car-guys-7@720.avif" alt="Sell your car, the same shape with its own three steps" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/car-guys-7@720.avif 720w, /images/projects/car-guys-7@1440.avif 1440w, /images/projects/car-guys-7@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
-<img src="/images/projects/car-guys-8@720.avif" alt="Exit your lease or finance, the third page on the same pattern" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/car-guys-8@720.avif 720w, /images/projects/car-guys-8@1440.avif 1440w, /images/projects/car-guys-8@2160.avif 2160w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
+<img src="/images/projects/car-guys-8@720.avif" alt="Exit your lease or finance, the third page on the same pattern" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/car-guys-8@720.avif 720w, /images/projects/car-guys-8@1440.avif 1440w, /images/projects/car-guys-8@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 The FAQ answers were written from the service copy rather than invented, so the page
 answers its own questions instead of contradicting itself further down.
