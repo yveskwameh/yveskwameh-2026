@@ -92,11 +92,18 @@ whenever Google next re-checks.
 
 1. In Search Console with the `yveskwameh.com` property selected, go to **Indexing**, then
    **Sitemaps** in the left sidebar.
-2. The field is already prefixed with `https://yveskwameh.com/`, so type only:
+2. Enter the **full URL**, not just the filename:
 
    ```
-   sitemap-index.xml
+   https://yveskwameh.com/sitemap-index.xml
    ```
+
+   This is the one place a Domain property behaves differently from a URL-prefix one and
+   it is easy to get backwards. A URL-prefix property pins the field with the host already
+   filled in, so you type only the filename. A Domain property covers http and https, www
+   and bare, and every subdomain, so Google cannot guess which host is meant and shows no
+   prefix at all. Giving it only `sitemap-index.xml` there returns "Invalid sitemap
+   address. Please enter a valid path to a sitemap in your site."
 
 3. Submit. Status goes to **Success**. It is an index, so Google follows it to
    `sitemap-0.xml` on its own and ends up with 7 URLs, the desktop plus six case studies.
