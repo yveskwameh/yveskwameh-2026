@@ -1,0 +1,54 @@
+# Cloudflare static assets reads this the same way Pages does. Rules are matched in order
+# and the most specific match wins, so the site-wide block goes first and the long-cache
+# globs after it.
+#
+# Two separate problems are solved here. The first is that the site shipped no security
+# headers at all. The second is that content-hashed files were being revalidated on every
+# repeat visit, which is the one kind of request that never needs to happen.
+
+/*
+  # Say HTTPS only, for two years, including subdomains. Safe to assert now: Always Use
+  # HTTPS is on at the zone, every host variant 301s to the apex over TLS, and the
+  # certificate covers www. Worth knowing before changing it: a browser that has seen
+  # this header will refuse plain http to this domain for the full max-age and there is
+  # no way to call that back other than waiting it out or serving max-age=0 for as long
+  # as it takes every visitor to come back. Do not add `preload` without meaning it.
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+  # Take the declared Content-Type at its word and never sniff. The one that actually
+  # matters here: without it a browser may decide a .txt or an .avif is something
+  # executable based on its bytes.
+  X-Content-Type-Options: nosniff
+  # Send the full URL to ourselves, only the origin to anyone else. Case study paths name
+  # clients, and those should not travel in a Referer header to a third party.
+  Referrer-Policy: strict-origin-when-cross-origin
+  # Nothing here asks for a camera, a microphone or a location, so nothing should be able
+  # to. An empty allowlist denies the feature outright rather than prompting.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  # Clickjacking. The site is a desktop full of buttons, which is exactly the kind of
+  # thing worth framing invisibly over something else.
+  X-Frame-Options: DENY
+
+# Everything below is content-hashed or immutable by nature, so it can be cached for a
+# year and never revalidated. The filename changes when the bytes change, which is what
+# makes `immutable` true rather than optimistic.
+#
+# HTML is deliberately absent. A page must be revalidated or a deploy would not reach
+# anyone who had already visited.
+
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/cursors/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/icons/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/audio/*
+  Cache-Control: public, max-age=31536000, immutable

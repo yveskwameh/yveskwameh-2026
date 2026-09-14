@@ -41,7 +41,7 @@ ${sorted
 
 ## About
 
-- [${site.name}](${abs('/')}): the desktop itself, with the About, Work, Music and Contact windows on it.
+- [${site.name}](${abs('/')}): the desktop itself, with the About, Work, Services, Feedback and Contact windows on it.
 
 ## Optional
 

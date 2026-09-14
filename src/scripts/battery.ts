@@ -20,6 +20,11 @@ export function initBattery() {
       // tooltip now, and that also lives on ::after, so the two were fighting over one
       // pseudo-element and the tooltip won. The number simply vanished.
       if (pct) pct.textContent = p + '%';
+      // The element is role="img", which makes everything inside it presentational, so
+      // the number a sighted visitor reads would otherwise not exist for anyone using a
+      // screen reader. The label is the only place left to put it. Free: this file is
+      // fetched on the first pointer move, not on load.
+      el.setAttribute('aria-label', b.charging ? `Battery ${p}%, charging` : `Battery ${p}%`);
       el.style.setProperty('--lvl', p + '%');
       el.classList.toggle('is-charging', b.charging);
       el.classList.toggle('is-low', p < 21 && !b.charging);

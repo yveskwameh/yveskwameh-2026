@@ -146,7 +146,7 @@ const accents = [
         the pseudo-element, and then this got a tooltip, whose text is also on ::after.
         One pseudo-element cannot print two things, so the tooltip silently ate the
         number. A span costs nothing and both can exist. */}
-    <span class="batt tip" id="batt" data-tip="Battery" aria-label="Battery">
+    <span class="batt tip" id="batt" data-tip="Battery" role="img" aria-label="Battery">
       <span class="batt__box"><i class="batt__fill"></i></span>
       <b class="batt__pct" id="batt-pct"></b>
     </span>

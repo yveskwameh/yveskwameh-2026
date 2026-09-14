@@ -31,7 +31,7 @@
  */
 import { prints } from '../../data/photos';
 ---
-<div class="prints is-empty" aria-label="Photographs by Yves. Click Images in the dock to lay them out on the desk, hover one to look at it, drag one back to put it away.">
+<div class="prints is-empty" role="group" aria-label="Photographs by Yves. Click Images in the dock to lay them out on the desk, hover one to look at it, drag one back to put it away.">
   {prints.map((p) => (
     <div class="print is-stowed" role="img" aria-label={p.alt} tabindex="0"
          data-slug={p.slug} data-w={p.w} data-h={p.h}

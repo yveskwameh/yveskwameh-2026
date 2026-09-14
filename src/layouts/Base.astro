@@ -106,9 +106,16 @@ const ld = schema?.length
     <meta name="twitter:description" content={ogDescription} />
     <meta name="twitter:image" content={ogImage} />
 
-    <!-- Preloaded because every label above the fold is set in it, so discovering it late
-         would mean a visible reflow. Only the 400 weight, 700 is rare enough to wait. -->
+    <!-- Both weights, because both are above the fold on the first screen anyone sees.
+
+         400 is every label. 700 is the lock screen clock, and that clock is the largest
+         thing on the page, which makes it the LCP element. It was not preloaded, on the
+         reasoning that 700 is rare, and that cost 1,558ms of render delay in a Lighthouse
+         run: the browser could not discover the file until it had parsed the CSS that
+         asked for it, and the biggest text on the page sat waiting. Two 9KB files
+         requested together are cheaper than one discovered late. -->
     <link rel="preload" href="/fonts/space-mono-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/space-mono-700.woff2" as="font" type="font/woff2" crossorigin />
 
     {/* Structured data. In the server-rendered HTML on purpose: a crawler that does not
         run scripts still has to be able to read it, and this site has no runtime that
