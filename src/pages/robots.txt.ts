@@ -6,10 +6,20 @@ import type { APIRoute } from 'astro';
  * static file is the usual way this breaks: it keeps pointing at the old host for months
  * because nobody remembers a file that never changes.
  *
- * Worth knowing before editing: Cloudflare serves a managed robots.txt of its own on this
- * account, carrying the Content Signals Policy. It appends that policy to the origin's
- * robots.txt rather than replacing it, so what ships live is this file plus their signal
- * block. Their block is comments and content signals; the groups below are ours.
+ * Worth knowing before editing, and it is more than a footnote: Cloudflare serves a
+ * managed robots.txt of its own on this account and appends it to ours. Checked against
+ * the live site on 2026-09-14, their half is not only comments and content signals. It
+ * carries `Content-Signal: search=yes,ai-train=no,use=reference` and nine explicit
+ * `Disallow: /` groups, for GPTBot, ClaudeBot, CCBot, Google-Extended, Applebot-Extended,
+ * Bytespider, meta-externalagent, Amazonbot and Cloudflare's own renderer.
+ *
+ * So BLOCK_AI_TRAINING below does not decide the answer on its own. This file currently
+ * ships zero Disallow lines and the live robots.txt has nine, all of them Cloudflare's.
+ * Yves asked for nothing to be blocked, and until that is turned off in the zone's AI
+ * Crawl Control settings, the edge is still saying no on his behalf.
+ *
+ * Which means: after any change here, `curl https://yveskwameh.com/robots.txt` and read
+ * both halves. The origin file is only half the answer.
  */
 
 /**
