@@ -13,15 +13,19 @@ filename: "yves-desktop.astro"
 featured: false
 ---
 
-## The problem
+## Why a desktop
 
-A design portfolio that describes how someone thinks about interfaces, in paragraphs, is
-asking to be taken on trust. I would rather the site be the argument.
+There was no brief here and no client, so this one does not read like the others. It is my
+own site.
 
-The risk in that idea is obvious. An interface built to be admired is usually slow, and a
+A portfolio that explains in paragraphs how I think about interfaces is asking to be taken
+on trust. I would rather the site be the thing itself, so a visitor can judge the work by
+using it.
+
+The risk in that is obvious. An interface built to be admired is usually slow, and a
 portfolio that takes four seconds to show anything has argued the opposite of what it meant
 to. So the whole thing is built to one rule: nothing loads that the visitor did not ask
-for, and the page arrives under 10KB of JavaScript.
+for.
 
 ## The lock screen
 
@@ -86,11 +90,15 @@ and resizing are off below 640, because there is nowhere on a phone to drag a wi
 
 <img class="tall" src="/images/projects/yves-desktop-11@420.avif" alt="A window on a phone, risen from the bottom as a sheet over a scrim" width="420" height="840" loading="lazy" decoding="async" srcset="/images/projects/yves-desktop-11@420.avif 420w, /images/projects/yves-desktop-11@840.avif 840w" sizes="(max-width: 640px) 100vw, 420px" />
 
-## Result
+## What it weighs
 
-It is the argument rather than a description of one. Someone can drag the icons, open the
-windows, lose at the game, and judge the work by using it instead of reading about it.
+The page arrives with 10,163 bytes of JavaScript against a budget of 10,240. That is
+measured by a script in the repo on every build, never by eye, and the build is the thing
+that says whether the rule still holds. Each app's code is fetched the first time its
+window opens and not before, so the desktop only ever carries the desktop.
 
-The rule held. The page arrives with 10,135 bytes of JavaScript, which is measured on every
-build rather than estimated, and each app's code is fetched the first time its window opens
-and not before.
+Everything on the page is there because something asked for it. No audio until the lock
+screen is answered, no fonts from anyone else's server, and the one embed on the site, a
+Spotify playlist, is built the first time Control Center is opened and not a moment
+earlier. Every window is real HTML written at build time rather than fetched when you
+click.

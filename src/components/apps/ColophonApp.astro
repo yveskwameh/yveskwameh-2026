@@ -21,6 +21,7 @@
  * Do not put it back.
  */
 import { readFileSync } from 'node:fs';
+import { site } from '../../data/site';
 
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 const astroVersion = (pkg.dependencies.astro as string).replace(/^\D+/, '').split('.')[0];
@@ -46,6 +47,24 @@ const stack = [
   ['GitHub', 'Pushing to main is the deploy. Cloudflare builds that commit and ships it.'],
 ];
 
+/**
+ * What the site knows about a visitor, which on a site with analytics on it is worth
+ * saying out loud even though none of it needs a consent banner.
+ *
+ * The analytics row is conditional on purpose. Until a token exists the beacon is not
+ * rendered at all, so claiming it counts anything would be a lie told at build time.
+ */
+const collects = [
+  site.analyticsToken && ['Page views',
+    'Cloudflare Web Analytics. No cookies, no fingerprint, nothing written to your machine, and no way to follow you to another site. I see which pages get opened, and that is all.'],
+  ['Cursors',
+    'While you are here, where your pointer is goes to everyone else who has the site open, and theirs comes back. It is held in memory for as long as the room has someone in it, and written down nowhere.'],
+  ['Messages',
+    'What you type in the Mail window goes to Web3Forms and then to my inbox. Nothing else reads it.'],
+  ['Your settings',
+    'The theme, the volume, where you dragged the icons and what you renamed them. All of it stays in your own browser and none of it is sent to me.'],
+].filter(Boolean) as [string, string][];
+
 /** Other people's work that ships inside the site, with the licence it ships under. */
 const credits = [
   ['Pixelarticons', 'Gerrit Halfmann, MIT', 'https://pixelarticons.com/'],
@@ -70,6 +89,18 @@ const credits = [
         <div class="colo__row">
           <dt>{name}</dt>
           <dd>{why}</dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+
+  <section class="colo__sec">
+    <h3 class="colo__h">What it collects</h3>
+    <dl class="colo__body colo__stack">
+      {collects.map(([name, what]) => (
+        <div class="colo__row">
+          <dt>{name}</dt>
+          <dd>{what}</dd>
         </div>
       ))}
     </dl>
