@@ -39,6 +39,23 @@ Then add a zone Redirect Rule sending `www` to the apex, 301. Pick one and keep 
 hostnames serving the same pages is a duplicate-content problem the canonical link should
 not have to clean up.
 
+**Then turn on Always Use HTTPS**, in SSL/TLS, Edge Certificates. Without it the zone
+answers plain http on port 80 with a 200 and the page, rather than a 301 to https, which
+is a fourth working copy of the site and a page anyone can serve to a visitor over an
+unencrypted connection. Checked on 2026-09-14 and it was off: `www` correctly 301s to the
+apex, and `http://yveskwameh.com/` returned 200 with content. Consider HSTS on the same
+screen once http has redirected cleanly for a while; it is hard to undo, so it is not a
+launch-day switch.
+
+Verify all four, expecting one 200 and three redirects:
+
+```sh
+curl -sI https://yveskwameh.com/      | head -1   # 200
+curl -sI https://www.yveskwameh.com/  | head -1   # 301
+curl -sI http://yveskwameh.com/       | head -1   # 301
+curl -sI http://www.yveskwameh.com/   | head -1   # 301
+```
+
 ## 4. Keep the old links working
 
 Anything already shared points at `workers.dev`. Do not turn that host off. Add a host
@@ -92,11 +109,18 @@ whenever Google next re-checks.
 
 1. In Search Console with the `yveskwameh.com` property selected, go to **Indexing**, then
    **Sitemaps** in the left sidebar.
-2. The field is already prefixed with `https://yveskwameh.com/`, so type only:
+2. Enter the **full URL**, not just the filename:
 
    ```
-   sitemap-index.xml
+   https://yveskwameh.com/sitemap-index.xml
    ```
+
+   This is the one place a Domain property behaves differently from a URL-prefix one and
+   it is easy to get backwards. A URL-prefix property pins the field with the host already
+   filled in, so you type only the filename. A Domain property covers http and https, www
+   and bare, and every subdomain, so Google cannot guess which host is meant and shows no
+   prefix at all. Giving it only `sitemap-index.xml` there returns "Invalid sitemap
+   address. Please enter a valid path to a sitemap in your site."
 
 3. Submit. Status goes to **Success**. It is an index, so Google follows it to
    `sitemap-0.xml` on its own and ends up with 7 URLs, the desktop plus six case studies.

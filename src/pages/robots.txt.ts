@@ -6,10 +6,25 @@ import type { APIRoute } from 'astro';
  * static file is the usual way this breaks: it keeps pointing at the old host for months
  * because nobody remembers a file that never changes.
  *
- * Worth knowing before editing: Cloudflare serves a managed robots.txt of its own on this
- * account, carrying the Content Signals Policy. It appends that policy to the origin's
- * robots.txt rather than replacing it, so what ships live is this file plus their signal
- * block. Their block is comments and content signals; the groups below are ours.
+ * This file is the whole answer again, but it was not always, and that is worth knowing
+ * before editing.
+ *
+ * Cloudflare can serve a managed robots.txt of its own and prepend it to this one. It was
+ * on. On 2026-09-14 this file shipped zero Disallow lines while the live robots.txt had
+ * nine, none of them ours: GPTBot, ClaudeBot, CCBot, Google-Extended, Applebot-Extended,
+ * Bytespider, meta-externalagent, Amazonbot and Cloudflare's own renderer, plus
+ * `Content-Signal: search=yes,ai-train=no,use=reference`. So flipping BLOCK_AI_TRAINING
+ * below changed nothing anyone could see, and the reason was two settings away in the
+ * dashboard rather than anywhere in this repo.
+ *
+ * Turned off the same day, in the zone's Security settings: `is_robots_txt_managed` to
+ * false under "Manage your robots.txt", and `ai_bots_protection` to disabled under
+ * "Block AI bots". Verified after: zero Disallow lines, no Content-Signal, and GPTBot,
+ * ClaudeBot, CCBot, Google-Extended and PerplexityBot all served 200 at the edge.
+ *
+ * The lesson survives the fix. After any change here, `curl https://yveskwameh.com/robots.txt`
+ * and read what actually ships. If a block reappears that is not in this file, it came
+ * from the zone, not from Astro.
  */
 
 /**
