@@ -60,6 +60,12 @@ const rules = panes.map(({ p }) => `
       which is untidy rather than broken. */}
   <input class="settings__toggle" type="checkbox" id="work-open" />
 
+  {/* Collapsed state for the rail, the way Finder and Mail keep one. Another checkbox for
+      the same reason as the one above: the state lives in the DOM, the label that flips it
+      can sit anywhere on the page, and none of it costs a byte on load. Its label is in
+      the window title bar, which is where a Mac puts this control. */}
+  <input class="settings__toggle" type="checkbox" id="work-rail" />
+
   {/* display: contents on a desktop, so the menu is a grid item of .settings and this
       wrapper is not there at all. On a phone it becomes the sticky header the menu hangs
       from. */}
@@ -153,6 +159,27 @@ const rules = panes.map(({ p }) => `
 
   .settings__radio { position: absolute; width: 1px; height: 1px; opacity: 0; }
   .settings__toggle { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+  /* ------------------------------------------------------------------
+     The collapsed rail.
+
+     --side is the one number the whole two column layout is built on: the grid template
+     reads it, the floating rail behind the rows is sized from it, and the pane is
+     positioned by it. So collapsing is that one number going to zero, and everything
+     follows without a second layout to maintain.
+
+     Only above 640. On a phone there is no rail to collapse, the rows are already a
+     dropdown, and the toggle is hidden with it.
+     ------------------------------------------------------------------ */
+  @media (min-width: 641px) {
+    .settings:has(#work-rail:checked) { --side: 0px; }
+    .settings:has(#work-rail:checked) .settings__menu { display: none; }
+    .settings:has(#work-rail:checked)::before { display: none; }
+    /* The gutter above the rail is there to float it. With no rail there is nothing to
+       float, and the banner should reach the top edge the way it does on the standalone
+       page. */
+    .settings:has(#work-rail:checked) { padding-top: 0; padding-bottom: 0; }
+  }
 
   /* On a desktop the wrapper is not there: the menu becomes the grid item it used to be
      and the picker never renders. */

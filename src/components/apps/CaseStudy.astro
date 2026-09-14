@@ -99,6 +99,13 @@ const FACTS: [string, string][] = [
   .cs__body :global(> h2 + *) { margin-top: 6px; }
   .cs__body :global(> p) { color: var(--os-muted); }
 
+  /* The pane can now get much wider than it used to: the rail collapses and the window
+     zooms, and together those take it from about 600px to about 1440. Pictures want all
+     of that and prose does not, so only the prose is capped. A line of 13px Space Mono at
+     70ch is around 550px, which is the measure this already read at before any of it
+     could be widened, so nothing changes for someone who never touches the controls. */
+  .cs__body :global(> p), .cs__body :global(> h2) { max-width: 70ch; }
+
   /* A screenshot in the markdown is a direct child, so it gets its own breathing room. */
   .cs__body :global(> img) {
     width: 100%; height: auto; margin-top: var(--space-3);

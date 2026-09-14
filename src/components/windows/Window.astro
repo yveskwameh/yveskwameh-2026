@@ -25,8 +25,17 @@ interface Props {
    * the landmark a screen reader user navigates by.
    */
   main?: boolean;
+  /**
+   * Turn the green light on. It fills the desktop and restores, the way zoom does on a
+   * Mac, and it is a checkbox rather than a script so it costs nothing on load.
+   *
+   * Opt in per window on purpose. Mail is anchored to a corner and the game asks for a
+   * fixed height, so a window that fills the screen is wrong for both. Work wants it,
+   * because a case study is mostly pictures and pictures want width.
+   */
+  zoomable?: boolean;
 }
-const { id, title, filename, width = 560, height, open = false, variant, closeHref, main = false } = Astro.props;
+const { id, title, filename, width = 560, height, open = false, variant, closeHref, main = false, zoomable = false } = Astro.props;
 ---
 <section
   class:list={['window', variant && `window--${variant}`, { 'is-open': open, 'is-focused': open }]}
@@ -39,6 +48,10 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
   {/* The sheet's grab handle. Nothing above 640px, where a window is a window and the
       title bar is what you drag. On a phone it is the thing a thumb reaches for, and
       scripts/drag.ts hangs the swipe-to-dismiss off it and the title bar together. */}
+  {/* Zoom, held in a checkbox so the state lives in the DOM and no script is needed.
+      Inside .window on purpose: the rule that reads it is .window:has(), and :has only
+      looks at descendants. */}
+  {zoomable && <input class="window__zoom-state" type="checkbox" id={`zoom-${id}`} tabindex="-1" aria-hidden="true" />}
   <div class="window__grab" aria-hidden="true"></div>
   <div class="window__titlebar">
     <div class="window__lights">
@@ -51,8 +64,14 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
           the corner anchoring of Mail, so leaving either live would promise something the
           OS does not really do. macOS greys out the ones a window does not support. */}
       <button class="light light--min" aria-label="Minimise (unavailable)" disabled></button>
-      <button class="light light--zoom" aria-label="Zoom (unavailable)" disabled></button>
+      {zoomable
+        ? <label class="light light--zoom" for={`zoom-${id}`} title="Zoom"><span class="sr-only">Zoom</span></label>
+        : <button class="light light--zoom" aria-label="Zoom (unavailable)" disabled></button>}
     </div>
+    {/* Anything a window wants beside its title. Work puts its sidebar toggle here, which
+        is where a Mac keeps one. Empty on every other window, and an empty slot renders
+        nothing at all. */}
+    <slot name="toolbar" />
     {/* Both tags written out rather than one dynamic tag name, so Astro can see them and
         scope .window__title to them. A computed tag is not always visible to the scoper,
         and a heading that quietly loses its styling is a hard thing to notice. */}
@@ -135,6 +154,41 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
   .light::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; }
   /* Left aligned, sitting just after the traffic lights, rather than centred in the bar. */
   .window__title { margin: 0; font: 11px var(--font-chrome); letter-spacing: .02em; }
+
+  /* ------------------------------------------------------------------
+     Zoom, with no JavaScript.
+
+     The checkbox holds the state and the green light is its label, so the whole feature
+     is one rule. !important is load bearing here rather than lazy: scripts/drag.ts and
+     the resize grips write left, top, width and height inline, and a zoomed window has to
+     beat all four. Because they only override and never erase, unzooming drops straight
+     back to wherever the window was dragged to and whatever size it was resized to.
+
+     It also means a zoomed window cannot be resized, which is correct: on a Mac it cannot
+     either. Dragging still works and simply does nothing visible until it is restored.
+     ------------------------------------------------------------------ */
+  .window__zoom-state { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  /* The green light is a label, and a label with no text is unreadable to a screen reader.
+     Declared here rather than globally because this file is the only one that needs it. */
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .light--zoom[for] { cursor: var(--cur-hand); }
+  /* The same + symbol macOS draws, appearing on hover like the close x. */
+  .window__lights:hover .light--zoom[for]::before {
+    content: ''; display: block; margin: 2px auto; width: 6px; height: 6px;
+    background-image:
+      linear-gradient(to bottom, transparent 43%, rgba(0,0,0,.6) 43% 57%, transparent 57%),
+      linear-gradient(to right, transparent 43%, rgba(0,0,0,.6) 43% 57%, transparent 57%);
+  }
+  @media (min-width: 641px) {
+    .window:has(.window__zoom-state:checked) {
+      left: 0 !important;
+      top: var(--window-top) !important;
+      width: 100vw !important;
+      height: calc(100% - var(--window-top) - var(--window-bottom)) !important;
+      max-height: none;
+      border-radius: 0;
+    }
+  }
   /* Carries the surface colour now that .window itself is transparent. */
   .window__body { flex: 1; min-height: 0; padding: var(--space-3); overflow: auto; background: var(--os-surface); }
   /* Resize grips. Six pixels of grab area straddling each edge, and the corners sit on
