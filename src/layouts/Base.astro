@@ -73,8 +73,19 @@ const ld = schema?.length
     {noindex
       ? <meta name="robots" content="noindex, follow" />
       : <link rel="canonical" href={canonical} />}
+    {/* One file, on purpose. favicon.ico and favicon.svg used to sit in public/ unlinked,
+        and both were Astro's own logo left over from the starter, so linking them would
+        have put a rocket in the tab instead of Yves. A single PNG is what every browser
+        since IE11 reads, and iOS scales it for the home screen. A sharper apple touch
+        icon and a manifest need a bigger export of this photo than the 160px one in the
+        repo, so they wait for that rather than ship upscaled. */}
     <link rel="icon" href="/favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
+    {/* The browser chrome on Android and the status bar on iOS take their colour from
+        here. Two values so it matches whichever theme the visitor is in, rather than
+        painting a light bar above a dark desktop. */}
+    <meta name="theme-color" content="#e6e6e3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#2b2b31" media="(prefers-color-scheme: dark)" />
     {/* robots.txt names it too. This is the second way a crawler finds it, and the one
         that works when robots.txt is served by somebody else, which on Cloudflare it
         partly is. */}
