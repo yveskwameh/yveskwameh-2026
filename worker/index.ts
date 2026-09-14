@@ -139,15 +139,48 @@ export class Room {
   webSocketError(ws: any) { this.gone(ws); }
 }
 
+/** The host everything should end up on. Matches `site` in astro.config.mjs. */
+const CANONICAL_HOST = 'yveskwameh.com';
+
 export default {
   async fetch(request: Request, env: any) {
-    if (new URL(request.url).pathname === '/ws') {
+    const url = new URL(request.url);
+
+    /**
+     * The old host, sent to the real one.
+     *
+     * Every link shared before the domain moved points at *.workers.dev, and that host
+     * still answers. Left alone it is a second copy of the whole site competing with the
+     * real one in search, and a visitor who lands there sees canonical tags naming a
+     * domain they are not on. A 301 is the one thing that resolves both.
+     *
+     * This runs before the `/ws` check on purpose: the websocket should be spoken on the
+     * canonical host too, and the redirect is what gets it there.
+     *
+     * Requires `run_worker_first` in wrangler.jsonc. Without it the assets binding answers
+     * first for any path that matches a file, and this would only ever catch 404s.
+     */
+    if (url.hostname.endsWith('.workers.dev')) {
+      url.hostname = CANONICAL_HOST;
+      url.protocol = 'https:';
+      url.port = '';
+      return Response.redirect(url.toString(), 301);
+    }
+
+    if (url.pathname === '/ws') {
       // One room for the whole site. idFromName is stable, so every visitor lands in the
       // same object no matter which edge location they hit.
       return env.ROOM.get(env.ROOM.idFromName('desktop')).fetch(request);
     }
-    // Static assets are matched before this Worker ever runs, so anything arriving here
-    // is genuinely not a file we have.
-    return new Response('Not found', { status: 404 });
+
+    /**
+     * Everything else is the assets binding's job, including deciding what a miss looks
+     * like. This used to hand back a nine byte `Not found` string, which meant the
+     * styled 404 page in src/pages/404.astro was built on every deploy and never once
+     * served: wrangler.jsonc asks for `not_found_handling: "404-page"`, and the binding
+     * is the only thing that can honour it. Delegating here is what makes that config
+     * line true.
+     */
+    return env.ASSETS.fetch(request);
   },
 };

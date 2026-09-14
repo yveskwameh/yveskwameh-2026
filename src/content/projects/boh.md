@@ -1,7 +1,7 @@
 ---
 title: "BOH Financial"
 client: "BOH Financial"
-year: 2025
+year: 2026
 summary: "Accounting for creators and talent, on a site that names who it is for before it names what it does."
 role: "Design and build"
 stack: ["Figma"]

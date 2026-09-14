@@ -1,7 +1,8 @@
 # 2026 Portfolio · yveskwameh.com
 
-Live at https://yveskwameh.2026-portfolio.workers.dev until the custom domain is
-attached. Source at https://github.com/yveskwameh/yveskwameh-2026 (private).
+Live at https://yveskwameh.com. The old https://yveskwameh.2026-portfolio.workers.dev
+host still answers and 301s to the apex, handled at the top of `worker/index.ts`.
+Source at https://github.com/yveskwameh/yveskwameh-2026 (private).
 
 Yves Kwameh's personal portfolio rebuilt as a retro operating system.
 Read `docs/BRIEF.md` before any design or content work. Read `README.md` for the project map.

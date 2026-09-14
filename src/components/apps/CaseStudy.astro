@@ -111,6 +111,16 @@ const FACTS: [string, string][] = [
     width: 100%; height: auto; margin-top: var(--space-3);
     border: 1px solid var(--os-line); border-radius: var(--r-inner);
   }
+  /* A phone or tablet screenshot, marked `class="tall"` in the markdown.
+
+     Without this every shot is stretched to the full width of the pane, which is fine for
+     a 16:10 browser window and absurd for a portrait phone: at the widest the pane now
+     goes, a 480px wide phone screen would be drawn nearly 1440 across and four thousand
+     deep. Capping the width keeps it at roughly the size of the thing it is a picture of,
+     and `min()` rather than a bare max-width is what keeps it from overflowing a narrow
+     pane on the way down. */
+  .cs__body :global(> img.tall) { width: min(100%, 420px); }
+  .cs__body :global(> img.tall-lg) { width: min(100%, 560px); }
 
   .cs__links { margin: var(--space-4) 0 0; font-size: 12px; }
 

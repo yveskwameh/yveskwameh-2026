@@ -1,7 +1,7 @@
 ---
 title: "Scroll House Studio"
 client: "Scroll House Studio"
-year: 2025
+year: 2026
 summary: "One page for a real estate film studio, built so the work plays before anyone is asked for anything."
 role: "Design and build"
 stack: ["Figma", "Webflow"]

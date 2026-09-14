@@ -7,10 +7,12 @@ site at once can see everyone else's cursor.
 Astro, fully static, no framework, under 10KB of JavaScript on arrival. Deployed to
 Cloudflare Workers static assets, with one small Worker for the live cursors.
 
-**Live: https://yveskwameh.2026-portfolio.workers.dev**
+**Live: https://yveskwameh.com**
 
-Headed for yveskwameh.com, which is still serving the previous site on Netlify. Nothing
-in here points at that domain until it moves.
+The domain has moved. `site` in `astro.config.mjs` is the one place the host is written
+down, so every canonical link, `og:url`, sitemap entry and JSON-LD `@id` follows it.
+`docs/DOMAIN-MOVE.md` has the rest of the day, including the parts only the Cloudflare
+dashboard and Search Console can do.
 
 Goal: zero server cost, zero framework JavaScript on the page, fast everywhere.
 
@@ -64,8 +66,7 @@ git add -A && git commit -m "what changed" && git push
 npm run indexnow      # optional, after a deploy that changed pages
 ```
 
-Live at **https://yveskwameh.2026-portfolio.workers.dev** until the custom
-domain is attached. A deploy uploads the static files AND the Worker in `worker/`, so the
+Live at **https://yveskwameh.com**. A deploy uploads the static files AND the Worker in `worker/`, so the
 live cursors go up with the site.
 
 `npm run deploy:manual` still exists and still works, but it is break-glass now. It pushes
