@@ -139,6 +139,23 @@ const ld = schema?.length
         Day is the default and stores nothing, so this writes no attribute for it.
         scripts/panel.ts is what puts the answer in localStorage. */}
     <script is:inline>var d=document.documentElement.dataset,s=localStorage;d.mode=s.mode||'';d.accent=s.accent||''</script>
+
+    {/* Cloudflare Web Analytics. The only third party script on the site.
+
+        It is cookieless, stores nothing on the visitor's machine and sends no personal
+        data, which is why it needs no consent banner and why it was chosen over the
+        alternatives. What it is not is free of weight: 30,294 bytes, 10,125 gzipped,
+        measured rather than estimated. That is three times the JavaScript this site
+        loads on its own, and it is a deliberate exception to non-negotiable rule 1,
+        taken by Yves with those numbers in front of him.
+
+        `defer` so it never blocks parsing, and it renders only when a token exists, so a
+        fork or a preview with no token pays nothing. tools/js-budget.py counts it
+        separately, so the number for our own code stays honest. */}
+    {site.analyticsToken && (
+      <script defer src="https://static.cloudflareinsights.com/beacon.min.js"
+              data-cf-beacon={JSON.stringify({ token: site.analyticsToken })}></script>
+    )}
   </head>
   <body>
     <slot />

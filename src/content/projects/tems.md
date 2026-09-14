@@ -2,7 +2,7 @@
 title: "Tem's"
 client: "Tem's United"
 year: 2025
-summary: "One-tap logistics, designed as two apps in one: a sender who wants a price, a rider who wants work."
+summary: "One-tap logistics, designed as two apps in one: a sender who wants a price, and a rider who wants the work."
 role: "Product design"
 stack: ["Figma"]
 cover: "/images/projects/tems.avif"

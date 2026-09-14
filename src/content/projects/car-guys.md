@@ -2,7 +2,7 @@
 title: "The Car Guys"
 client: "The Car Guys Inc"
 year: 2026
-summary: "A waitlist up on day one, then the whole site, and an application half the length."
+summary: "A waitlist up on day one, then the whole site, three services on one shape, and an application half the length."
 role: "Design and build"
 stack: ["Figma", "Webflow"]
 url: "https://thecarguysinc.com/"

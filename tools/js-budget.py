@@ -6,11 +6,26 @@ through STATIC imports, and deliberately stops at `import(`: a dynamically impor
 chunk is a separate file the browser only fetches when something asks for it, so it
 costs nothing until then. Those are listed separately, as information rather than debt.
 
+Third party scripts are counted too, but on their own line. They are not on disk, so
+their size is a constant here, measured rather than guessed:
+
+    curl -s https://static.cloudflareinsights.com/beacon.min.js | wc -c
+
+The budget applies to our own code. That is the number the rule is about and the one a
+change to this repo can move. A third party script is a separate, named decision with its
+own number beside it, so adding one can never quietly buy room for more of ours.
+
   python3 tools/js-budget.py [dist/index.html]
 """
 import re, sys, pathlib
 
 BUDGET = 10240
+
+# url fragment -> (label, bytes). Measured with curl, see the note above. Re-measure if
+# the number matters: these files are updated by their vendors without notice.
+THIRD_PARTY = {
+    'cloudflareinsights.com/beacon.min.js': ('Cloudflare Web Analytics beacon', 30294),
+}
 page = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else 'dist/index.html')
 dist = page.parent
 
@@ -66,6 +81,15 @@ for name, n in sorted(eager.items(), key=lambda kv: -kv[1]):
     print(f'  {name:<52} {n:>6}')
 print(f'  {"":-<52} {"":->6}')
 print(f'  {"INITIAL LOAD":<52} {total:>6}  of {BUDGET}  ({BUDGET - total:+} headroom)')
+
+third = [(label, n) for frag, (label, n) in THIRD_PARTY.items() if frag in html]
+if third:
+    print('\n  third party, not on disk, so these are measured constants:')
+    for label, n in third:
+        print(f'  {label:<52} {n:>6}')
+    print(f'  {"":-<52} {"":->6}')
+    print(f'  {"TOTAL ON LOAD":<52} {total + sum(n for _, n in third):>6}')
+
 if lazy:
     print('\n  fetched only when the app that needs it is opened:')
     for name, n in sorted(lazy.items(), key=lambda kv: -kv[1]):

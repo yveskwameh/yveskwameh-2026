@@ -2,7 +2,7 @@
 title: "Altabrio"
 client: "Altabrio"
 year: 2025
-summary: "Weeks from launch, with navigation to untangle and an identity to rebuild."
+summary: "Weeks from launch, with navigation to untangle and an identity to rebuild, from sign in to the plans table."
 role: "Product design"
 stack: ["Figma"]
 cover: "/images/projects/altabrio.avif"

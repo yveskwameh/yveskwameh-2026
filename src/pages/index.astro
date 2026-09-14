@@ -12,10 +12,14 @@ import { website, person, profilePage } from '../data/schema';
 const schema = [website(Astro.site!), person(Astro.site!), profilePage(Astro.site!)];
 ---
 
+{/* One title and one description, no og overrides. They used to be three different
+    sentences: a job label for search, a different line for social, and a third one
+    inherited from Base because this page never set `description` at all. So Google and
+    LinkedIn showed a visitor two different sites. Base already falls the og fields back
+    to these two, which is why there is nothing else to set here. */}
 <Base
-  title="Yves Kwameh, UX/UI Designer"
-  ogTitle="Yves Kwameh, a portfolio built as an operating system"
-  ogDescription="Strategic UX/UI design and no-code builds. Open the windows on the desktop to read the case studies."
+  title="Yves Kwameh, UX/UI designer and no-code developer"
+  description="I design interfaces and build them, so the thing that ships is the thing that was designed. Six case studies are here, each one in a window you open."
   schema={schema}
 >
   <LockScreen />
