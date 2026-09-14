@@ -65,7 +65,7 @@ Most of this is looked at on a phone, often by someone standing in a property. T
 tiles are already the right shape for it, so the grid becomes one column and nothing has to
 be re-cropped.
 
-<img class="tall" src="/images/projects/scrollhouse-6.avif" alt="The site on a phone, the vertical tiles in a single column" width="420" height="840" loading="lazy" decoding="async" />
+<img class="tall" src="/images/projects/scrollhouse-6@420.avif" alt="The site on a phone, the vertical tiles in a single column" width="420" height="840" loading="lazy" decoding="async" srcset="/images/projects/scrollhouse-6@420.avif 420w, /images/projects/scrollhouse-6@840.avif 840w" sizes="(max-width: 640px) 100vw, 420px" />
 
 ## Result
 
