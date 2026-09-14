@@ -155,7 +155,20 @@ const accents = [
         that opened it and the whole surface costs one <details>. */}
     <div class="anchor anchor--cc">
       <details class="menu menu--cc" id="cc" data-menu>
-        <summary id="clock-sum"><span id="clock"><span></span><span></span></span></summary>
+        <summary id="clock-sum">
+          <span id="clock"><span></span><span></span></span>
+          {/* The way out, on a phone only and only while the panel is open.
+
+              Control Center is full width down there, so it covers the screen and the only
+              thing that closes it is tapping the clock again, which is now underneath the
+              panel's own shadow and reads like part of the thing you are trying to leave.
+              Nobody should have to guess that.
+
+              Inside the <summary> on purpose: a summary toggles its <details> on click, so
+              this needs no handler, no id and no script. It is a signifier attached to the
+              control that already works. */}
+          <span class="cc__x" aria-hidden="true"><Icon name="close" size={12} /></span>
+        </summary>
       </details>
 
       <div class="tray tray--cc" role="group" aria-label="Control Center">
@@ -588,6 +601,17 @@ const accents = [
   .anchor--snd:hover .tray,
   .anchor--snd:has(.menu--snd[open]) .tray { display: block; }
   .anchor--cc:has(.menu--cc[open]) .tray { display: grid; }
+
+  /* Nothing on a desktop: the panel is a small box anchored under the clock, there is
+     plenty of desktop left to click, and an x on a 40px bar would be clutter. */
+  .cc__x { display: none; }
+  @media (max-width: 640px) {
+    .menu--cc[open] .cc__x {
+      display: grid; place-items: center;
+      width: 18px; height: 18px; margin-left: 6px;
+      border-radius: 50%; background: var(--os-press); color: var(--os-ink);
+    }
+  }
   /* The resting state of this corner while a window soundtrack plays. */
   :global(body.is-playing) .anchor--snd .tray { display: block; }
   /* Except when another menu wants the corner. When that one closes this comes back on
