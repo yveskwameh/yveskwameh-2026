@@ -97,8 +97,13 @@ measured by a script in the repo on every build, never by eye, and the build is 
 that says whether the rule still holds. Each app's code is fetched the first time its
 window opens and not before, so the desktop only ever carries the desktop.
 
-Everything on the page is there because something asked for it. No audio until the lock
-screen is answered, no fonts from anyone else's server, and the one embed on the site, a
-Spotify playlist, is built the first time Control Center is opened and not a moment
+Almost everything on the page is there because something asked for it. No audio until the
+lock screen is answered, no fonts from anyone else's server, and the one embed on the site,
+a Spotify playlist, is built the first time Control Center is opened and not a moment
 earlier. Every window is real HTML written at build time rather than fetched when you
 click.
+
+The exception is worth naming on a page about not making people download things. Cloudflare
+injects an analytics script, thirty kilobytes of it, which is three times the JavaScript
+this site loads on its own. It counts page views, sets no cookies and writes nothing to
+your machine. A few more kilobytes is not the end of the world, so it stays.

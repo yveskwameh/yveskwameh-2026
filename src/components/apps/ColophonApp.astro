@@ -51,10 +51,11 @@ const stack = [
  * What the site knows about a visitor, which on a site with analytics on it is worth
  * saying out loud even though none of it needs a consent banner.
  *
- * The analytics row follows `site.analytics`, which is whether anything is counting, not
- * `site.analyticsToken`, which is only whether we are the ones putting the script on the
- * page. With Cloudflare's automatic setup there is no token here and the counting still
- * happens, and a privacy note that goes quiet in that case is worse than no note at all.
+ * The analytics row follows `site.analytics`, which records that counting is happening.
+ * It used to be gated on a token in this repo instead, which was a bug: Cloudflare's
+ * automatic setup injects the beacon at its edge and there is no token here, so the site
+ * would have been counting visitors while this note told them it was not. A privacy note
+ * that goes quiet exactly when it matters is worse than no note at all.
  */
 const collects = [
   site.analytics && ['Page views',

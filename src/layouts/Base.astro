@@ -140,22 +140,26 @@ const ld = schema?.length
         scripts/panel.ts is what puts the answer in localStorage. */}
     <script is:inline>var d=document.documentElement.dataset,s=localStorage;d.mode=s.mode||'';d.accent=s.accent||''</script>
 
-    {/* Cloudflare Web Analytics. The only third party script on the site.
+    {/* No analytics script here on purpose, and this is a decision rather than an omission.
 
-        It is cookieless, stores nothing on the visitor's machine and sends no personal
-        data, which is why it needs no consent banner and why it was chosen over the
-        alternatives. What it is not is free of weight: 30,294 bytes, 10,125 gzipped,
-        measured rather than estimated. That is three times the JavaScript this site
-        loads on its own, and it is a deliberate exception to non-negotiable rule 1,
-        taken by Yves with those numbers in front of him.
+        Cloudflare Web Analytics is on, and Cloudflare's automatic setup injects the beacon
+        into this page at its edge. Adding our own would not add anything, it would count
+        every visit twice.
 
-        `defer` so it never blocks parsing, and it renders only when a token exists, so a
-        fork or a preview with no token pays nothing. tools/js-budget.py counts it
-        separately, so the number for our own code stays honest. */}
-    {site.analyticsToken && (
-      <script defer src="https://static.cloudflareinsights.com/beacon.min.js"
-              data-cf-beacon={JSON.stringify({ token: site.analyticsToken })}></script>
-    )}
+        The edge version is also the better of the two, which is the part that is easy to
+        get wrong. It arrives version pinned with a Subresource Integrity hash and
+        crossorigin="anonymous", and Cloudflare's own FAQ says a hand embedded snippet
+        cannot safely carry SRI because they do not version pin it for manual users. It is
+        also type="module", so it defers without being told to.
+
+        What would break the injection, from that same FAQ, so nobody has to rediscover it:
+        a Cache-Control of `public, no-transform` on the HTML, HTML that is not valid, or
+        the domain going DNS only instead of proxied. The HTML here is served
+        `public, max-age=0, must-revalidate`, which is fine.
+
+        `site.analytics` records that counting is happening. The privacy note in About this
+        site reads it. tools/js-budget.py reads it too, so the beacon's 30,294 bytes show up
+        in the total even though they are nowhere in dist/. */}
   </head>
   <body>
     <slot />

@@ -12,24 +12,20 @@ export const site = {
   avatar: '/images/avatar.avif',    // made by tools/make-avatar.sh. Falls back to initials if absent.
 
   /**
-   * Cloudflare Web Analytics. Two separate facts, because they are separate.
+   * Whether anything is counting visitors. True because Cloudflare Web Analytics is on,
+   * with automatic setup, so Cloudflare injects the beacon at its edge and there is no
+   * script for this repo to add. See the note in Base.astro for why the edge version is
+   * the better one and what would stop it working.
    *
-   * `analytics` is whether the site is counted at all. It is what the privacy note in
-   * About this site reads, and it must be true whenever anything is counting, however the
-   * beacon gets onto the page. Gating that note on the token instead was a bug: with
-   * Cloudflare's automatic setup the token is never in this file, so the site would have
-   * been counting visitors while telling them it was not.
+   * This is read in two places that must not disagree with reality: the "What it collects"
+   * note in About this site, and tools/js-budget.py, which cannot see an edge injected
+   * script in dist/ and would otherwise report a total that is true of the build and false
+   * of the site.
    *
-   * `analyticsToken` is only for manual setup, where we put the beacon on the page
-   * ourselves. Cloudflare's automatic setup injects the same script at the edge instead,
-   * and then this stays empty. Never do both: two beacons means every visit counted twice.
-   *
-   * Either way it is the only third party script on the site, 30,294 bytes and 10,125
-   * gzipped, and a deliberate exception to non-negotiable rule 1 taken with the numbers in
-   * front of us. See the note in CLAUDE.md.
+   * It is the only third party script on the site, 30,294 bytes and 10,125 gzipped, and a
+   * deliberate exception to non-negotiable rule 1 taken with the numbers in front of us.
    */
   analytics: true,
-  analyticsToken: '',
 
   /** Round icon buttons on the lock screen. `glyph` is a Pixelarticons name. */
   /* Ordered by what a client or a recruiter opens first, not by when each was added.
