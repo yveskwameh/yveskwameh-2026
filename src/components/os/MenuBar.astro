@@ -244,6 +244,32 @@ const accents = [
           </fieldset>
         </div>
 
+        {/* The social links, on a phone only.
+
+            In the bar they are four 15px glyphs in a row that, with the speaker, the
+            battery and the clock, took 321 of a 393px screen and pushed the clock onto a
+            second line. Down here they are rows with names on them, which is both easier
+            to hit and easier to understand than an unlabelled mark. Same `site.socials`,
+            so the bar and this cannot drift apart.
+
+            Rendered always and hidden above 640 rather than built conditionally: the
+            markup costs a few bytes in a gzipped page, and a conditional would mean the
+            desktop and the phone disagreeing about what exists.
+
+            Above Spotify on purpose. It sat last at first, under a 152px embed, which put
+            the links below the fold of a panel that already fills a phone screen. Moving
+            four links off the bar and then burying them is not moving them, it is hiding
+            them. The playlist is the one thing down here nobody is looking for. */}
+        <div class="cc__tile cc__socials">
+          <div class="cc__head"><strong>Find me</strong></div>
+          {site.socials.map((so) => (
+            <a class="cc__social" href={so.url} target="_blank" rel="noopener noreferrer">
+              <Icon name={so.glyph} size={15} />
+              <span>{so.name}</span>
+            </a>
+          ))}
+        </div>
+
         {/* Spotify, simply present. No button to reveal it: opening Control Center is
             the only asking anyone should have to do.
 
@@ -269,26 +295,7 @@ const accents = [
           </a>
         </div>
 
-        {/* The social links, on a phone only.
 
-            In the bar they are four 15px glyphs in a row that, with the speaker, the
-            battery and the clock, took 321 of a 393px screen and pushed the clock onto a
-            second line. Down here they are rows with names on them, which is both easier
-            to hit and easier to understand than an unlabelled mark. Same `site.socials`,
-            so the bar and this cannot drift apart.
-
-            Rendered always and hidden above 640 rather than built conditionally: the
-            markup costs a few bytes in a gzipped page, and a conditional would mean the
-            desktop and the phone disagreeing about what exists. */}
-        <div class="cc__tile cc__socials">
-          <div class="cc__head"><strong>Elsewhere</strong></div>
-          {site.socials.map((so) => (
-            <a class="cc__social" href={so.url} target="_blank" rel="noopener noreferrer">
-              <Icon name={so.glyph} size={15} />
-              <span>{so.name}</span>
-            </a>
-          ))}
-        </div>
 
         <div class="cc__pair">
           <button class="cc__btn" type="button" data-action="tidy">Clean up desktop</button>
@@ -511,6 +518,10 @@ const accents = [
   .cc__social:hover { background: var(--os-hover); }
   /* The two halves of the clock. Both always render; the phone hides one. */
   #clock { display: inline-flex; gap: 6px; align-items: baseline; }
+  /* The row the clock and its close x sit in. Without this the summary lays its children
+     out as blocks, the x drops onto a second line, and the time is pushed up out of the
+     middle of the bar. It is the parent that has to be a row, not the children. */
+  #clock-sum { display: flex; align-items: center; gap: 6px; }
 
   /* ==================================================================
      The two panels.
@@ -608,7 +619,7 @@ const accents = [
   @media (max-width: 640px) {
     .menu--cc[open] .cc__x {
       display: grid; place-items: center;
-      width: 18px; height: 18px; margin-left: 6px;
+      flex: none; width: 18px; height: 18px;
       border-radius: 50%; background: var(--os-press); color: var(--os-ink);
     }
   }
