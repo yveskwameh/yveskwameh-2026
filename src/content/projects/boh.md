@@ -11,7 +11,9 @@ filename: "boh-financial.webflow"
 featured: false
 ---
 
-[//]: # (Yves to confirm two things. 1. `stack`: the live site gives away no platform, so only Figma is claimed here. Add Webflow if that is what it was built in. 2. The `url` is deliberately absent. boh-cfo.com today is a light redesign headlined "Your back of house, handled." and every shot in this case study comes from the recording of the dark site Yves delivered. Linking it would send people to a design that is not the one described here. Put the url back if the live site is still his work, or leave it off.)
+[//]: # (No `url` on purpose, and this is settled rather than pending. Yves has confirmed that boh-cfo.com as it stands today is not his work: it is a later light redesign headlined "Your back of house, handled." Every shot in this case study comes from the recording of the dark site he delivered. Linking the domain would send people to somebody else's design under his name, so it stays off unless that changes.)
+
+[//]: # (Yves to confirm: `stack`. The recording gives away no platform, so only Figma is claimed here. Add Webflow if that is what it was built in.)
 
 ## The problem
 
@@ -73,7 +75,7 @@ them would have undercut everything above.
 
 ## Result
 
-A site that names its audience before it names its services, gives each one a page of its
-own, and puts the prices where a visitor can read them. It reads as specialist rather than
-general, which is the whole difference for a firm whose clients are not ordinary small
+What was delivered names its audience before it names its services, gives each one a page
+of its own, and puts the prices where a visitor can read them. It read as specialist rather
+than general, which is the whole difference for a firm whose clients are not ordinary small
 businesses.
