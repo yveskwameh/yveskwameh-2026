@@ -841,6 +841,21 @@ const accents = [
     .tray {
       position: fixed; top: calc(var(--menubar-h) + 6px);
       right: var(--space-2); left: var(--space-2); width: auto;
+      /* Bounded by the screen, and scrollable inside it.
+
+         Without this the panel is as tall as its contents and simply runs off the bottom
+         of the phone. Control Center is the tallest of them, and Clean up desktop and Lock
+         are the last two things in it, so the two buttons nobody can reach any other way
+         on a phone were the two that fell off. dvh rather than vh because the browser
+         chrome moves and vh does not know that.
+
+         overscroll-behavior: contain stops a flick at the end of the panel turning into a
+         scroll of the desktop behind it, which on a fixed, full-width sheet reads as the
+         whole page jumping. */
+      max-height: calc(100dvh - var(--menubar-h) - var(--space-3) - env(safe-area-inset-bottom, 0px));
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
     }
     /* The bridge only makes sense under a panel that sits below its own trigger. */
     .tray::before { display: none; }
