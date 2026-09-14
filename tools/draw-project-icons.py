@@ -16,9 +16,15 @@ import zlib, struct, pathlib, math
 SIZE = 96
 R = 21          # corner radius, roughly the iOS/macOS proportion at this size
 
+# Only the case studies that have no real cover art of their own. The Car Guys and Yves
+# Desktop both use a real crop now, so they are deliberately not here: running this with
+# their names in it would drop a generated PNG next to the real AVIF, and the next
+# project-images.py run would pick the wrong one.
 ICONS = {
-    'car-guys': ((0xC0, 0x3A, 0x2B), (0x7A, 0x1B, 0x14)),
-    'yves-desktop':  ((0x2C, 0x33, 0x3E), (0x14, 0x18, 0x20)),
+    'tems':        ((0x4F, 0x46, 0xE5), (0x27, 0x21, 0x8C)),
+    'altabrio':    ((0x7C, 0x3A, 0xED), (0x45, 0x19, 0x91)),
+    'boh':         ((0x4C, 0x3A, 0xC4), (0x1E, 0x14, 0x5A)),
+    'scrollhouse': ((0xE8, 0x8A, 0x3C), (0xA8, 0x4E, 0x12)),
 }
 
 
