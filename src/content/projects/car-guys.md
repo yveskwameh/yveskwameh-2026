@@ -7,7 +7,8 @@ role: "Design and build"
 stack: ["Figma", "Webflow"]
 url: "https://thecarguysinc.com/"
 cover: "/images/projects/car-guys.avif"
-banner: "/images/projects/car-guys-1.avif"
+banner: "/images/projects/car-guys-1@720.avif"
+bannerSrcset: "/images/projects/car-guys-1@720.avif 720w, /images/projects/car-guys-1@1440.avif 1440w, /images/projects/car-guys-1@2160.avif 2160w"
 filename: "car-guys.webflow"
 featured: true
 ---
@@ -67,11 +68,11 @@ then How It Works as three steps, then the form. Someone who lands on Sell Your 
 search reads the same structure as someone who came through the home page, so the site only
 has to be learned once.
 
-<img src="/images/projects/car-guys-6.avif" alt="Buy or lease a new car, the first of the three service pages" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/car-guys-6@720.avif" alt="Buy or lease a new car, the first of the three service pages" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/car-guys-6@720.avif 720w, /images/projects/car-guys-6@1440.avif 1440w, /images/projects/car-guys-6@2160.avif 2160w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
-<img src="/images/projects/car-guys-7.avif" alt="Sell your car, the same shape with its own three steps" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/car-guys-7@720.avif" alt="Sell your car, the same shape with its own three steps" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/car-guys-7@720.avif 720w, /images/projects/car-guys-7@1440.avif 1440w, /images/projects/car-guys-7@2160.avif 2160w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
-<img src="/images/projects/car-guys-8.avif" alt="Exit your lease or finance, the third page on the same pattern" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/car-guys-8@720.avif" alt="Exit your lease or finance, the third page on the same pattern" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/car-guys-8@720.avif 720w, /images/projects/car-guys-8@1440.avif 1440w, /images/projects/car-guys-8@2160.avif 2160w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 The FAQ answers were written from the service copy rather than invented, so the page
 answers its own questions instead of contradicting itself further down.
@@ -80,13 +81,13 @@ answers its own questions instead of contradicting itself further down.
 
 Responsive the whole way down, not just below one breakpoint.
 
-<img class="tall-lg" src="/images/projects/car-guys-9.avif" alt="The home page at tablet width, the navigation collapsed to a menu" width="600" height="800" loading="lazy" decoding="async" />
+<img class="tall-lg" src="/images/projects/car-guys-9@560.avif" alt="The home page at tablet width, the navigation collapsed to a menu" width="560" height="747" loading="lazy" decoding="async" srcset="/images/projects/car-guys-9@560.avif 560w, /images/projects/car-guys-9@1120.avif 1120w" sizes="(max-width: 640px) 100vw, 560px" />
 
 The navigation collapses to a menu at tablet width. On a phone the three step rows stack,
 and the two column form fields become one column rather than shrinking to something nobody
 can tap.
 
-<img class="tall" src="/images/projects/car-guys-10.avif" alt="The home page on a phone, the rows stacked into one column" width="420" height="840" loading="lazy" decoding="async" />
+<img class="tall" src="/images/projects/car-guys-10@420.avif" alt="The home page on a phone, the rows stacked into one column" width="420" height="840" loading="lazy" decoding="async" srcset="/images/projects/car-guys-10@420.avif 420w, /images/projects/car-guys-10@840.avif 840w" sizes="(max-width: 640px) 100vw, 420px" />
 
 ## The application
 

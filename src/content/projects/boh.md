@@ -6,7 +6,8 @@ summary: "Accounting for creators and talent, on a site that names who it is for
 role: "Design and build"
 stack: ["Figma"]
 cover: "/images/projects/boh.avif"
-banner: "/images/projects/boh-1.avif"
+banner: "/images/projects/boh-1@720.avif"
+bannerSrcset: "/images/projects/boh-1@720.avif 720w, /images/projects/boh-1@1440.avif 1440w"
 filename: "boh-financial.webflow"
 featured: false
 ---
@@ -32,7 +33,7 @@ The home page leads with who it is for. Three audiences as three doors, entertai
 talent, agencies and managers, and small businesses, because someone arriving already knows
 which one they are and wants their door marked rather than a paragraph to sort through.
 
-<img src="/images/projects/boh-2.avif" alt="Three audiences as three doors: talent, agencies and managers, and small businesses" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/boh-2@720.avif" alt="Three audiences as three doors: talent, agencies and managers, and small businesses" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/boh-2@720.avif 720w, /images/projects/boh-2@1440.avif 1440w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## A page each
 
@@ -40,7 +41,7 @@ Multi-page rather than one long scroll, so each door opens onto a page that spea
 that audience. The talent page can talk about royalties and touring without a small business
 owner reading past it, and the reverse.
 
-<img src="/images/projects/boh-3.avif" alt="The talent page, written for artists and performers rather than for everybody" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/boh-3@720.avif" alt="The talent page, written for artists and performers rather than for everybody" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/boh-3@720.avif 720w, /images/projects/boh-3@1440.avif 1440w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## Eight services, folded
 
@@ -51,13 +52,13 @@ paragraph, is a page nobody finishes.
 So it folds. Closed, it reads as a short list of what they do, which is the question most
 people are actually asking.
 
-<img src="/images/projects/boh-4.avif" alt="The service list closed, eight lines that can be read at a glance" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/boh-4@720.avif" alt="The service list closed, eight lines that can be read at a glance" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/boh-4@720.avif 720w, /images/projects/boh-4@1440.avif 1440w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 Open, one at a time, it gives the detail to the person who wants that one thing. Royalty
 administration matters enormously to a musician and not at all to a restaurant, and neither
 of them should have to scroll past the other's answer.
 
-<img src="/images/projects/boh-5.avif" alt="One service opened, the detail shown only where somebody asked for it" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/boh-5@720.avif" alt="One service opened, the detail shown only where somebody asked for it" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/boh-5@720.avif 720w, /images/projects/boh-5@1440.avif 1440w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## Proof, then price
 
@@ -65,13 +66,13 @@ Testimonials sit below the services rather than at the top, because a quote mean
 after someone knows what is being sold. They are attributed to real roles, a content
 creator, a musician, so a visitor can find the one closest to themselves.
 
-<img src="/images/projects/boh-6.avif" alt="Testimonials placed after the services, attributed by role" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/boh-6@720.avif" alt="Testimonials placed after the services, attributed by role" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/boh-6@720.avif 720w, /images/projects/boh-6@1440.avif 1440w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 Then the prices, in the open, as three tiers rather than a form to fill in to find out. An
 accounting firm that publishes its numbers is making a claim about how it works, and hiding
 them would have undercut everything above.
 
-<img src="/images/projects/boh-7.avif" alt="Three published price tiers rather than an enquiry to find out" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/boh-7@720.avif" alt="Three published price tiers rather than an enquiry to find out" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/boh-7@720.avif 720w, /images/projects/boh-7@1440.avif 1440w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## Result
 

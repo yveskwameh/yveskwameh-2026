@@ -42,6 +42,8 @@ const FACTS: [string, string][] = [
     /* alt is empty on purpose: the shot is decorative here, and every image that carries
        meaning is inside the write up with a real description on it. */
     <img class="cs__banner" src={p.data.banner} alt="" width="720" height="450"
+         srcset={p.data.bannerSrcset}
+         sizes={p.data.bannerSrcset ? '(max-width: 640px) 100vw, min(100vw, 1440px)' : undefined}
          loading={eager ? 'eager' : 'lazy'}
          fetchpriority={eager ? 'high' : undefined}
          decoding="async" />
