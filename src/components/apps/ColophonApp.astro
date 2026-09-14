@@ -51,11 +51,13 @@ const stack = [
  * What the site knows about a visitor, which on a site with analytics on it is worth
  * saying out loud even though none of it needs a consent banner.
  *
- * The analytics row is conditional on purpose. Until a token exists the beacon is not
- * rendered at all, so claiming it counts anything would be a lie told at build time.
+ * The analytics row follows `site.analytics`, which is whether anything is counting, not
+ * `site.analyticsToken`, which is only whether we are the ones putting the script on the
+ * page. With Cloudflare's automatic setup there is no token here and the counting still
+ * happens, and a privacy note that goes quiet in that case is worse than no note at all.
  */
 const collects = [
-  site.analyticsToken && ['Page views',
+  site.analytics && ['Page views',
     'Cloudflare Web Analytics. No cookies, no fingerprint, nothing written to your machine, and no way to follow you to another site. I see which pages get opened, and that is all.'],
   ['Cursors',
     'While you are here, where your pointer is goes to everyone else who has the site open, and theirs comes back. It is held in memory for as long as the room has someone in it, and written down nowhere.'],

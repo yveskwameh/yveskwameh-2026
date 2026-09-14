@@ -26,6 +26,20 @@ BUDGET = 10240
 THIRD_PARTY = {
     'cloudflareinsights.com/beacon.min.js': ('Cloudflare Web Analytics beacon', 30294),
 }
+
+# Cloudflare's automatic setup injects that same beacon at the edge, so it is on the page a
+# visitor gets and not in the HTML this tool reads. Counting only what is in dist/ would
+# report a number that is true of the build and false of the site, so src/data/site.ts is
+# read as well. It is the one place that says whether anything is counting.
+SITE_TS = pathlib.Path(__file__).resolve().parent.parent / 'src/data/site.ts'
+EDGE_INJECTED = ('Cloudflare Web Analytics beacon, injected at the edge', 30294)
+
+
+def analytics_on() -> bool:
+    try:
+        return bool(re.search(r'^\s*analytics:\s*true', SITE_TS.read_text(), re.M))
+    except OSError:
+        return False
 page = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else 'dist/index.html')
 dist = page.parent
 
@@ -83,6 +97,11 @@ print(f'  {"":-<52} {"":->6}')
 print(f'  {"INITIAL LOAD":<52} {total:>6}  of {BUDGET}  ({BUDGET - total:+} headroom)')
 
 third = [(label, n) for frag, (label, n) in THIRD_PARTY.items() if frag in html]
+# Only one beacon is ever on the page. If it is in the HTML we put it there ourselves, and
+# if it is not but analytics is on, Cloudflare is injecting it. Never both: two beacons
+# would count every visit twice.
+if not third and analytics_on():
+    third = [EDGE_INJECTED]
 if third:
     print('\n  third party, not on disk, so these are measured constants:')
     for label, n in third:

@@ -12,16 +12,23 @@ export const site = {
   avatar: '/images/avatar.avif',    // made by tools/make-avatar.sh. Falls back to initials if absent.
 
   /**
-   * Cloudflare Web Analytics site token, from the dashboard under Analytics & Logs, Web
-   * Analytics, then the site, then Manage site.
+   * Cloudflare Web Analytics. Two separate facts, because they are separate.
    *
-   * Empty means the beacon is not rendered at all, which is the right default: a script
-   * tag with no token is a request that fails and a byte cost with nothing in return.
+   * `analytics` is whether the site is counted at all. It is what the privacy note in
+   * About this site reads, and it must be true whenever anything is counting, however the
+   * beacon gets onto the page. Gating that note on the token instead was a bug: with
+   * Cloudflare's automatic setup the token is never in this file, so the site would have
+   * been counting visitors while telling them it was not.
    *
-   * This is the only third party script on the site and it is a deliberate exception to
-   * non-negotiable rule 1, taken with the numbers in front of us rather than by accident.
-   * See the note in CLAUDE.md.
+   * `analyticsToken` is only for manual setup, where we put the beacon on the page
+   * ourselves. Cloudflare's automatic setup injects the same script at the edge instead,
+   * and then this stays empty. Never do both: two beacons means every visit counted twice.
+   *
+   * Either way it is the only third party script on the site, 30,294 bytes and 10,125
+   * gzipped, and a deliberate exception to non-negotiable rule 1 taken with the numbers in
+   * front of us. See the note in CLAUDE.md.
    */
+  analytics: true,
   analyticsToken: '',
 
   /** Round icon buttons on the lock screen. `glyph` is a Pixelarticons name. */
