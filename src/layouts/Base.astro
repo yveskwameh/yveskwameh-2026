@@ -73,8 +73,19 @@ const ld = schema?.length
     {noindex
       ? <meta name="robots" content="noindex, follow" />
       : <link rel="canonical" href={canonical} />}
+    {/* One file, on purpose. favicon.ico and favicon.svg used to sit in public/ unlinked,
+        and both were Astro's own logo left over from the starter, so linking them would
+        have put a rocket in the tab instead of Yves. A single PNG is what every browser
+        since IE11 reads, and iOS scales it for the home screen. A sharper apple touch
+        icon and a manifest need a bigger export of this photo than the 160px one in the
+        repo, so they wait for that rather than ship upscaled. */}
     <link rel="icon" href="/favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
+    {/* The browser chrome on Android and the status bar on iOS take their colour from
+        here. Two values so it matches whichever theme the visitor is in, rather than
+        painting a light bar above a dark desktop. */}
+    <meta name="theme-color" content="#e6e6e3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#2b2b31" media="(prefers-color-scheme: dark)" />
     {/* robots.txt names it too. This is the second way a crawler finds it, and the one
         that works when robots.txt is served by somebody else, which on Cloudflare it
         partly is. */}
@@ -128,6 +139,27 @@ const ld = schema?.length
         Day is the default and stores nothing, so this writes no attribute for it.
         scripts/panel.ts is what puts the answer in localStorage. */}
     <script is:inline>var d=document.documentElement.dataset,s=localStorage;d.mode=s.mode||'';d.accent=s.accent||''</script>
+
+    {/* No analytics script here on purpose, and this is a decision rather than an omission.
+
+        Cloudflare Web Analytics is on, and Cloudflare's automatic setup injects the beacon
+        into this page at its edge. Adding our own would not add anything, it would count
+        every visit twice.
+
+        The edge version is also the better of the two, which is the part that is easy to
+        get wrong. It arrives version pinned with a Subresource Integrity hash and
+        crossorigin="anonymous", and Cloudflare's own FAQ says a hand embedded snippet
+        cannot safely carry SRI because they do not version pin it for manual users. It is
+        also type="module", so it defers without being told to.
+
+        What would break the injection, from that same FAQ, so nobody has to rediscover it:
+        a Cache-Control of `public, no-transform` on the HTML, HTML that is not valid, or
+        the domain going DNS only instead of proxied. The HTML here is served
+        `public, max-age=0, must-revalidate`, which is fine.
+
+        `site.analytics` records that counting is happening. The privacy note in About this
+        site reads it. tools/js-budget.py reads it too, so the beacon's 30,294 bytes show up
+        in the total even though they are nowhere in dist/. */}
   </head>
   <body>
     <slot />

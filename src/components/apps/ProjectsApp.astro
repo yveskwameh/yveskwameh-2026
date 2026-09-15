@@ -17,15 +17,12 @@
  * Still a real radio group, so arrow keys move between rows for free. Still every pane
  * rendered at build time, per rule 3. Nothing is fetched when you switch.
  */
-import { getCollection, render } from 'astro:content';
+import { getCollection } from 'astro:content';
 import CaseStudy from './CaseStudy.astro';
 import Icon from '../os/Icon.astro';
 
 const projects = (await getCollection('projects')).sort(
   (a, b) => Number(b.data.featured) - Number(a.data.featured) || b.data.year - a.data.year,
-);
-const panes = await Promise.all(
-  projects.map(async (p) => ({ p, Content: (await render(p)).Content })),
 );
 
 /**
@@ -37,7 +34,7 @@ const panes = await Promise.all(
  * scopes a <style> by adding an attribute to the elements it can see at build time, and
  * it cannot see into a string. Ids do the narrowing instead.
  */
-const rules = panes.map(({ p }) => `
+const rules = projects.map((p) => `
 .settings:has(#w-${p.id}:checked) [for="w-${p.id}"]{background:var(--os-accent);color:var(--os-on-accent)}
 .settings:has(#w-${p.id}:checked) #pane-${p.id}{display:block}
 .settings:has(#w-${p.id}:checked) .settings__pick-name[data-for="${p.id}"]{display:grid}
@@ -50,7 +47,7 @@ const rules = panes.map(({ p }) => `
   {/* Every radio first. Everything else is reached from here, so nothing downstream has
       to sit in a particular place. */}
   {projects.length === 0 && <input class="settings__radio" type="radio" name="work" id="w-none" disabled />}
-  {panes.map(({ p }) => (
+  {projects.map((p) => (
     <input class="settings__radio" type="radio" name="work" id={`w-${p.id}`} value={p.id} />
   ))}
 
@@ -81,7 +78,7 @@ const rules = panes.map(({ p }) => `
             <span class="settings__name">Nothing here yet</span>
           </span>
         )}
-        {panes.map(({ p }) => (
+        {projects.map((p) => (
           <span class="settings__pick-name" data-for={p.id}>
             <img class="settings__icon" src={p.data.cover} alt="" width="20" height="20" loading="lazy" decoding="async" />
             <span class="settings__name">{p.data.title}</span>
@@ -104,7 +101,7 @@ const rules = panes.map(({ p }) => `
       {/* One line of text next to a small icon, the way a Settings sidebar reads. The
           client and the year are facts about the project, so they live in the pane with
           the other facts rather than making the list heavy. */}
-      {panes.map(({ p }) => (
+      {projects.map((p) => (
         <label class="settings__row" for={`w-${p.id}`}>
           <img class="settings__icon" src={p.data.cover} alt="" width="20" height="20" loading="lazy" decoding="async" />
           <span class="settings__name">{p.data.title}</span>
@@ -121,11 +118,11 @@ const rules = panes.map(({ p }) => `
       </div>
     </article>
   )}
-  {panes.map(({ p, Content }) => (
+  {projects.map((p) => (
     <article class="settings__pane" id={`pane-${p.id}`}>
       {/* Everything inside the pane is CaseStudy.astro, which the standalone /work/<id>
           page renders too, so a shared link shows what the window shows. */}
-      <CaseStudy p={p}><Content /></CaseStudy>
+      <CaseStudy p={p} />
     </article>
   ))}
 </fieldset>
