@@ -80,7 +80,7 @@ meant to win.
 
 The same desktop rebuilt for touch rather than shrunk. The icons become a grid.
 
-<img class="tall-lg" src="/images/projects/yves-desktop-9@560.avif" alt="The desktop at tablet width, icons reflowed into a grid" width="560" height="747" loading="lazy" decoding="async" srcset="/images/projects/yves-desktop-9@560.avif 560w, /images/projects/yves-desktop-9@1120.avif 1120w" sizes="(max-width: 640px) 100vw, 560px" />
+<img class="tall-lg" src="/images/projects/yves-desktop-9@560.avif" alt="The desktop at tablet width, icons reflowed into a grid" width="560" height="746" loading="lazy" decoding="async" srcset="/images/projects/yves-desktop-9@560.avif 560w, /images/projects/yves-desktop-9@1120.avif 1120w" sizes="(max-width: 640px) 100vw, 560px" />
 
 <img class="tall" src="/images/projects/yves-desktop-10@420.avif" alt="The desktop on a phone, the icon grid and the dock" width="420" height="840" loading="lazy" decoding="async" srcset="/images/projects/yves-desktop-10@420.avif 420w, /images/projects/yves-desktop-10@840.avif 840w" sizes="(max-width: 640px) 100vw, 420px" />
 

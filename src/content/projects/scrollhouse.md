@@ -44,7 +44,7 @@ The portfolio is the largest section on the page, deliberately. Vertical tiles, 
 that is the shape these films are shot in and the shape they are watched in, and a grid
 rather than a carousel, so the range is visible at a glance instead of one at a time.
 
-<img src="/images/projects/scrollhouse-3@720.avif" alt="The portfolio grid, vertical tiles in the shape the films are actually watched in" width="720" height="495" loading="lazy" decoding="async" srcset="/images/projects/scrollhouse-3@720.avif 720w, /images/projects/scrollhouse-3@1440.avif 1440w, /images/projects/scrollhouse-3@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
+<img src="/images/projects/scrollhouse-3@720.avif" alt="The portfolio grid, vertical tiles in the shape the films are actually watched in" width="720" height="494" loading="lazy" decoding="async" srcset="/images/projects/scrollhouse-3@720.avif 720w, /images/projects/scrollhouse-3@1440.avif 1440w, /images/projects/scrollhouse-3@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 A tile opens in place. Nobody is sent to another site or another tab, because a visitor who
 leaves to watch something on a video host has left, and the enquiry was on this page.
@@ -57,7 +57,7 @@ Under the work, the capability section splits into capture and create: what happ
 and what happens after. Two groups rather than a list of twelve services, because the
 useful distinction to a buyer is whether someone has to come out to the property.
 
-<img src="/images/projects/scrollhouse-5@720.avif" alt="Capability split into capture and create, on site and after" width="720" height="495" loading="lazy" decoding="async" srcset="/images/projects/scrollhouse-5@720.avif 720w, /images/projects/scrollhouse-5@1440.avif 1440w, /images/projects/scrollhouse-5@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
+<img src="/images/projects/scrollhouse-5@720.avif" alt="Capability split into capture and create, on site and after" width="720" height="494" loading="lazy" decoding="async" srcset="/images/projects/scrollhouse-5@720.avif 720w, /images/projects/scrollhouse-5@1440.avif 1440w, /images/projects/scrollhouse-5@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## On a phone
 
@@ -66,6 +66,14 @@ tiles are already the right shape for it, so the grid becomes one column and not
 be re-cropped.
 
 <img class="tall" src="/images/projects/scrollhouse-6@420.avif" alt="The site on a phone, the vertical tiles in a single column" width="420" height="840" loading="lazy" decoding="async" srcset="/images/projects/scrollhouse-6@420.avif 420w, /images/projects/scrollhouse-6@840.avif 840w" sizes="(max-width: 640px) 100vw, 420px" />
+
+## The whole page
+
+One page means there is a whole page to show. This is it end to end, hero to footer, at the
+size it was built. The length is the argument: the work comes first and the asking comes
+last, and that only reads when you can see the run of it.
+
+<img src="/images/projects/scrollhouse-7@720.avif" alt="The Scroll House Studio home page in full, from the film to the footer" width="720" height="2830" loading="lazy" decoding="async" srcset="/images/projects/scrollhouse-7@720.avif 720w, /images/projects/scrollhouse-7@1440.avif 1440w, /images/projects/scrollhouse-7@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## Result
 

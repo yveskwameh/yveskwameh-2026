@@ -31,7 +31,7 @@ The home page leads with who it is for. Three audiences as three doors, entertai
 talent, agencies and managers, and small businesses, because someone arriving already knows
 which one they are and wants their door marked rather than a paragraph to sort through.
 
-<img src="/images/projects/boh-2@720.avif" alt="Three audiences as three doors: talent, agencies and managers, and small businesses" width="720" height="375" loading="lazy" decoding="async" srcset="/images/projects/boh-2@720.avif 720w, /images/projects/boh-2@1440.avif 1440w, /images/projects/boh-2@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
+<img src="/images/projects/boh-2@720.avif" alt="Three audiences as three doors: talent, agencies and managers, and small businesses" width="720" height="374" loading="lazy" decoding="async" srcset="/images/projects/boh-2@720.avif 720w, /images/projects/boh-2@1440.avif 1440w, /images/projects/boh-2@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## A page each
 
@@ -39,7 +39,7 @@ Multi-page rather than one long scroll, so each door opens onto a page that spea
 that audience. The talent page can talk about royalties and touring without a small business
 owner reading past it, and the reverse.
 
-<img src="/images/projects/boh-3@720.avif" alt="The talent page, written for artists and performers rather than for everybody" width="720" height="475" loading="lazy" decoding="async" srcset="/images/projects/boh-3@720.avif 720w, /images/projects/boh-3@1440.avif 1440w, /images/projects/boh-3@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
+<img src="/images/projects/boh-3@720.avif" alt="The talent page, written for artists and performers rather than for everybody" width="720" height="474" loading="lazy" decoding="async" srcset="/images/projects/boh-3@720.avif 720w, /images/projects/boh-3@1440.avif 1440w, /images/projects/boh-3@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## Ten services, folded
 
@@ -67,7 +67,15 @@ Then the prices, in the open, as three tiers rather than a form to fill in to fi
 accounting firm that publishes its numbers is making a claim about how it works, and hiding
 them would have undercut everything above.
 
-<img src="/images/projects/boh-6@720.avif" alt="Three published price tiers rather than an enquiry to find out" width="720" height="725" loading="lazy" decoding="async" srcset="/images/projects/boh-6@720.avif 720w, /images/projects/boh-6@1440.avif 1440w, /images/projects/boh-6@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
+<img src="/images/projects/boh-6@720.avif" alt="Three published price tiers rather than an enquiry to find out" width="720" height="724" loading="lazy" decoding="async" srcset="/images/projects/boh-6@720.avif 720w, /images/projects/boh-6@1440.avif 1440w, /images/projects/boh-6@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
+
+## The whole page
+
+Everything above is a piece of it. This is the home page from the top of the hero to the
+last line of the footer, at the size it was built, so the shape of the thing can be read in
+one go rather than assembled from six crops.
+
+<img src="/images/projects/boh-7@720.avif" alt="The BOH Financial home page in full, from the hero to the footer" width="720" height="770" loading="lazy" decoding="async" srcset="/images/projects/boh-7@720.avif 720w, /images/projects/boh-7@1440.avif 1440w, /images/projects/boh-7@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## Result
 

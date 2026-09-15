@@ -111,6 +111,27 @@ BANNER_FIELD = re.compile(
 BANNER_SRCSET_FIELD = re.compile(r'^bannerSrcset:.*\n', re.M)
 
 
+def even(n):
+    """Round down to an even number. See the note in emit()."""
+    return n - (n % 2)
+
+
+def sips_dims(path):
+    """Dimensions according to sips.
+
+    ffprobe cannot be used to read an avif back: it reports the AVIF grid tile, which is
+    512x512 whatever the picture is, and it returns one line per tile so it does not even
+    parse. sips reports the composed image.
+    """
+    out = subprocess.run(['sips', '-g', 'pixelWidth', '-g', 'pixelHeight', str(path)],
+                         capture_output=True, text=True).stdout
+    w = re.search(r'pixelWidth:\s*(\d+)', out)
+    h = re.search(r'pixelHeight:\s*(\d+)', out)
+    if not (w and h):
+        sys.exit('could not read the size of %s back' % path)
+    return int(w.group(1)), int(h.group(1))
+
+
 def dims(path):
     out = subprocess.run(
         ['ffprobe', '-v', 'error', '-select_streams', 'v:0',
@@ -140,13 +161,27 @@ def emit(source, stem, widths):
             skipped.append(w)
             continue
         out = IMAGES / ('%s@%d.avif' % (stem, w))
+        h = even(round(w * src_h / src_w))
         if WRITE:
+            # Both dimensions are given, and both are even, for a reason that cost a long
+            # afternoon. sips will encode an avif at an odd pixel height, report the height
+            # you asked for, produce a plausible number of bytes, and hand you a file that
+            # Chrome draws as a blank box. Nothing in the file admits it: macOS decodes it
+            # fine, so it cannot be caught by decoding locally either, and ffprobe reports
+            # 512x512 because it is describing the AVIF grid tile rather than the image.
+            # Proven with one source encoded twice: 1440x1540 draws, 1440x1541 does not.
+            # So heights are rounded down to even and never left to --resampleWidth.
             r = subprocess.run(
                 ['sips', '-s', 'format', 'avif', '-s', 'formatOptions', '72',
-                 '--resampleWidth', str(w), str(source), '--out', str(out)],
+                 '--resampleHeightWidth', str(h), str(w), str(source), '--out', str(out)],
                 capture_output=True, text=True)
             if r.returncode:
                 sys.exit('sips failed on %s at %dpx\n%s' % (stem, w, r.stderr[-500:]))
+            got_w, got_h = sips_dims(out)
+            if (got_w, got_h) != (w, h) or got_w % 2 or got_h % 2:
+                sys.exit('%s came out %dx%d, wanted %dx%d and both even. Stopping rather '
+                         'than shipping an image that may not draw.'
+                         % (out.name, got_w, got_h, w, h))
         kept.append(w)
     return kept, skipped, src_w, src_h
 
@@ -227,7 +262,7 @@ def main():
             tag = set_attr(tag, 'srcset', srcset_for(stem, kept))
             tag = set_attr(tag, 'sizes', sizes)
             tag = set_attr(tag, 'width', str(base))
-            tag = set_attr(tag, 'height', str(round(base * src_h / src_w)))
+            tag = set_attr(tag, 'height', str(even(round(base * src_h / src_w))))
             return tag
 
         text = IMG_TAG.sub(rewrite, text)

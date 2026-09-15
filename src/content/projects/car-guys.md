@@ -81,7 +81,7 @@ answers its own questions instead of contradicting itself further down.
 
 Responsive the whole way down, not just below one breakpoint.
 
-<img class="tall-lg" src="/images/projects/car-guys-9@560.avif" alt="The home page at tablet width, the navigation collapsed to a menu" width="560" height="747" loading="lazy" decoding="async" srcset="/images/projects/car-guys-9@560.avif 560w, /images/projects/car-guys-9@1120.avif 1120w" sizes="(max-width: 640px) 100vw, 560px" />
+<img class="tall-lg" src="/images/projects/car-guys-9@560.avif" alt="The home page at tablet width, the navigation collapsed to a menu" width="560" height="746" loading="lazy" decoding="async" srcset="/images/projects/car-guys-9@560.avif 560w, /images/projects/car-guys-9@1120.avif 1120w" sizes="(max-width: 640px) 100vw, 560px" />
 
 The navigation collapses to a menu at tablet width. On a phone the three step rows stack,
 and the two column form fields become one column rather than shrinking to something nobody
