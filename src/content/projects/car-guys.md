@@ -37,11 +37,11 @@ that is a warmer lead than a name on a list. Three chips above it name what the 
 actually does, lease buyouts, auto brokering, no dealer markup, so a visitor knows whether
 they are in the right place before they type anything.
 
-<img src="/images/projects/car-guys-2.avif" alt="The coming soon page on desktop, with the waitlist form beside the headline" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/car-guys-2@720.avif" alt="The coming soon page on desktop, with the waitlist form beside the headline" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/car-guys-2@720.avif 720w, /images/projects/car-guys-2@1440.avif 1440w, /images/projects/car-guys-2@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 Drawn at 1920, 1440 and 425, so it was responsive before the site it was standing in for.
 
-<img class="tall" src="/images/projects/car-guys-3.avif" alt="The same coming soon page on a phone, the form stacked under the headline" width="480" height="924" loading="lazy" decoding="async" />
+<img class="tall" src="/images/projects/car-guys-3@420.avif" alt="The same coming soon page on a phone, the form stacked under the headline" width="420" height="1730" loading="lazy" decoding="async" srcset="/images/projects/car-guys-3@420.avif 420w, /images/projects/car-guys-3@840.avif 840w" sizes="(max-width: 640px) 100vw, 420px" />
 
 ## Drawn before it was built
 
@@ -50,13 +50,13 @@ That is deliberate. A dark hero with a car in it will sell almost any layout to 
 anyone, and the point of this stage was to argue about the order of the sections and the
 length of the forms while those were still cheap to change.
 
-<img src="/images/projects/car-guys-4.avif" alt="The home page wireframe in grey, sections blocked out with no photography" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/car-guys-4@720.avif" alt="The home page wireframe in grey, sections blocked out with no photography" width="720" height="1908" loading="lazy" decoding="async" srcset="/images/projects/car-guys-4@720.avif 720w, /images/projects/car-guys-4@1440.avif 1440w, /images/projects/car-guys-4@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 Eleven layouts came out of it, seven for desktop and four for phones. The application was
 drawn at this stage too, which is how the length of it became a design question rather than
 something discovered at the end.
 
-<img src="/images/projects/car-guys-5.avif" alt="The application wireframe, with the form blocked out field by field" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/car-guys-5@720.avif" alt="The application wireframe, with the form blocked out field by field" width="720" height="1240" loading="lazy" decoding="async" srcset="/images/projects/car-guys-5@720.avif 720w, /images/projects/car-guys-5@1440.avif 1440w, /images/projects/car-guys-5@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## The site
 
@@ -107,7 +107,15 @@ because three tabs hide how much is left and a page does not.
 The co-signer moved behind a toggle. Off by default, twenty one fields that only exist for
 the people who have one. That single decision is most of the difference between 43 and 22.
 
-<img src="/images/projects/car-guys-11.avif" alt="The shipped application, individual and business as two tabs with the co-signer folded away" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/car-guys-11@720.avif" alt="The shipped application, individual and business as two tabs with the co-signer folded away" width="720" height="942" loading="lazy" decoding="async" srcset="/images/projects/car-guys-11@720.avif 720w, /images/projects/car-guys-11@1440.avif 1440w, /images/projects/car-guys-11@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
+
+## The whole page
+
+Three services, an application and a waitlist, all on one site. This is the home page end
+to end at the size it was built, so the run of it can be read in one go rather than
+assembled from the shots above.
+
+<img src="/images/projects/car-guys-12@720.avif" alt="The Car Guys home page in full, from the hero to the footer" width="720" height="4628" loading="lazy" decoding="async" srcset="/images/projects/car-guys-12@720.avif 720w, /images/projects/car-guys-12@1440.avif 1440w, /images/projects/car-guys-12@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## Result
 
