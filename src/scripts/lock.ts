@@ -69,17 +69,23 @@ export function initLock() {
  *   corner   drive it somewhere it is blocked on BOTH axes and it has nowhere left to go
  *   home     after a while the avatar starts pulsing; push the button onto it
  *
- * The push always clears the panic radius, so it never buzzes under the cursor. That is
- * the only reason the radius used to shrink, and with a fixed push it can be fixed too.
+ * The push no longer always clears the panic radius, so a short dodge can land still
+ * inside it. It cannot buzz under a still cursor even so, because a dodge needs a
+ * pointermove to fire. See the constants below.
  * ------------------------------------------------------------------ */
-/* Tuned down after a first time visitor could not get in and said he would have left.
-   Smaller radius means you can get closer before it bolts, and a shorter push means it
-   travels less per dodge, so it can be herded into a corner rather than just scattering.
-   PUSH must stay above R or a dodge could end still inside the radius: the push is
-   randomised to 0.85x-1.15x, so the floor is 102 against a radius of 90. */
-const R = 90;       // panic radius: it bolts when you are near, not only when you are on it
-const PUSH = 120;   // always further than R, so one dodge always breaks contact
-const ARM = 4;      // dodges before the clue shows up, so it rewards effort not luck
+/* Retuned after a first time visitor could not get in and said he would have left. These
+   are Yves's figures.
+   The radius stays wide, so it still bolts early and chasing it down is still hard. The
+   fix is the clue instead: two dodges and the avatar starts pulsing, so the way to win
+   arrives almost at once rather than being earned over eight.
+   The push no longer clears the radius on every dodge, which it used to. It randomises to
+   0.85x-1.15x, so the floor is 127 against a radius of 140 and a short dodge can land
+   still inside it. That is fine here: a second dodge only fires if the pointer moves
+   again, so it cannot buzz under a still cursor, and the 40ms guard below rate limits it
+   either way. */
+const R = 140;      // panic radius: it bolts when you are near, not only when you are on it
+const PUSH = 150;   // usually further than R, so most dodges break contact outright
+const ARM = 2;      // dodges before the clue shows up. Low, so nobody is stuck working it out
 
 /** All copy is read off the button's data attributes. See the note in LockScreen.astro:
  *  L = [intro, clue, wonHome, wonCorner, gotIt, opening, touch] */
