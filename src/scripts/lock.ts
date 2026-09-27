@@ -72,9 +72,14 @@ export function initLock() {
  * The push always clears the panic radius, so it never buzzes under the cursor. That is
  * the only reason the radius used to shrink, and with a fixed push it can be fixed too.
  * ------------------------------------------------------------------ */
-const R = 140;      // panic radius: it bolts when you are near, not only when you are on it
-const PUSH = 190;   // always further than R, so one dodge always breaks contact
-const ARM = 8;      // dodges before the clue shows up, so it rewards effort not luck
+/* Tuned down after a first time visitor could not get in and said he would have left.
+   Smaller radius means you can get closer before it bolts, and a shorter push means it
+   travels less per dodge, so it can be herded into a corner rather than just scattering.
+   PUSH must stay above R or a dodge could end still inside the radius: the push is
+   randomised to 0.85x-1.15x, so the floor is 102 against a radius of 90. */
+const R = 90;       // panic radius: it bolts when you are near, not only when you are on it
+const PUSH = 120;   // always further than R, so one dodge always breaks contact
+const ARM = 4;      // dodges before the clue shows up, so it rewards effort not luck
 
 /** All copy is read off the button's data attributes. See the note in LockScreen.astro:
  *  L = [intro, clue, wonHome, wonCorner, gotIt, opening, touch] */
@@ -84,8 +89,8 @@ let cta: HTMLElement | null = null;
 let face: HTMLElement | null = null;
 let ox = 0, oy = 0;
 let bx = 0, by = 0, bw = 0, bh = 0;   // untransformed layout box, measured once
-let last = 0, began = 0, said = '', n = 0;
-let won = false, armed = false, shouted = false, pins = 0;
+let last = 0, began = 0, said = '', n = 0, shoutT = 0;
+let won = false, armed = false, pins = 0;
 let mq: MediaQueryList;
 
 const say = (t: string) => cta && (cta.dataset.say = said = t);
@@ -100,7 +105,8 @@ const win = (line: string) => {
 /** Back to a full round. Called on every re-lock. */
 function reset() {
   ox = 0; oy = 0; bw = 0; said = ''; began = 0; last = 0; n = 0;
-  won = false; armed = false; shouted = false; pins = 0;
+  won = false; armed = false; pins = 0;
+  clearTimeout(shoutT);
   face?.classList.remove('is-target');
   $('lock-shout')?.classList.remove('is-on');
   if (!cta) return;
@@ -143,7 +149,7 @@ function flee(px: number, py: number, ts: number, forced = false) {
   cta.style.transform = `translate(${ox}px,${oy}px)`;
   sfx('flee');        // one blip per dodge. The 40ms guard above already rate limits it.
 
-  if (!began) { began = ts; say(L[0]); return; }
+  if (!began) { began = 1; shout(); say(L[0]); return; }
 
   // The clue. Reverse psychology, so it reads as a joke and still names the target,
   // the goal and the verb in one line. Yves saw the pulse and could not tell it meant
@@ -171,16 +177,23 @@ function flee(px: number, py: number, ts: number, forced = false) {
   let i = (Math.random() * pool.length) | 0;
   if (pool[i] === said) i = (i + 1) % pool.length;
   say(pool[i]);
-
-  shout(ts);
 }
 
-/** The escape. Fires 10s after the chase began, not 10s after the page loaded. */
-function shout(ts: number) {
-  if (shouted || ts - began < 10_000) return;
-  shouted = true;
-  $('lock-shout')?.classList.add('is-on');
-  sfx('menu');
+/**
+ * The escape. Armed by the first dodge, then it lands on its own five seconds later.
+ *
+ * It used to be checked inside flee() against a timestamp, which meant the clock only
+ * advanced while you were still chasing. Someone who tried for a few seconds, gave up and
+ * stopped moving never dodged again, so the check never ran and the way out never
+ * appeared. The one person most in need of the hint was the one person who could not get
+ * it. A timer does not care whether the chase continued.
+ */
+function shout() {
+  clearTimeout(shoutT);
+  shoutT = setTimeout(() => {
+    $('lock-shout')?.classList.add('is-on');
+    sfx('menu');
+  }, 5_000);
 }
 
 function initRunaway(root: HTMLElement) {
