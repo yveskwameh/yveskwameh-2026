@@ -46,8 +46,15 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
         ? <img class="lock__avatar" id="lock-avatar" src={site.avatar} alt="" width="64" height="64" />
         : <span class="lock__avatar lock__avatar--fallback" id="lock-avatar" aria-hidden="true">{initials}</span>}
       {/* Short on purpose. This is the escape hatch, so it has one job: say the chase is
-          unwinnable and name the way out. The recording says the rest. */}
-      <p class="lock__shout" id="lock-shout" role="status">Alright, that is enough. Press <kbd>Space</kbd> or <kbd>Enter</kbd> and come in.</p>
+          unwinnable and name the way out. The recording says the rest.
+
+          The bubble points at the avatar, so this is Yves talking rather than the button,
+          which is why it can be friendly about a thing the button is being smug about.
+          It cannot assume you have been suffering either: at three seconds you have had
+          about two dodges, so the old "Alright, that is enough" was telling people off
+          for something they had barely started. Stating the rule instead works whether
+          you arrive at three seconds or three minutes. */}
+      <p class="lock__shout" id="lock-shout" role="status">Okay, it never gets tired. Press <kbd>Space</kbd> or <kbd>Enter</kbd> and come in.</p>
     </span>
     {/* The h1 for the whole desktop. It is the page's subject, it is already the most
         prominent text on it, and .lock__name sets margin and size, so making it a heading
