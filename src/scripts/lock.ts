@@ -186,7 +186,7 @@ function flee(px: number, py: number, ts: number, forced = false) {
 }
 
 /**
- * The escape. Armed by the first dodge, then it lands on its own three seconds later.
+ * The escape. Armed by the first dodge, then it lands on its own two seconds later.
  *
  * It used to be checked inside flee() against a timestamp, which meant the clock only
  * advanced while you were still chasing. Someone who tried for a few seconds, gave up and
@@ -199,7 +199,7 @@ function shout() {
   shoutT = setTimeout(() => {
     $('lock-shout')?.classList.add('is-on');
     sfx('menu');
-  }, 3_000);
+  }, 2_000);
 }
 
 function initRunaway(root: HTMLElement) {
