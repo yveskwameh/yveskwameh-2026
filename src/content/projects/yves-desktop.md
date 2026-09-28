@@ -22,10 +22,9 @@ A portfolio that explains in paragraphs how I think about interfaces is asking t
 on trust. I would rather the site be the thing itself, so a visitor can judge the work by
 using it.
 
-The risk in that is obvious. An interface built to be admired is usually slow, and a
-portfolio that takes four seconds to show anything has argued the opposite of what it meant
-to. So the whole thing is built to one rule: nothing loads that the visitor did not ask
-for.
+The risk in that is obvious. An interface built to be admired is usually slow, and a slow
+portfolio makes the opposite point to the one I wanted. So the whole thing is built to one
+rule: nothing loads that you did not ask for.
 
 ## The lock screen
 
@@ -33,8 +32,10 @@ It opens on a lock screen instead of a home page, and it asks one thing: whether
 sound. Nothing plays until you answer, and the answer is remembered for the rest of the
 visit. The voice clip is not even fetched unless you say yes.
 
-The unlock button runs away from the cursor. That is a joke, and jokes have to have an exit,
-so Enter works for anyone who would rather not play.
+The unlock button runs away from the cursor. It is a joke, and a joke needs a way out, so
+the button says "press Enter" from the start and a line offers it again a couple of seconds
+in. A first time visitor told me he nearly gave up on it, which is how I found out the way
+out only appeared if you kept chasing.
 
 <img src="/images/projects/yves-desktop-2@720.avif" alt="The lock screen, with the clock and the unlock button that moves" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/yves-desktop-2@720.avif 720w, /images/projects/yves-desktop-2@1440.avif 1440w, /images/projects/yves-desktop-2@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
@@ -53,8 +54,8 @@ when it is pressed, scatter, and can be picked up and dropped back into it.
 ## The windows
 
 Every window is real HTML at build time, hidden with a class rather than fetched. Opening
-one costs no request. What is fetched on first open is that app's behaviour, and only
-that app's, which is what keeps the desktop itself down to the desktop.
+one costs no request. What is fetched on first open is that app's behaviour, and only that
+app's, so the desktop never carries code for a window you have not opened.
 
 Work is laid out like System Settings, a rail of case studies beside one case study.
 
@@ -92,10 +93,10 @@ and resizing are off below 640, because there is nowhere on a phone to drag a wi
 
 ## What it weighs
 
-The page arrives with 10,163 bytes of JavaScript against a budget of 10,240. That is
-measured by a script in the repo on every build, never by eye, and the build is the thing
-that says whether the rule still holds. Each app's code is fetched the first time its
-window opens and not before, so the desktop only ever carries the desktop.
+The page arrives with 10,192 bytes of JavaScript against a budget of 10,240. A script in the
+repo measures it on every build, so the build is what tells me whether the rule still holds
+rather than my own judgement. Each app's code is fetched the first time its window opens and
+not before, so the desktop only ever carries the desktop.
 
 Almost everything on the page is there because something asked for it. No audio until the
 lock screen is answered, no fonts from anyone else's server, and the one embed on the site,
@@ -103,7 +104,8 @@ a Spotify playlist, is built the first time Control Center is opened and not a m
 earlier. Every window is real HTML written at build time rather than fetched when you
 click.
 
-The exception is worth naming on a page about not making people download things. Cloudflare
-injects an analytics script, thirty kilobytes of it, which is three times the JavaScript
-this site loads on its own. It counts page views, sets no cookies and writes nothing to
-your machine. A few more kilobytes is not the end of the world, so it stays.
+There is one exception and it is worth naming on a page about not making people download
+things. Cloudflare injects an analytics script, thirty kilobytes of it, which is three times
+the JavaScript this site loads on its own. It counts page views, sets no cookies and writes
+nothing to your machine. I decided a few more kilobytes was worth knowing whether anyone
+visits, so it stays.
