@@ -15,18 +15,15 @@ featured: true
 
 ## What they had
 
-The Car Guys had just bought the domain. There was no site, no pages, and nothing anyone
-could fill in.
+The Car Guys had just bought the domain. There was no site.
 
 The business does three different things and they are not versions of each other. You can
 buy or lease a new car, sell the car you already have, or hand back a lease early, and all
-of it happens without going to a dealership. Each one needs different information from a
-different kind of person, and each one ends in an application that a human being has to
-read.
+of it happens without having to go to a dealership. Each one needs different information from
+a different kind of person, and each one ends in an application that a human has to read.
 
-They brought me in to design and build all of it, the site and the application. So it could
-not be a brochure with a contact form at the bottom. It had to carry three services and take
-real applications the day it went up.
+They brought me in to design and build all of it, the site and the applications. So it had to carry three services and take
+real applications the day it went live.
 
 ## The waitlist
 
@@ -42,7 +39,7 @@ anything.
 
 <img src="/images/projects/car-guys-2@720.avif" alt="The coming soon page on desktop, with the waitlist form beside the headline" width="720" height="450" loading="lazy" decoding="async" srcset="/images/projects/car-guys-2@720.avif 720w, /images/projects/car-guys-2@1440.avif 1440w, /images/projects/car-guys-2@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
-I drew it at 1920, 1440 and 425, so it was responsive before the real site existed.
+I designed it at 1920, 1440 and 425, so it was responsive.
 
 <img class="tall" src="/images/projects/car-guys-3@420.avif" alt="The same coming soon page on a phone, the form stacked under the headline" width="420" height="1730" loading="lazy" decoding="async" srcset="/images/projects/car-guys-3@420.avif 420w, /images/projects/car-guys-3@840.avif 840w" sizes="(max-width: 640px) 100vw, 420px" />
 
@@ -50,12 +47,12 @@ I drew it at 1920, 1440 and 425, so it was responsive before the real site exist
 
 I wireframed every page in Figma first, in grey, with no photography and no brand colour.
 That is because a dark hero with a car in it makes almost any layout look good, and I wanted
-us arguing about the order of the sections and the length of the forms while both were still
+us arguing about the order of the sections, contents, and the length of the forms while they were still
 cheap to change.
 
 <img src="/images/projects/car-guys-4@720.avif" alt="The home page wireframe in grey, sections blocked out with no photography" width="720" height="1908" loading="lazy" decoding="async" srcset="/images/projects/car-guys-4@720.avif 720w, /images/projects/car-guys-4@1440.avif 1440w, /images/projects/car-guys-4@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
-Eleven layouts came out of that, seven for desktop and four for phones. I drew the
+Eleven layouts came out of that, seven for desktop and four for phones. I designed the
 application at this stage too, so how long it was became something we decided rather than
 something we found out at the end.
 
@@ -63,7 +60,7 @@ something we found out at the end.
 
 ## The site
 
-I built it in Webflow from those wireframes. Four pages: the home page and one for each
+I built it in Webflow from those wireframes. Four pages: the home page and one page for each
 service.
 
 Every service page is the same shape. A headline that says what you can do, one button, then
