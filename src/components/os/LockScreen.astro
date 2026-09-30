@@ -12,8 +12,8 @@ import Icon from './Icon.astro';
 const hasAvatar = existsSync('public' + site.avatar);
 const initials = site.name.split(' ').map((w) => w[0]).join('');
 ---
-{/* The sound gate. A corner pill was too easy to miss and could sit on top of the
-    fleeing button, so this covers the screen and has to be answered first. */}
+{/* The sound gate. A corner pill was too easy to miss, so this covers the screen and has
+    to be answered before anything else on the lock screen can be touched. */}
 <div id="lock-gate" class="gate" role="dialog" aria-modal="true" aria-labelledby="gate-h" hidden>
   <div class="gate__card">
     <span class="gate__icon"><Icon name="volume-2" size={22} /></span>
@@ -45,16 +45,6 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
       {hasAvatar
         ? <img class="lock__avatar" id="lock-avatar" src={site.avatar} alt="" width="64" height="64" />
         : <span class="lock__avatar lock__avatar--fallback" id="lock-avatar" aria-hidden="true">{initials}</span>}
-      {/* Short on purpose. This is the escape hatch, so it has one job: say the chase is
-          unwinnable and name the way out. The recording says the rest.
-
-          The bubble points at the avatar, so this is Yves talking rather than the button,
-          which is why it can be friendly about a thing the button is being smug about.
-          It cannot assume you have been suffering either: at two seconds you have had
-          about one dodge, so the old "Alright, that is enough" was telling people off
-          for something they had barely started. Stating the rule instead works whether
-          you arrive at two seconds or three minutes. */}
-      <p class="lock__shout" id="lock-shout" role="status">Okay, it never gets tired. Press <kbd>Space</kbd> or <kbd>Enter</kbd> and come in.</p>
     </span>
     {/* The h1 for the whole desktop. It is the page's subject, it is already the most
         prominent text on it, and .lock__name sets margin and size, so making it a heading
@@ -65,15 +55,10 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   </div>
 
   <div class="lock__bottom">
-    {/* Every line the button says lives here, not in the script. String literals are
-        not minified, so copy in JS is copy charged against the ~10KB budget, while copy
-        in markup is free and lands in the gzipped HTML instead. It also means editing
-        the jokes never means touching logic. Order is fixed, see scripts/lock.ts. */}
-    <button class="lock__cta" id="lock-cta" type="button" data-unlock
-      data-lines="Catch me if you can to unlock|Whatever you do, do not push me onto his face.|Ugh. Take me.|Fine. It is yours.|CLICK TO UNLOCK|CATCH ME OR PRESS ENTER|TAP TO UNLOCK"
-      data-taunts="Too slow.|Not even close.|Try harder.|Was that it?"
-      data-corner="Ow. Not the corner.|That one hurt.|Fine, that counts.">
-      <Icon name="lock" size={13} /><span id="lock-label">CATCH ME OR PRESS ENTER</span>
+    {/* One word, because it works on every input. "Click" is wrong on a phone and "tap"
+        is wrong on a desktop, and the lock glyph beside it already says what it does. */}
+    <button class="lock__cta" id="lock-cta" type="button" data-unlock>
+      <Icon name="lock" size={13} /><span>UNLOCK</span>
     </button>
 
     <p class="lock__status"><span>PREPARING DESKTOP…</span><span>READY</span></p>
@@ -101,8 +86,7 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   .lock__top { gap: var(--space-2); }
   .lock__id { align-content: center; gap: 3px; }
   .lock__bottom { align-content: end; gap: var(--space-4); }
-  /* The button moves, so it is the top layer of the whole lock screen: whatever it
-     travels over (READY, the clock, the name, the avatar) sits under its glass. Nothing
+  /* The one interactive thing on the screen, so it stays above the decoration. Nothing
      else here carries a z-index, so this one number is the entire stacking order. */
   .lock__cta { z-index: 5; }
 
@@ -147,55 +131,18 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
     font: inherit; font-size: 12px; letter-spacing: .18em; color: #fff;
     text-shadow: 0 1px 2px rgba(0,0,0,.35);   /* keeps the label legible over any wallpaper */
-    /* Deliberately faster than --t-base, and local rather than a token change: --t-base
-       is shared with the dock and the windows, so lowering it would speed up the site.
-       At 220ms a lunge could reach the button mid-slide. */
-    /* No `transform` in this transition beyond the 90ms dodge, and deliberately no hover
-       transform anywhere below: scripts/lock.ts owns this element's transform, and the
-       dodge maths reconstructs the button's origin from it. A hover lift would either be
-       overwritten by the inline style or, worse, apply and leave the origin wrong. So the
-       CTA lifts with light and shadow only, and the movement stays the button's own. */
-    transition: background-color var(--t-fast), box-shadow var(--t-fast), border-color var(--t-fast),
-                transform 90ms var(--ease);
+    /* Light and shadow only, no transform. The button no longer moves, and a hover lift
+       on the one control everybody has to hit buys nothing but a moving target. */
+    transition: background-color var(--t-fast), box-shadow var(--t-fast), border-color var(--t-fast);
   }
   .lock__socials a:hover { background: var(--glass-hover); }
   .lock__socials a:active { background: var(--glass-press); }
-  /* During the chase the button is out of hit testing. Once caught, the ring below is
-     the reward and this hover only strengthens the glass edge. */
   .lock__cta:hover {
     border-color: rgba(255,255,255,.55);
     box-shadow: var(--glass-sheen), 0 10px 26px -10px rgba(0,0,0,.6);
   }
   .lock__cta:active { box-shadow: var(--glass-sheen); }
 
-  /* The anti-cheat, and it has to be CSS rather than a click handler. A transitioning
-     element is hit-tested at its interpolated position, so for the whole 90ms slide the
-     button really is under the cursor and a click really does land. Taking it out of hit
-     testing entirely is the only way to close that window. A stab now falls through to
-     #lock, whose handler looks for [data-unlock] on the target and finds nothing.
-
-     This selector MUST mirror the matchMedia string in scripts/lock.ts. If they ever
-     drift, a reduced-motion visitor gets a button that cannot be clicked at all. */
-  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-    .lock__cta:not(.is-caught) { pointer-events: none; }
-  }
-
-  /* Speech bubble, same trick as the dock tooltip: a pseudo-element carrying
-     content: attr(), plus a border-triangle tail. Being a pseudo-element on the button
-     it travels with it for free, and the script only has to set one data attribute. */
-  .lock__cta[data-say]::after {
-    content: attr(data-say); position: absolute; left: 50%; bottom: calc(100% + 12px);
-    transform: translateX(-50%); padding: 7px 13px; border-radius: 12px;
-    white-space: nowrap; font-size: 11px; letter-spacing: .02em; font-weight: 700;
-    background: rgba(20,32,52,.92); color: #fff; pointer-events: none;
-    animation: pop var(--t-base) var(--ease);
-  }
-  .lock__cta[data-say]::before {
-    content: ''; position: absolute; left: 50%; bottom: calc(100% + 6px);
-    transform: translateX(-50%); border: 6px solid transparent;
-    border-top-color: rgba(20,32,52,.92); pointer-events: none;
-  }
-  @keyframes pop { from { opacity: 0; transform: translate(-50%, 4px) scale(.94); } }
   /* Pure theatre, so it belongs in CSS. Both states ship in the markup stacked in one
      grid cell and cross-fade on a delay, which drops a lookup, a timer and two strings
      out of the JS budget. */
@@ -237,66 +184,9 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
     margin: 0; min-height: 1.2em; font-size: 11px; letter-spacing: .1em;
     color: rgba(255,255,255,.7); transition: opacity var(--t-fast);
   }
-  /* The win flash is a ring, not a scale. A scale keyframe would have to restate the
-     button's current translate to avoid snapping to origin, which is what the --ox/--oy
-     custom properties were for. Animating box-shadow instead lets both of them go. */
-  .lock__cta.is-caught {
-    background-image: var(--glass-hover);
-    animation: caught var(--t-base) var(--ease);
-  }
-  @keyframes caught { from { box-shadow: 0 0 0 0 rgba(255,255,255,.6); } to { box-shadow: 0 0 0 18px rgba(255,255,255,0); } }
-
-  /* Once the button tires, the avatar starts pulsing: herd it here to end the chase.
-     Nothing new is added to the resting screen, the target is the face already there. */
-  .lock__avatar.is-target {
-    box-shadow: 0 0 0 3px rgba(255,255,255,.5), 0 0 0 10px rgba(255,255,255,.14);
-    animation: beacon 1.4s var(--ease) infinite;
-  }
-  @keyframes beacon {
-    50% { box-shadow: 0 0 0 4px rgba(255,255,255,.75), 0 0 0 16px rgba(255,255,255,0); }
-  }
-
-  /* The escape, as a message from Yves rather than a system banner. It hangs off his
-     avatar with a tail pointing at his face, so it reads as him saying it. Absolutely
-     positioned inside .lock__id, which is already position: relative, so it cannot shift
-     the button's cached layout box. */
-  .lock__shout {
-    position: absolute; left: 50%; bottom: calc(100% + 12px);
-    transform: translateX(-50%) scale(.9); transform-origin: 50% 100%;
-    margin: 0; padding: 9px 13px; width: max-content; max-width: 236px;
-    border-radius: 14px;
-    background: #fff; color: #16161a;
-    font-size: 11px; font-weight: 700; line-height: 1.45; letter-spacing: .01em;
-    box-shadow: 0 14px 34px -10px rgba(0,0,0,.6);
-    opacity: 0; pointer-events: none;
-    transition: opacity var(--t-base) var(--ease), transform var(--t-base) var(--ease);
-  }
-  /* The tail sits dead centre, because the bubble is centred on the avatar. It used to
-     be pinned near the left edge, which left it pointing at empty space beside his head. */
-  .lock__shout::after {
-    content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%);
-    border: 7px solid transparent; border-top-color: #fff; border-bottom: 0;
-  }
-  .lock__shout kbd {
-    display: inline-block; padding: 1px 6px; margin: 0 1px; border-radius: 4px;
-    background: #16161a; color: #fff; font: inherit; font-size: 10px;
-  }
-  /* It bounces every few seconds for as long as the visitor stays on the lock screen,
-     so the way out keeps catching the eye without being on screen all the time. */
-  .lock__shout.is-on {
-    opacity: 1; transform: translateX(-50%) scale(1);
-    animation: nudge 3.4s var(--ease) var(--t-base) infinite;
-  }
-  @keyframes nudge {
-    0%, 24%, 100% { transform: translateX(-50%) scale(1); }
-    6%  { transform: translateX(-50%) translateY(-6px) scale(1.04) rotate(-2deg); }
-    12% { transform: translateX(-50%) translateY(0) scale(1) rotate(1.6deg); }
-    18% { transform: translateX(-50%) translateY(-3px) rotate(0deg); }
-  }
 
   /* The sound gate. Covers everything, so the choice is made before the lock screen can
-     be touched at all. That also removes the old bug where a corner pill could sit on
-     top of the fleeing button and swallow the winning click. */
+     be touched at all. */
   .gate {
     position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center;
     padding: var(--space-4); text-align: center; color: #fff;
@@ -329,9 +219,6 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   .gate__no { margin-top: var(--space-2); }
 
   /* Everything eases in once, so the screen assembles rather than just appearing.
-     .lock__bottom fades WITHOUT moving on purpose: it is the button's ancestor, and an
-     ancestor transform would offset the box the dodge maths measures, leaving the origin
-     permanently wrong for anyone who moves the mouse during the entrance.
 
      `backwards`, not `both`. A filled opacity animation makes an element a backdrop root
      for as long as it is filling, and `both` fills forever, so the unlock button inside
@@ -350,11 +237,7 @@ const initials = site.name.split(' ').map((w) => w[0]).join('');
   @media (prefers-reduced-motion: reduce) {
     .lock__top, .lock__id, .lock__bottom { animation: none; }
     .lock__cta { transition: background var(--t-fast); }
-    .lock__cta.is-caught, .lock__cta[data-say]::after, .lock__avatar.is-target { animation: none; }
     .lock__dot::after { animation: none; }
-    /* The shout still appears, it just does not shake. It is the escape hatch, so it has
-       to reach everyone. */
-    .lock__shout.is-on { animation: none; }
     .lock { transition-duration: 150ms; transform: none !important; }
   }
 
