@@ -15,8 +15,36 @@
  * sidebar uses at 20px. It cannot be stretched across a pane.
  */
 import type { CollectionEntry } from 'astro:content';
-interface Props { p: CollectionEntry<'projects'> }
-const { p } = Astro.props;
+interface Props {
+  p: CollectionEntry<'projects'>;
+  /**
+   * Which of the two surfaces this is. The component serves both, and they differ in
+   * more than one way, so they share one prop rather than accumulating a flag each.
+   *
+   * The banner: inside the Work window it is one of six panes, five of them hidden, so
+   * lazy is right and eager would fetch six banners to show one. On the standalone page
+   * it is the topmost thing on the screen and an LCP candidate, so it is eager.
+   *
+   * The headings: the standalone page's own <h1> is the window title, so the write up
+   * starts at <h2> and the card's title, which repeats that <h1> word for word, is not a
+   * heading at all. Inside the desktop the same card sits under the Work window's <h2>,
+   * so its title is an <h3> and the write up starts at <h4>. Without this the home page
+   * carried forty odd <h2>s, six of them the words "The problem", because every case
+   * study is in the DOM at build time per rule 3.
+   */
+  standalone?: boolean;
+}
+const { p, standalone = false } = Astro.props;
+
+/* The write up comes from the content store as HTML rather than through a slot, because
+   the heading level has to depend on where it is being rendered and markdown has no way
+   to say that. The shift is a plain string replace: these are our own files, there is no
+   <h2> in them that is not a section heading, and anything cleverer would be a parser for
+   a problem that does not have one. */
+const body = (() => {
+  const html = p.rendered?.html ?? '';
+  return standalone ? html : html.replace(/<(\/?)h2\b/g, '<$1h4');
+})();
 
 const FACTS: [string, string][] = [
   ['Client', p.data.client],
@@ -29,11 +57,22 @@ const FACTS: [string, string][] = [
   {p.data.banner && (
     /* alt is empty on purpose: the shot is decorative here, and every image that carries
        meaning is inside the write up with a real description on it. */
-    <img class="cs__banner" src={p.data.banner} alt="" width="720" height="450" loading="lazy" decoding="async" />
+    <img class="cs__banner" src={p.data.banner} alt="" width="720" height="450"
+         srcset={p.data.bannerSrcset}
+         sizes={p.data.bannerSrcset ? '(max-width: 640px) 100vw, min(100vw, 1440px)' : undefined}
+         loading={standalone ? 'eager' : 'lazy'}
+         fetchpriority={standalone ? 'high' : undefined}
+         decoding="async" />
   )}
 
   <div class="cs__inner">
-    <h3 class="cs__title">{p.data.title}</h3>
+    {/* Not a heading on the standalone page: the window titlebar above already carries
+        this exact text as the page's <h1>, and repeating it as an <h2> would put the same
+        words in the outline twice. It is still the title visually, which is what the
+        wireframe draws. */}
+    {standalone
+      ? <p class="cs__title">{p.data.title}</p>
+      : <h3 class="cs__title">{p.data.title}</h3>}
 
     {/* Two columns of label and value, which is the whole point of this direction: a fact
         is a labelled thing, not a pill that could be a date or a tool. */}
@@ -45,7 +84,7 @@ const FACTS: [string, string][] = [
 
     <hr class="cs__rule" />
 
-    <div class="cs__body"><slot /></div>
+    <div class="cs__body" set:html={body}></div>
 
     {p.data.url && (
       <p class="cs__links">
@@ -91,12 +130,12 @@ const FACTS: [string, string][] = [
      spacing is set here rather than asking anyone to write markdown differently. */
   .cs__body { font-size: 13px; line-height: 1.65; }
   .cs__body :global(> *) { margin: 0; }
-  .cs__body :global(> h2) {
+  .cs__body :global(> h2), .cs__body :global(> h4) {
     margin-top: var(--space-3); font: 700 13px var(--font-chrome); color: var(--os-ink);
   }
-  .cs__body :global(> h2:first-child) { margin-top: 0; }
+  .cs__body :global(> h2:first-child), .cs__body :global(> h4:first-child) { margin-top: 0; }
   .cs__body :global(> * + *) { margin-top: var(--space-2); }
-  .cs__body :global(> h2 + *) { margin-top: 6px; }
+  .cs__body :global(> h2 + *), .cs__body :global(> h4 + *) { margin-top: 6px; }
   .cs__body :global(> p) { color: var(--os-muted); }
 
   /* The pane can now get much wider than it used to: the rail collapses and the window
@@ -104,7 +143,7 @@ const FACTS: [string, string][] = [
      of that and prose does not, so only the prose is capped. A line of 13px Space Mono at
      70ch is around 550px, which is the measure this already read at before any of it
      could be widened, so nothing changes for someone who never touches the controls. */
-  .cs__body :global(> p), .cs__body :global(> h2) { max-width: 70ch; }
+  .cs__body :global(> p), .cs__body :global(> h2), .cs__body :global(> h4) { max-width: 70ch; }
 
   /* A screenshot in the markdown is a direct child, so it gets its own breathing room. */
   .cs__body :global(> img) {

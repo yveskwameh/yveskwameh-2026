@@ -274,7 +274,11 @@ html[data-mode='dark'][data-accent='violet'] { --os-accent: #c08ad6; --os-accent
    both `bottom` and `max-height`, and the per-window height pins in GameApp and MailApp
    read it too. */
 @media (max-width: 640px) {
-  :root { --window-top: 24px; --window-bottom: 0px; }
+  /* 40, not 24. At 24 a sheet came out 676 of a 740 tall screen and read as a full screen
+     modal: the strip of desktop left above it was too thin to say "there is something
+     behind this". 40 is enough to see the wallpaper and the scrim over it, which is what
+     makes the thing underneath feel present and the sheet feel like a sheet. */
+  :root { --window-top: 40px; --window-bottom: 0px; }
 }
 /* A phone in landscape, or a very short desktop window. The dock reserve is the tight
    version here or there is no room left to work in.

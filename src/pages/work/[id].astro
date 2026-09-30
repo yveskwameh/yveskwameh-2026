@@ -4,7 +4,7 @@
  * but having a real URL keeps it shareable and indexable.
  */
 import { existsSync } from 'node:fs';
-import { getCollection, render } from 'astro:content';
+import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Window from '../../components/windows/Window.astro';
 import CaseStudy from '../../components/apps/CaseStudy.astro';
@@ -15,7 +15,6 @@ export async function getStaticPaths() {
   return projects.map((p) => ({ params: { id: p.id }, props: { p } }));
 }
 const { p } = Astro.props;
-const { Content } = await render(p);
 
 /* Its own share card if tools/draw-og.py has drawn one, the generic card otherwise. The
    check is a filesystem read at build time, which is the same trick MenuBar.astro uses for
@@ -43,7 +42,7 @@ const schema = [
       window on this same case study. */}
   <Window id={p.id} title={p.data.title} filename={p.data.filename} open main width={760}
           closeHref={`/#work-${p.id}`}>
-    <CaseStudy p={p}><Content /></CaseStudy>
+    <CaseStudy p={p} standalone />
     <p class="back"><a href={`/#work-${p.id}`}>Back to the desktop</a></p>
   </Window>
 </Base>

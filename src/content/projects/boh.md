@@ -2,80 +2,95 @@
 title: "BOH Financial"
 client: "BOH Financial"
 year: 2026
-summary: "Accounting for creators and talent, on a site that names who it is for before it names what it does."
+summary: "Accounting for creators and entertainers. I gave them a home page that sorts visitors into three audiences, and a page each that talks to only one of them."
 role: "Design and build"
-stack: ["Figma"]
+stack: ["Figma", "Webflow"]
 cover: "/images/projects/boh.avif"
-banner: "/images/projects/boh-1.avif"
+banner: "/images/projects/boh-1@720.avif"
+bannerSrcset: "/images/projects/boh-1@720.avif 720w, /images/projects/boh-1@1440.avif 1440w, /images/projects/boh-1@2880.avif 2880w"
 filename: "boh-financial.webflow"
 featured: false
 ---
 
 [//]: # (No `url` on purpose, and this is settled rather than pending. Yves has confirmed that boh-cfo.com as it stands today is not his work: it is a later light redesign headlined "Your back of house, handled." Every shot in this case study comes from the recording of the dark site he delivered. Linking the domain would send people to somebody else's design under his name, so it stays off unless that changes.)
 
-[//]: # (Yves to confirm: `stack`. The recording gives away no platform, so only Figma is claimed here. Add Webflow if that is what it was built in.)
+## What they had
 
-## The problem
+BOH Financial does accounting for creators, entertainers and the businesses around them, and
+they sell it as a subscription rather than by the hour.
 
-Accounting firms all say the same four things, and a musician trying to work out whether
-one of them understands touring income cannot tell them apart. BOH works with creators,
-entertainers and the agencies around them, which is a real difference, and the old way of
-saying it was a services list that could have belonged to anybody.
+The old site did not carry that. It was a services list, and a services list from an
+accounting firm reads much the same whoever wrote it.
 
-There is a second problem underneath that one. Three audiences, an artist, a manager, and
-an ordinary small business, want different things and are reassured by different proof. A
-single page written for all three ends up written for none.
+They also sell to three groups who want different things: artists and performers, the
+agencies and managers who represent them, and founders running a small business. One page
+written for all three ends up written for none of them.
 
-## Say who, then what
+They brought me in to design and build the site.
 
-The home page leads with who it is for. Three audiences as three doors, entertainers and
-talent, agencies and managers, and small businesses, because someone arriving already knows
-which one they are and wants their door marked rather than a paragraph to sort through.
+## The home page
 
-<img src="/images/projects/boh-2.avif" alt="Three audiences as three doors: talent, agencies and managers, and small businesses" width="720" height="450" loading="lazy" decoding="async" />
+The home page does one job. A headline that says who the firm is for, three cards for the
+three audiences, and a login for clients who already have an account. That is the whole page.
+
+I kept it short on purpose. You already know whether you are an artist, an agency or a
+business owner, so the page lets you say which and then gets out of your way. The navigation
+works the same, the only content menu on it is Who We Help.
+
+<img src="/images/projects/boh-2@720.avif" alt="Three audiences as three doors: talent, agencies and managers, and small businesses" width="720" height="374" loading="lazy" decoding="async" srcset="/images/projects/boh-2@720.avif 720w, /images/projects/boh-2@1440.avif 1440w, /images/projects/boh-2@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## A page each
 
-Multi-page rather than one long scroll, so each door opens onto a page that speaks only to
-that audience. The talent page can talk about royalties and touring without a small business
-owner reading past it, and the reverse.
+Each card opens a page written for that audience alone. The talent page leads with "For
+Artists, Musicians, Influencers, And Performers Managing Their Business", and it keeps the
+photograph from the card you clicked, so you can see you landed where you aimed.
 
-<img src="/images/projects/boh-3.avif" alt="The talent page, written for artists and performers rather than for everybody" width="720" height="450" loading="lazy" decoding="async" />
+That is what going multi-page bought us. The talent page can talk about royalties and
+touring, the small business page can talk about payroll, and neither one makes you read the
+other.
 
-## Eight services, folded
+<img src="/images/projects/boh-3@720.avif" alt="The talent page, written for artists and performers rather than for everybody" width="720" height="474" loading="lazy" decoding="async" srcset="/images/projects/boh-3@720.avif 720w, /images/projects/boh-3@1440.avif 1440w, /images/projects/boh-3@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
-The service list is long: bookkeeping, contract and royalty administration, tax compliance,
-payroll, cash flow, insurance, entity structuring, advisory. Eight items, each needing a
-paragraph, is a page nobody finishes.
+## Ten services, folded
 
-So it folds. Closed, it reads as a short list of what they do, which is the question most
-people are actually asking.
+Talent alone has ten services: bookkeeping, contract and royalty administration, tax
+compliance, payroll, cash flow, insurance, bill pay, wealth coordination, entity structuring,
+and advisory. Every one of them needs a paragraph to explain properly.
 
-<img src="/images/projects/boh-4.avif" alt="The service list closed, eight lines that can be read at a glance" width="720" height="450" loading="lazy" decoding="async" />
+So I folded them into an accordion. Closed, each one is a single line, so the ten together
+answer what do you actually do inside one screen. Open, each gives its detail to the person
+who came for that one thing. Royalty administration matters to a musician and not at all to a
+restaurant, and neither should have to scroll past the other to reach their own.
 
-Open, one at a time, it gives the detail to the person who wants that one thing. Royalty
-administration matters enormously to a musician and not at all to a restaurant, and neither
-of them should have to scroll past the other's answer.
+<img src="/images/projects/boh-4@720.avif" alt="Talent Services, one open with its detail and nine closed underneath" width="720" height="750" loading="lazy" decoding="async" srcset="/images/projects/boh-4@720.avif 720w, /images/projects/boh-4@1440.avif 1440w, /images/projects/boh-4@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
-<img src="/images/projects/boh-5.avif" alt="One service opened, the detail shown only where somebody asked for it" width="720" height="450" loading="lazy" decoding="async" />
+## Testimonials and pricing
 
-## Proof, then price
+The testimonials sit under the services rather than above them, because a quote is worth more
+once you know what is being sold. They are attributed by name and role, a musician, a
+production company, an actor, so you can find the one closest to yourself.
 
-Testimonials sit below the services rather than at the top, because a quote means more
-after someone knows what is being sold. They are attributed to real roles, a content
-creator, a musician, so a visitor can find the one closest to themselves.
+<img src="/images/projects/boh-5@720.avif" alt="Testimonials placed after the services, attributed by role" width="720" height="322" loading="lazy" decoding="async" srcset="/images/projects/boh-5@720.avif 720w, /images/projects/boh-5@1440.avif 1440w, /images/projects/boh-5@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
-<img src="/images/projects/boh-6.avif" alt="Testimonials placed after the services, attributed by role" width="720" height="450" loading="lazy" decoding="async" />
+Then the prices, in the open. Three tiers for talent, named for where an artist is in their
+career rather than Basic, Pro and Premium, and each one includes everything in the tier below
+it.
 
-Then the prices, in the open, as three tiers rather than a form to fill in to find out. An
-accounting firm that publishes its numbers is making a claim about how it works, and hiding
-them would have undercut everything above.
+BOH sell a monthly subscription, so the monthly price belongs on the page. Putting it behind
+an enquiry form would have made the rest of the page harder to believe.
 
-<img src="/images/projects/boh-7.avif" alt="Three published price tiers rather than an enquiry to find out" width="720" height="450" loading="lazy" decoding="async" />
+<img src="/images/projects/boh-6@720.avif" alt="Three published price tiers rather than an enquiry to find out" width="720" height="724" loading="lazy" decoding="async" srcset="/images/projects/boh-6@720.avif 720w, /images/projects/boh-6@1440.avif 1440w, /images/projects/boh-6@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
+
+## The whole page
+
+The home page end to end at the size it was built. There is not much to it, which is the
+whole idea.
+
+<img src="/images/projects/boh-7@720.avif" alt="The BOH Financial home page in full, the headline, the three cards and the client login" width="720" height="770" loading="lazy" decoding="async" srcset="/images/projects/boh-7@720.avif 720w, /images/projects/boh-7@1440.avif 1440w, /images/projects/boh-7@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## Result
 
-What was delivered names its audience before it names its services, gives each one a page
-of its own, and puts the prices where a visitor can read them. It read as specialist rather
-than general, which is the whole difference for a firm whose clients are not ordinary small
-businesses.
+BOH now has a page for each of the three groups they sell to, each with its own services, its
+own proof and its own prices. A musician and a restaurant owner never see each other's page.
+Their pitch is that they understand creators, and the site says so before anyone reads a word
+about accounting.

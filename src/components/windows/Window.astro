@@ -68,16 +68,17 @@ const { id, title, filename, width = 560, height, open = false, variant, closeHr
         ? <label class="light light--zoom" for={`zoom-${id}`} title="Zoom"><span class="sr-only">Zoom</span></label>
         : <button class="light light--zoom" aria-label="Zoom (unavailable)" disabled></button>}
     </div>
-    {/* Anything a window wants beside its title. Work puts its sidebar toggle here, which
-        is where a Mac keeps one. Empty on every other window, and an empty slot renders
-        nothing at all. */}
-    <slot name="toolbar" />
     {/* Both tags written out rather than one dynamic tag name, so Astro can see them and
         scope .window__title to them. A computed tag is not always visible to the scoper,
         and a heading that quietly loses its styling is a hard thing to notice. */}
     {main
       ? <h1 class="window__title" id={`win-${id}-title`}>{title}</h1>
       : <h2 class="window__title" id={`win-${id}-title`}>{title}</h2>}
+    {/* Anything a window wants beside its title, and it has to come AFTER the title or the
+        title gets pushed along in front of it. Work puts its sidebar toggle here, which is
+        where a Mac keeps one. Empty on every other window, and an empty slot renders
+        nothing at all. */}
+    <slot name="toolbar" />
   </div>
   <div class="window__body"><slot /></div>
   {/* Eight grips, one per edge and corner. data-resize holds the DIRECTION now, not the

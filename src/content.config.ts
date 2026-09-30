@@ -21,6 +21,11 @@ const projects = defineCollection({
     /* A wide shot for the top of the pane. `cover` is a 96px icon and cannot do this
        job. Optional, so a case study without one simply starts at its title. */
     banner: z.string().optional(),
+    /* The width ladder for that banner, written by tools/project-images.py. The body
+       images carry their own srcset in the markdown, but the banner is rendered by
+       CaseStudy.astro rather than written by hand, so it needs the list here. Absent
+       until a full resolution source exists, and then the banner is a single file. */
+    bannerSrcset: z.string().optional(),
     filename: z.string(),         // caption under the window, e.g. "compass-bio-labs.webflow"
     featured: z.boolean().default(false),
   }),

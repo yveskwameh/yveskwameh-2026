@@ -85,11 +85,22 @@ export function init(selector: string) {
       // Any new press means the previous drag's click is never coming, so stop waiting for
       // it. Before the guard below, so a press on a traffic light clears it too.
       blockUntil = 0;
-      // Guard the window traffic lights, but not the handle itself. A desktop icon IS a
-      // <button>, so a plain closest('button') check matched it and no icon could ever
-      // be dragged.
-      const btn = (e.target as HTMLElement).closest('button');
-      if (btn && btn !== handle) return;
+      /**
+       * Guard anything in the chrome that is itself a control, but not the handle.
+       *
+       * A desktop icon IS a <button>, so a plain closest('button') check matched it and no
+       * icon could ever be dragged. Hence the `!== handle` half.
+       *
+       * `label` is here because leaving it out broke the Work sidebar toggle in a way that
+       * does not show up in a synthetic test. Pressing a label started a window drag, the
+       * title bar called setPointerCapture, and a captured pointer makes the browser fire
+       * the click at the capturing element rather than at what is under the cursor. The
+       * label never saw the click and its checkbox never flipped. Same shape as the bug
+       * that once ate the close button. Any control put in the title bar from now on needs
+       * to be in this list or it will silently do nothing.
+       */
+      const ctl = (e.target as HTMLElement).closest('button, label, input, a, summary');
+      if (ctl && ctl !== handle) return;
       handle.setPointerCapture(e.pointerId);
       ox = target.offsetLeft; oy = target.offsetTop; sx = e.clientX; sy = e.clientY;
       moved = false; dragging = true;
