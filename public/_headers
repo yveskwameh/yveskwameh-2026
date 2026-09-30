@@ -28,27 +28,45 @@
   # thing worth framing invisibly over something else.
   X-Frame-Options: DENY
 
-# Everything below is content-hashed or immutable by nature, so it can be cached for a
-# year and never revalidated. The filename changes when the bytes change, which is what
-# makes `immutable` true rather than optimistic.
+# Caching, and the rule that decides which block a path belongs in: `immutable` is only
+# honest when the filename changes with the bytes. It tells a browser never to revalidate,
+# not even to ask, so a file served that way and later edited in place is frozen in every
+# cache that already holds it until the max-age runs out.
 #
-# HTML is deliberately absent. A page must be revalidated or a deploy would not reach
-# anyone who had already visited.
+# That is not a theory. `/images/*` was in the immutable block below with a one year
+# max-age, and the six case study icons were replaced with the real brand marks under
+# their existing filenames. Anyone who had loaded the site before that kept the old flat
+# squares and their browser never asked again. The same applied to a wireframe shot that
+# was re-exported to fix overlapping text. The server was serving the right bytes the
+# whole time and no cache was going to collect them.
+#
+# HTML is deliberately absent from both blocks. A page must be revalidated or a deploy
+# would not reach anyone who had already visited.
 
+# Content-hashed by the build. The filename carries a digest, so a changed file is a new
+# URL and `immutable` is earned rather than asserted.
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
 
+# Everything below lives in public/ and is copied through verbatim, so the filenames are
+# stable and editing a file in place keeps its URL. These get a day of freshness and then
+# a month during which a stale copy may be served instantly while a fresh one is fetched
+# behind it, so a repeat visit is still served from cache and an edit still lands.
+#
+# The cost is one conditional request per asset per day, answered with a 304 when nothing
+# changed. Lighthouse's long cache TTL check is a zero weight diagnostic rather than part
+# of the performance score, so this does not move the number.
 /fonts/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, stale-while-revalidate=2592000
 
 /images/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, stale-while-revalidate=2592000
 
 /cursors/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, stale-while-revalidate=2592000
 
 /icons/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, stale-while-revalidate=2592000
 
 /audio/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, stale-while-revalidate=2592000
