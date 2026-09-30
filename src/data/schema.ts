@@ -40,7 +40,7 @@ export function person(base: URL | string) {
        panel reads. It is deliberately the long form, not the short lock-screen label. */
     jobTitle: site.role,
     description:
-      'Yves Kwameh is a strategic UX/UI designer and no-code developer in Port Harcourt, ' +
+      'Yves Kwameh is a design engineer and no-code developer in Port Harcourt, ' +
       'Nigeria, working with clients in any time zone. He designs in Figma and builds in ' +
       'Webflow, Framer and Astro.',
     image: abs(base, site.avatar),

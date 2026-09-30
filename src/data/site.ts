@@ -1,8 +1,8 @@
 /** Single place for identity + links, used by the lock screen, menu bar and About window. */
 export const site = {
   name: 'Yves Kwameh',
-  role: 'Strategic UX/UI Designer & No-code Developer',
-  title: 'UX/UI DESIGNER',          // the short line under the name on the lock screen
+  role: 'Design Engineer & No-code Developer',
+  title: 'DESIGN ENGINEER',         // the short line under the name on the lock screen
   location: 'Port Harcourt',
   /* Sits next to the location on the lock screen. Says availability rather than
      geography, because "WAT" read as a limit and Yves works to his clients' hours. */
