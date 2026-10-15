@@ -114,7 +114,7 @@ between 43 and 22.
 
 This is the home page end to end at the size it was built, hero to footer.
 
-<img src="/images/projects/car-guys-12@720.avif" alt="The Car Guys home page in full, from the hero to the footer" width="720" height="4628" loading="lazy" decoding="async" srcset="/images/projects/car-guys-12@720.avif 720w, /images/projects/car-guys-12@1440.avif 1440w, /images/projects/car-guys-12@2880.avif 2880w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
+<img src="/images/projects/car-guys-12-v2@720.avif" alt="The Car Guys home page in full, from the hero to the footer" width="720" height="2804" loading="lazy" decoding="async" srcset="/images/projects/car-guys-12-v2@720.avif 720w, /images/projects/car-guys-12-v2@1440.avif 1440w" sizes="(max-width: 640px) 100vw, min(100vw, 1440px)" />
 
 ## Result
 
