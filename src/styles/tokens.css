@@ -103,6 +103,20 @@
   --os-shadow: 0 18px 40px -12px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.18);
   --os-shadow-sm: 0 6px 16px -6px rgba(0,0,0,.35);
 
+  /* The products shelf. Oak, lit from above: the top face catches the light, the front
+     edge is the board's own colour with a grain, and the underside goes dark. Brackets
+     are black steel. Not themed on purpose: a wooden shelf is the same wood in dark mode. */
+  --shelf-top: #d9b98c;
+  --shelf-face: #b98a55;
+  --shelf-face-dark: #9c7041;
+  --shelf-grain: rgba(80, 48, 18, 0.16);
+  --shelf-under: #6e4a26;
+  --shelf-bracket: #24221f;
+  --shelf-cast: 0 22px 26px -14px rgba(0,0,0,.55);
+  --shelf-tag: #f4efe4;
+  --shelf-tag-ink: #2b2620;
+  --app-radius: 22.5%;
+
   /* Radius: rounded windows, square pixels */
   --r-window: 10px;
   --r-inner: 6px;

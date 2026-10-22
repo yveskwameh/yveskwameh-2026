@@ -1,0 +1,212 @@
+---
+/**
+ * The Browser window: the apps from the shelf, running inside the desktop.
+ *
+ * All of this is build-time HTML, per rule 3: the toolbar, the bookmark bar, the home page
+ * and the fallback. The one thing that is not is the app itself, which is a live
+ * third-party page in an <iframe>. That is a named exception to rule 3, recorded in
+ * CLAUDE.md, and it follows rule 2's discipline: scripts/browser.ts creates the frame
+ * only when an app is picked, so nothing from an app is fetched until somebody asks.
+ *
+ * Every control that leads somewhere is a real link to the real site, so it still works
+ * before browser.ts has loaded and with scripts off. browser.ts takes the click over and
+ * loads it here instead.
+ *
+ * The home page is after Chrome's new tab page, which Yves picked from three: a search
+ * that filters the apps as you type, round shortcut tiles under it, then the apps as cards.
+ * The card is after the App Store's list row: icon, name, what it is, category and a
+ * status pill, and an Open button on the right.
+ *
+ * The window keeps a laptop screen's shape, 16:10, rather than stretching to the width of
+ * the desktop. A wide short window made every site look letterboxed.
+ */
+import Icon from '../os/Icon.astro';
+import { products, productIcon } from '../../data/products';
+
+const find = (p: typeof products[number]) => `${p.name} ${p.line} ${p.category}`.toLowerCase();
+---
+<div class="br" id="br" data-state="home">
+  <div class="br__bar">
+    <button class="br__btn" type="button" data-br="home" title="Home" aria-label="Home"><Icon name="home" size={14} /></button>
+    <button class="br__btn" type="button" data-br="reload" title="Reload" aria-label="Reload"><Icon name="reload" size={14} /></button>
+    <div class="br__address" aria-live="polite">
+      <Icon name="lock" size={12} />
+      <span class="br__url" id="br-url">Apps Yves built</span>
+    </div>
+    <a class="br__btn br__out" id="br-out" href={products[0]?.url} target="_blank" rel="noopener" title="Open in a new tab" aria-label="Open in a new tab"><Icon name="external-link" size={14} /></a>
+  </div>
+
+  <nav class="br__marks" aria-label="Apps">
+    {products.map((p) => (
+      <a class="br__mark" href={p.url} target="_blank" rel="noopener" data-go={p.id}>
+        <img src={productIcon(p.id)} alt="" width="16" height="16" loading="lazy" decoding="async" draggable="false" />
+        {p.name}
+      </a>
+    ))}
+  </nav>
+
+  <div class="br__view">
+    <div class="br__home">
+      <label class="br__search">
+        <Icon name="search" size={14} />
+        <span class="sr-only">Search the apps</span>
+        <input type="search" id="br-search" placeholder="Search apps Yves built" autocomplete="off" />
+      </label>
+
+      <ul class="tiles" aria-label="Shortcuts">
+        {products.map((p) => (
+          <li data-find={find(p)}>
+            <a class="tile" href={p.url} target="_blank" rel="noopener" data-go={p.id}>
+              <span class="tile__art"><img src={productIcon(p.id)} alt="" width="32" height="32" loading="lazy" decoding="async" draggable="false" /></span>
+              <span class="tile__name">{p.name}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      <section class="cards" aria-labelledby="cards-h">
+        <h3 class="cards__h" id="cards-h">Apps Yves built</h3>
+        <ul class="cards__list">
+          {products.map((p) => (
+            <li class="card" data-find={find(p)}>
+              <img class="card__icon" src={productIcon(p.id)} alt="" width="52" height="52" loading="lazy" decoding="async" draggable="false" />
+              <div class="card__text">
+                <b class="card__name">{p.name}</b>
+                <span class="card__line">{p.line}</span>
+                <span class="card__meta">
+                  {p.category}
+                  <span class:list={['card__status', { 'is-live': p.status === 'Live' }]}>{p.status}</span>
+                </span>
+              </div>
+              <a class="card__open" href={p.url} target="_blank" rel="noopener" data-go={p.id} aria-label={`Open ${p.name}`}>Open</a>
+            </li>
+          ))}
+        </ul>
+        <p class="cards__none" id="br-none" hidden>No app matches that.</p>
+      </section>
+    </div>
+
+    {/* The frame lands in here. One at a time: switching apps replaces it. */}
+    <div class="br__frame" id="br-frame"></div>
+
+    {/* For an app with embed: false in data/products.ts. */}
+    <div class="br__out-panel">
+      <img id="br-out-icon" src="" alt="" width="56" height="56" decoding="async" hidden />
+      <p><b id="br-out-name"></b> opens in its own tab.</p>
+      <a class="br__go" id="br-out-go" href="#" target="_blank" rel="noopener">Open it</a>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* 16:10, the shape of a laptop screen, as large as the desktop allows and no wider than
+     1280, the width browser.ts lays sites out at. Height follows from width, and width is
+     also held back by the height available, so the window never comes out wide and short.
+     Desktop only: a phone never opens this window. The green light's zoom still wins,
+     because its rule in Window.astro is !important. */
+  @media (min-width: 641px) {
+    :global(#win-browser) {
+      --bw: min(1280px, calc(100vw - 32px), calc((100dvh - var(--menubar-h) - var(--window-top) - var(--window-bottom)) * 1.6));
+      width: var(--bw); height: calc(var(--bw) / 1.6);
+    }
+  }
+  /* Edge to edge, the way Work does it: a browser's toolbar meets the window frame. */
+  :global(#win-browser .window__body) { padding: 0; overflow: hidden; }
+  .br { display: grid; grid-template-rows: auto auto 1fr; height: 100%; min-height: 0; background: var(--os-surface); }
+
+  /* ---- toolbar ---- */
+  .br__bar {
+    display: flex; align-items: center; gap: 4px; padding: 6px 8px;
+    border-bottom: 1px solid var(--os-hairline); background: var(--os-chrome);
+  }
+  .br__btn {
+    all: unset; display: grid; place-items: center; width: 26px; height: 26px; flex: none;
+    border-radius: var(--r-inner); color: var(--os-muted); cursor: var(--cur-hand);
+  }
+  .br__btn:hover { background: var(--os-hover); color: var(--os-ink); }
+  .br__btn:focus-visible { outline: 2px solid var(--os-accent); }
+  .br__address {
+    flex: 1; min-width: 0; max-width: 640px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 6px;
+    height: 26px; padding: 0 10px; border-radius: var(--r-pill); background: var(--os-card); border: 1px solid var(--os-hairline);
+    font: 11px var(--font-chrome); color: var(--os-muted);
+  }
+  .br__url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--os-ink); }
+  .br[data-state='home'] .br__address :global(.glyph) { display: none; }
+  .br[data-state='home'] .br__out { visibility: hidden; }
+
+  .br__marks {
+    display: flex; gap: 2px; padding: 4px 8px; overflow-x: auto;
+    border-bottom: 1px solid var(--os-hairline); background: var(--os-chrome);
+  }
+  .br__mark {
+    display: flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: var(--r-inner);
+    font: 11px var(--font-chrome); color: var(--os-ink); text-decoration: none; white-space: nowrap; cursor: var(--cur-hand);
+  }
+  .br__mark img { border-radius: var(--app-radius); }
+  .br__mark:hover { background: var(--os-hover); }
+  .br__mark[aria-current='page'] { background: var(--os-press); }
+
+  /* ---- states ---- */
+  .br__view { position: relative; min-height: 0; overflow: hidden; }
+  .br__home, .br__frame, .br__out-panel { position: absolute; inset: 0; }
+  .br__frame, .br__out-panel { display: none; }
+  .br[data-state='app'] .br__home, .br[data-state='out'] .br__home { display: none; }
+  .br[data-state='app'] .br__frame { display: block; }
+  .br[data-state='out'] .br__out-panel { display: grid; }
+  /* The search hides what does not match, and .card's own display would otherwise win. */
+  .br [hidden] { display: none !important; }
+
+  /* The frame is laid out at a desktop width and scaled down to fit, by browser.ts, so a
+     site gets its desktop layout even in a window narrower than a laptop screen. */
+  .br__frame { overflow: hidden; background: #fff; }
+  .br__frame :global(iframe) { border: 0; display: block; background: #fff; transform-origin: 0 0; }
+
+  .br__out-panel { place-content: center; justify-items: center; gap: var(--space-2); text-align: center; font: 12px var(--font-body); color: var(--os-ink); }
+  .br__out-panel img { border-radius: var(--app-radius); }
+  .br__out-panel p { margin: 0; }
+  .br__go { padding: 6px 14px; border-radius: var(--r-pill); background: var(--os-accent); color: var(--os-on-accent); text-decoration: none; font: 12px var(--font-chrome); }
+
+  /* ---- home: Chrome's new tab page ---- */
+  .br__home {
+    overflow: auto; padding: 12vh var(--space-4) var(--space-5);
+    display: flex; flex-direction: column; align-items: center; gap: var(--space-4);
+  }
+  .br__search {
+    display: flex; align-items: center; gap: 8px; width: min(100%, 560px); height: 44px; padding: 0 18px; box-sizing: border-box; flex: none;
+    border-radius: var(--r-pill); background: var(--os-card); border: 1px solid var(--os-hairline); box-shadow: var(--os-shadow-sm); color: var(--os-muted);
+  }
+  .br__search:focus-within { border-color: var(--os-accent); }
+  .br__search input { all: unset; flex: 1; font: 12px var(--font-body); color: var(--os-ink); }
+
+  /* Round shortcut tiles, the way Chrome draws them under its search. */
+  .tiles { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); }
+  .tile { display: grid; justify-items: center; gap: 8px; width: 104px; padding: 12px 4px; border-radius: var(--r-window); text-decoration: none; color: var(--os-ink); cursor: var(--cur-hand); }
+  .tile:hover { background: var(--os-hover); }
+  .tile__art { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--os-recess); }
+  .tile__art img { border-radius: var(--app-radius); }
+  .tile__name { font: 11px var(--font-chrome); text-align: center; }
+
+  /* Cards: the App Store list row. Grouped on one plate, rows split by a hairline that
+     starts after the icon, the way an inset grouped list does it. */
+  .cards { width: min(100%, 560px); }
+  .cards__h { margin: 0 0 var(--space-2); font: 700 12px var(--font-chrome); color: var(--os-muted); }
+  .cards__list { list-style: none; margin: 0; padding: 0 var(--space-3); border-radius: var(--r-window); background: var(--os-card); border: 1px solid var(--os-hairline); }
+  .card { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: var(--space-3); padding: 14px 0; position: relative; }
+  .card + .card::before { content: ''; position: absolute; top: 0; left: calc(52px + var(--space-3)); right: 0; border-top: 1px solid var(--os-hairline); }
+  .card__icon { border-radius: var(--app-radius); box-shadow: 0 0 0 1px var(--os-hairline); }
+  .card__text { display: grid; gap: 3px; min-width: 0; font: 11px var(--font-body); color: var(--os-muted); }
+  .card__name { font: 700 13px var(--font-chrome); color: var(--os-ink); }
+  .card__meta { display: flex; align-items: center; gap: 6px; font-size: 10px; }
+  /* Status as a pill. Live is tinted with the accent, anything else stays neutral. */
+  .card__status {
+    padding: 1px 8px; border-radius: var(--r-pill); font: 700 9px var(--font-chrome); letter-spacing: .03em;
+    background: var(--os-recess); color: var(--os-muted);
+  }
+  .card__status.is-live { background: color-mix(in srgb, var(--os-accent) 14%, transparent); color: var(--os-accent); }
+  .card__open {
+    padding: 5px 16px; border-radius: var(--r-pill); background: var(--os-recess); color: var(--os-accent);
+    font: 700 11px var(--font-chrome); text-decoration: none; text-transform: uppercase; letter-spacing: .04em; cursor: var(--cur-hand);
+  }
+  .card__open:hover { background: var(--os-accent); color: var(--os-on-accent); }
+  .cards__none { margin: var(--space-3) 0 0; font: 12px var(--font-body); color: var(--os-muted); text-align: center; }
+</style>

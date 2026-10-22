@@ -168,7 +168,17 @@ export function initWindowManager() {
     // A single click on a desktop icon only selects it, and the dblclick above opens it.
     // detail 0 means the keyboard fired this, and Enter should open straight away.
     const select = pointer && !!t?.classList.contains('icon') && (e as MouseEvent).detail !== 0;
-    const opens = select ? undefined : t?.dataset.open;
+    let opens = select ? undefined : t?.dataset.open;
+
+    // A link that opens a window, which is what the shelf's apps are. On a desktop the
+    // window replaces the link. On a phone the link wins and the real site opens in a new
+    // tab, because a site inside a bottom sheet is too cramped to use.
+    if (opens && t!.tagName === 'A') {
+      if (matchMedia('(max-width: 640px)').matches) opens = undefined;
+      else e.preventDefault();
+    }
+    // What to open it on, for a window that shows more than one thing. browser.ts reads it.
+    if (opens && t!.dataset.arg) q(opens)?.setAttribute('data-arg', t!.dataset.arg);
 
     /**
      * The dismiss. Anything outside the open window puts it away, which is what makes the

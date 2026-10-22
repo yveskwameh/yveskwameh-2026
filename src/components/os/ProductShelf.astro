@@ -1,0 +1,145 @@
+---
+/**
+ * A wooden shelf on the desktop wall holding the apps Yves has built for himself.
+ *
+ * Each app stands on an oak plank as its real icon, with a paper tag hanging off the front
+ * edge underneath it: name and status, the way a shop labels a shelf. Two steel brackets
+ * hold the plank up, out at its ends so they clear the tags.
+ *
+ * Click an app and the Browser window opens on it (scripts/browser.ts), with every app in
+ * that window's bookmark bar. Each item is an <a> to the real site, so on a phone, where
+ * window-manager.ts lets the link through, it opens in a new tab. That is also where a PWA
+ * can be installed, which it cannot be inside a frame.
+ *
+ * Three to a plank. A fourth app starts a second plank below the first.
+ *
+ * Under 640px it leaves the drag layer and becomes one full-width row of the phone grid.
+ */
+import { products, productIcon } from '../../data/products';
+
+const PER_ROW = 3;
+const rows: typeof products[] = [];
+for (let i = 0; i < products.length; i += PER_ROW) rows.push(products.slice(i, i + PER_ROW));
+---
+<section class="shelf" aria-labelledby="shelf-title">
+  <h2 class="shelf__title" id="shelf-title">Apps Yves built</h2>
+  {rows.map((row) => (
+    <div class="shelf__row">
+      <ul class="shelf__items">
+        {row.map((p, i) => (
+          <li class="shelf__slot">
+            <a class="shelf__item" href={p.url} target="_blank" rel="noopener"
+               data-open="browser" data-arg={p.id}
+               aria-label={`${p.name}, ${p.line}. Opens in the browser.`}>
+              <img class="shelf__app" src={productIcon(p.id)} alt="" width="64" height="64"
+                   draggable="false" decoding="async" />
+              <span class:list={['shelf__tag', { 'is-tilted': i % 2 === 1 }]} aria-hidden="true">
+                <b>{p.name}</b>
+                <span>{p.status}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <div class="shelf__board" aria-hidden="true">
+        <i class="shelf__bracket"></i><i class="shelf__bracket"></i>
+      </div>
+    </div>
+  ))}
+</section>
+
+<style>
+  /* Pinned to the wall top right, clear of the icon columns on the left and above the pile
+     of prints. z-index 1 like the prints: over the wallpaper, under the scrim and windows. */
+  .shelf {
+    --board-h: 20px; --app: 64px; --slot: 104px; --tag-gap: 54px;
+    position: absolute; top: 28px; right: 56px; z-index: 1;
+    display: grid; justify-items: center; gap: var(--space-2);
+    font-family: var(--font-chrome);
+  }
+  .shelf__title {
+    margin: 0; font-size: 10px; font-weight: 400; color: #fff; letter-spacing: .02em;
+    text-shadow: 0 0 3px rgba(0,0,0,.85), 0 1px 3px rgba(0,0,0,.65);
+  }
+
+  /* Room under each plank for its tags before the next plank starts. */
+  .shelf__row { position: relative; margin-bottom: var(--tag-gap); }
+  .shelf__items {
+    list-style: none; margin: 0; padding: 0 28px;
+    display: flex; justify-content: center; gap: var(--space-2);
+    min-width: calc(var(--slot) * 3 + var(--space-2) * 2);
+    /* Down into the board's top face by 3px, so the apps stand on it rather than float. */
+    margin-bottom: -3px; position: relative; z-index: 1;
+  }
+  .shelf__slot { width: var(--slot); display: grid; justify-items: center; }
+
+  .shelf__item {
+    position: relative; display: grid; justify-items: center;
+    text-decoration: none; color: inherit; cursor: var(--cur-hand); outline: none;
+    -webkit-user-drag: none;
+  }
+  .shelf__app {
+    width: var(--app); height: var(--app); display: block;
+    border-radius: var(--app-radius);
+    box-shadow: 0 1px 0 rgba(255,255,255,.25) inset, 0 6px 8px -4px rgba(0,0,0,.45);
+    transition: transform var(--t-fast) var(--ease);
+  }
+  /* The contact shadow where the app meets the board. */
+  .shelf__item::after {
+    content: ''; position: absolute; left: 10%; right: 10%; top: calc(var(--app) - 4px); height: 8px;
+    background: radial-gradient(closest-side, rgba(0,0,0,.45), transparent);
+    transition: opacity var(--t-fast);
+  }
+  .shelf__item:hover .shelf__app, .shelf__item:focus-visible .shelf__app { transform: translateY(-4px); }
+  .shelf__item:hover::after, .shelf__item:focus-visible::after { opacity: .5; }
+  .shelf__item:focus-visible .shelf__app { outline: 2px solid #fff; outline-offset: 3px; }
+
+  /* The plank. Top face catching the light, then the front edge with its grain, then a
+     dark line for the underside, and the shadow it throws down the wall. */
+  .shelf__board {
+    position: relative; height: var(--board-h); border-radius: 2px;
+    background:
+      linear-gradient(to bottom, var(--shelf-top) 0 7px, rgba(0,0,0,.12) 7px 8px, transparent 8px),
+      repeating-linear-gradient(90deg, transparent 0 9px, var(--shelf-grain) 9px 10px, transparent 10px 23px, var(--shelf-grain) 23px 25px, transparent 25px 41px),
+      linear-gradient(to bottom, var(--shelf-face), var(--shelf-face-dark));
+    box-shadow: inset 0 -2px 0 var(--shelf-under), var(--shelf-cast);
+  }
+  /* Two steel brackets under the plank, out at the ends so the tags hang clear of them. */
+  .shelf__bracket {
+    position: absolute; top: 100%; width: 28px; height: 28px;
+    background: var(--shelf-bracket);
+    clip-path: polygon(0 0, 100% 0, 100% 3px, 4px 100%, 0 100%);
+    filter: drop-shadow(0 3px 2px rgba(0,0,0,.4));
+  }
+  .shelf__bracket:first-child { left: 8px; }
+  .shelf__bracket:last-child  { right: 8px; transform: scaleX(-1); }
+
+  /* A paper tag on a short string from the plank's front edge: name, then status. Every
+     other one hangs at a slightly different angle, the way real tags never quite agree. */
+  .shelf__tag {
+    position: absolute; top: calc(var(--app) + var(--board-h) + 2px);
+    display: grid; justify-items: center; gap: 1px;
+    padding: 5px 8px 6px; min-width: 64px;
+    background: var(--shelf-tag); color: var(--shelf-tag-ink);
+    border-radius: 2px; box-shadow: 0 3px 5px -1px rgba(0,0,0,.4);
+    font-size: 9px; line-height: 1.2; text-align: center; white-space: nowrap;
+    transform: rotate(-2deg); transform-origin: top center;
+    transition: transform var(--t-fast) var(--ease);
+  }
+  .shelf__tag.is-tilted { transform: rotate(2.5deg); }
+  .shelf__item:hover .shelf__tag { transform: rotate(0deg); }
+  .shelf__tag::before {
+    content: ''; position: absolute; bottom: 100%; left: 50%; width: 1px; height: 4px; background: rgba(0,0,0,.55);
+  }
+  .shelf__tag b { font-weight: 700; }
+  .shelf__tag span { color: #6d6457; }
+
+  /* A window is up: the shelf stops answering the pointer, like the icons and prints. */
+  :global(body.has-window) .shelf__item { pointer-events: none; }
+
+  @media (max-width: 640px) {
+    /* One row of the phone grid, full width, after the icons. */
+    .shelf { position: static; grid-column: 1 / -1; margin-top: var(--space-3); }
+    .shelf__items { min-width: 0; }
+  }
+</style>
