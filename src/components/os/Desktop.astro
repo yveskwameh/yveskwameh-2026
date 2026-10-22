@@ -61,9 +61,11 @@ import Icon from './Icon.astro';
       is testimonials rather than feedback because that is what data/desktop.ts opens. */}
   <Window id="testimonials" title="Feedback" filename="feedback.txt" width={760}><TestimonialsApp /></Window>
   {/* Explicitly sized, like Work: an app needs a real viewport to lay itself out in, and a
-      window sized to its content would collapse an iframe to its default 150px. 960 wide
-      so a site gets a desktop layout, and zoomable for the ones that want the screen. */}
-  <Window id="browser" title="Browser" filename="apps.webloc" width={960} height={620} zoomable><BrowserApp /></Window>
+      window sized to its content would collapse an iframe to its default 150px. Asks for
+      1440 by 900 and gets as much of that as the desktop has, since Window.astro caps both
+      to the screen. Below 1280 browser.ts scales the site down rather than letting it fall
+      back to its tablet layout. */}
+  <Window id="browser" title="Browser" filename="apps.webloc" width={1440} height={900} zoomable><BrowserApp /></Window>
 
   {/* The unmute notice. One line, once, and only to somebody who is missing something.
 

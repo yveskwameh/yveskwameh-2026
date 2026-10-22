@@ -32,6 +32,29 @@ export function init() {
 
   const show = (state: 'home' | 'app' | 'out') => { br.dataset.state = state; };
 
+  /**
+   * Lay the site out at a laptop's width, then scale it down to the window. A site decides
+   * its layout from the width it is given, and a frame in a 960 window got a tablet layout.
+   * At 1280 or wider nothing is scaled and the site simply fills the window.
+   */
+  const DESKTOP = 1280;
+  function fit() {
+    const f = host.querySelector('iframe');
+    if (!f || !host.clientWidth) return;
+    const s = Math.min(1, host.clientWidth / DESKTOP);
+    f.style.width = `${host.clientWidth / s}px`;
+    f.style.height = `${host.clientHeight / s}px`;
+    f.style.transform = s < 1 ? `scale(${s})` : '';
+  }
+  new ResizeObserver(fit).observe(host);
+
+  // The search on the Chrome home filters the tiles and cards as you type.
+  const search = document.getElementById('br-search') as HTMLInputElement | null;
+  search?.addEventListener('input', () => {
+    const q = search.value.trim().toLowerCase();
+    br.querySelectorAll<HTMLElement>('[data-find]').forEach((el) => { el.hidden = !!q && !el.dataset.find!.includes(q); });
+  });
+
   function home() {
     host.replaceChildren();
     marks.forEach((m) => m.removeAttribute('aria-current'));
@@ -65,6 +88,7 @@ export function init() {
     f.referrerPolicy = 'strict-origin-when-cross-origin';
     host.replaceChildren(f);
     show('app');
+    fit();
   }
 
   br.addEventListener('click', (e) => {

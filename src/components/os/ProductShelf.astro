@@ -2,84 +2,57 @@
 /**
  * A wooden shelf on the desktop wall holding the apps Yves has built for himself.
  *
- * Each app stands on the board as its real icon. Click one and the Browser window opens on
- * it (scripts/browser.ts), with every app in that window's bookmark bar. Each item is an
- * <a> to the real site, so on a phone, where window-manager.ts lets the link through, it
- * opens in a new tab. That is also where a PWA can be installed, which it cannot be inside
- * a frame.
+ * Each app stands on an oak plank as its real icon, with a paper tag hanging off the front
+ * edge underneath it: name and status, the way a shop labels a shelf. Two steel brackets
+ * hold the plank up, out at its ends so they clear the tags.
  *
- * Three looks, all from the same markup, chosen by data-shelf:
- *   plank  one board on two steel brackets, names underneath like the desktop icons
- *   unit   a small wooden bookcase with a spare shelf, so new apps have room to go
- *   tags   the plank with a paper tag hanging off the front edge under each app
+ * Click an app and the Browser window opens on it (scripts/browser.ts), with every app in
+ * that window's bookmark bar. Each item is an <a> to the real site, so on a phone, where
+ * window-manager.ts lets the link through, it opens in a new tab. That is also where a PWA
+ * can be installed, which it cannot be inside a frame.
  *
- * The products go in rows of three. The bookcase always shows at least two rows, so the
- * empty one is visible room to grow. The other two looks hide empty rows.
+ * Three to a plank. A fourth app starts a second plank below the first.
  *
  * Under 640px it leaves the drag layer and becomes one full-width row of the phone grid.
  */
 import { products, productIcon } from '../../data/products';
 
-interface Props { variant?: 'plank' | 'unit' | 'tags' }
-const { variant = 'plank' } = Astro.props;
-
 const PER_ROW = 3;
 const rows: typeof products[] = [];
 for (let i = 0; i < products.length; i += PER_ROW) rows.push(products.slice(i, i + PER_ROW));
-while (rows.length < 2) rows.push([]);
 ---
-<section class="shelf" data-shelf={variant} aria-labelledby="shelf-title">
+<section class="shelf" aria-labelledby="shelf-title">
   <h2 class="shelf__title" id="shelf-title">Apps Yves built</h2>
-  <div class="shelf__case">
-    {rows.map((row) => (
-      <div class:list={['shelf__row', { 'is-empty': row.length === 0 }]}>
-        <ul class="shelf__items">
-          {row.map((p) => (
-            <li class="shelf__slot">
-              <a class="shelf__item" href={p.url} target="_blank" rel="noopener"
-                 data-open="browser" data-arg={p.id}
-                 aria-label={`${p.name}, ${p.line}. Opens in the browser.`}>
-                <img class="shelf__app" src={productIcon(p.id)} alt="" width="56" height="56"
-                     draggable="false" decoding="async" />
-                <span class="shelf__name" aria-hidden="true">{p.name}</span>
-                <span class="shelf__tag" aria-hidden="true">
-                  <b>{p.name}</b>
-                  <span>{p.status}</span>
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-        <div class="shelf__board" aria-hidden="true">
-          <i class="shelf__bracket"></i><i class="shelf__bracket"></i>
-        </div>
+  {rows.map((row) => (
+    <div class="shelf__row">
+      <ul class="shelf__items">
+        {row.map((p, i) => (
+          <li class="shelf__slot">
+            <a class="shelf__item" href={p.url} target="_blank" rel="noopener"
+               data-open="browser" data-arg={p.id}
+               aria-label={`${p.name}, ${p.line}. Opens in the browser.`}>
+              <img class="shelf__app" src={productIcon(p.id)} alt="" width="64" height="64"
+                   draggable="false" decoding="async" />
+              <span class:list={['shelf__tag', { 'is-tilted': i % 2 === 1 }]} aria-hidden="true">
+                <b>{p.name}</b>
+                <span>{p.status}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <div class="shelf__board" aria-hidden="true">
+        <i class="shelf__bracket"></i><i class="shelf__bracket"></i>
       </div>
-    ))}
-  </div>
+    </div>
+  ))}
 </section>
-
-{/* Preview only. Never rendered in a production build, so it costs the live site nothing.
-    It flips data-shelf so the three looks can be compared on the real desktop. */}
-{import.meta.env.DEV && (
-  <div class="shelf-pick" role="group" aria-label="Shelf style (preview only)">
-    <span>Shelf</span>
-    {['plank', 'unit', 'tags'].map((v) => <button type="button" data-pick={v} aria-pressed={String(v === variant)}>{v}</button>)}
-    <script is:inline>
-      document.querySelector('.shelf-pick').addEventListener('click', (e) => {
-        const v = e.target.closest('[data-pick]')?.dataset.pick;
-        if (!v) return;
-        document.querySelector('.shelf').dataset.shelf = v;
-        document.querySelectorAll('.shelf-pick [data-pick]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pick === v)));
-      });
-    </script>
-  </div>
-)}
 
 <style>
   /* Pinned to the wall top right, clear of the icon columns on the left and above the pile
      of prints. z-index 1 like the prints: over the wallpaper, under the scrim and windows. */
   .shelf {
-    --board-h: 20px; --app: 64px; --slot: 104px;
+    --board-h: 20px; --app: 64px; --slot: 104px; --tag-gap: 54px;
     position: absolute; top: 28px; right: 56px; z-index: 1;
     display: grid; justify-items: center; gap: var(--space-2);
     font-family: var(--font-chrome);
@@ -89,10 +62,10 @@ while (rows.length < 2) rows.push([]);
     text-shadow: 0 0 3px rgba(0,0,0,.85), 0 1px 3px rgba(0,0,0,.65);
   }
 
-  .shelf__row { position: relative; }
-  .shelf__row.is-empty { display: none; }
+  /* Room under each plank for its tags before the next plank starts. */
+  .shelf__row { position: relative; margin-bottom: var(--tag-gap); }
   .shelf__items {
-    list-style: none; margin: 0; padding: 0 var(--space-3);
+    list-style: none; margin: 0; padding: 0 28px;
     display: flex; justify-content: center; gap: var(--space-2);
     min-width: calc(var(--slot) * 3 + var(--space-2) * 2);
     /* Down into the board's top face by 3px, so the apps stand on it rather than float. */
@@ -121,7 +94,7 @@ while (rows.length < 2) rows.push([]);
   .shelf__item:hover::after, .shelf__item:focus-visible::after { opacity: .5; }
   .shelf__item:focus-visible .shelf__app { outline: 2px solid #fff; outline-offset: 3px; }
 
-  /* The board. Top face catching the light, then the front edge with its grain, then a
+  /* The plank. Top face catching the light, then the front edge with its grain, then a
      dark line for the underside, and the shadow it throws down the wall. */
   .shelf__board {
     position: relative; height: var(--board-h); border-radius: 2px;
@@ -131,64 +104,35 @@ while (rows.length < 2) rows.push([]);
       linear-gradient(to bottom, var(--shelf-face), var(--shelf-face-dark));
     box-shadow: inset 0 -2px 0 var(--shelf-under), var(--shelf-cast);
   }
-  /* Two steel brackets under the board, a quarter in from each end. */
+  /* Two steel brackets under the plank, out at the ends so the tags hang clear of them. */
   .shelf__bracket {
     position: absolute; top: 100%; width: 28px; height: 28px;
     background: var(--shelf-bracket);
     clip-path: polygon(0 0, 100% 0, 100% 3px, 4px 100%, 0 100%);
     filter: drop-shadow(0 3px 2px rgba(0,0,0,.4));
   }
-  .shelf__bracket:first-child { left: 18%; }
-  .shelf__bracket:last-child  { right: 18%; transform: scaleX(-1); }
+  .shelf__bracket:first-child { left: 8px; }
+  .shelf__bracket:last-child  { right: 8px; transform: scaleX(-1); }
 
-  /* Name under the board, in the same white label as every desktop icon. Sits below the
-     board and its brackets, so it is absolutely placed from the app. */
-  .shelf__name {
-    position: absolute; top: calc(var(--app) + var(--board-h) + 34px); width: var(--slot);
-    font-size: 10px; color: #fff; text-align: center; line-height: 1.3;
-    text-shadow: 0 0 3px rgba(0,0,0,.85), 0 1px 3px rgba(0,0,0,.65);
-  }
-  .shelf__tag { display: none; }
-
-  /* ---- unit: a small bookcase. Sides, a top, a back panel, and a spare shelf. ---- */
-  .shelf[data-shelf='unit'] .shelf__case {
-    padding: var(--space-3) 10px 0;
-    border: 10px solid var(--shelf-face); border-bottom-width: 0; border-radius: 3px 3px 0 0;
-    background:
-      linear-gradient(to bottom, rgba(0,0,0,.28), rgba(0,0,0,.12)),
-      linear-gradient(var(--shelf-face-dark), var(--shelf-face-dark));
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.18), var(--shelf-cast);
-    display: grid; gap: calc(var(--space-3) + 6px);
-  }
-  .shelf[data-shelf='unit'] .shelf__row.is-empty { display: block; }
-  .shelf[data-shelf='unit'] .shelf__row.is-empty .shelf__items { height: var(--app); }
-  .shelf[data-shelf='unit'] .shelf__board { margin: 0 -10px; box-shadow: inset 0 -2px 0 var(--shelf-under), 0 6px 8px -4px rgba(0,0,0,.4); }
-  .shelf[data-shelf='unit'] .shelf__bracket { display: none; }
-  /* The names go on the board's front edge, like a label on a bookcase. */
-  .shelf[data-shelf='unit'] .shelf__name {
-    top: calc(var(--app) + 5px); font-size: 8px; color: #2b1a08; text-shadow: 0 1px 0 rgba(255,255,255,.25);
-  }
-  .shelf[data-shelf='unit'] .shelf__item::after { display: none; }
-  .shelf[data-shelf='unit'] .shelf__app { box-shadow: 0 1px 0 rgba(255,255,255,.25) inset, 0 4px 6px -2px rgba(0,0,0,.6); }
-
-  /* ---- tags: a paper tag on a string under each app, name and status. ---- */
-  .shelf[data-shelf='tags'] .shelf__name { display: none; }
-  .shelf[data-shelf='tags'] .shelf__tag {
+  /* A paper tag on a short string from the plank's front edge: name, then status. Every
+     other one hangs at a slightly different angle, the way real tags never quite agree. */
+  .shelf__tag {
     position: absolute; top: calc(var(--app) + var(--board-h) + 2px);
     display: grid; justify-items: center; gap: 1px;
     padding: 5px 8px 6px; min-width: 64px;
     background: var(--shelf-tag); color: var(--shelf-tag-ink);
     border-radius: 2px; box-shadow: 0 3px 5px -1px rgba(0,0,0,.4);
-    font-size: 9px; line-height: 1.2; text-align: center;
+    font-size: 9px; line-height: 1.2; text-align: center; white-space: nowrap;
     transform: rotate(-2deg); transform-origin: top center;
+    transition: transform var(--t-fast) var(--ease);
   }
-  .shelf[data-shelf='tags'] .shelf__slot:nth-child(even) .shelf__tag { transform: rotate(2.5deg); }
-  .shelf[data-shelf='tags'] .shelf__tag::before {
+  .shelf__tag.is-tilted { transform: rotate(2.5deg); }
+  .shelf__item:hover .shelf__tag { transform: rotate(0deg); }
+  .shelf__tag::before {
     content: ''; position: absolute; bottom: 100%; left: 50%; width: 1px; height: 4px; background: rgba(0,0,0,.55);
   }
-  .shelf[data-shelf='tags'] .shelf__tag b { font-weight: 700; }
-  .shelf[data-shelf='tags'] .shelf__tag span { color: #6d6457; }
-  .shelf[data-shelf='tags'] .shelf__bracket { display: none; }
+  .shelf__tag b { font-weight: 700; }
+  .shelf__tag span { color: #6d6457; }
 
   /* A window is up: the shelf stops answering the pointer, like the icons and prints. */
   :global(body.has-window) .shelf__item { pointer-events: none; }
@@ -197,16 +141,5 @@ while (rows.length < 2) rows.push([]);
     /* One row of the phone grid, full width, after the icons. */
     .shelf { position: static; grid-column: 1 / -1; margin-top: var(--space-3); }
     .shelf__items { min-width: 0; }
-    .shelf[data-shelf='unit'] .shelf__row.is-empty { display: none; }
   }
-
-  .shelf-pick {
-    position: fixed; left: 50%; bottom: 120px; transform: translateX(-50%); z-index: 950;
-    display: flex; align-items: center; gap: 4px; padding: 4px 6px;
-    background: rgba(0,0,0,.72); color: #fff; border-radius: 999px;
-    font: 11px var(--font-chrome);
-  }
-  .shelf-pick span { padding: 0 6px; opacity: .7; }
-  .shelf-pick button { all: unset; padding: 4px 10px; border-radius: 999px; cursor: pointer; }
-  .shelf-pick button[aria-pressed='true'] { background: #fff; color: #000; }
 </style>

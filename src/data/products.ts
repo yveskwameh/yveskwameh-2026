@@ -29,6 +29,8 @@ export type Product = {
   /** What it is, in a few words. Shown on the shelf tag and the start page. */
   line: string;
   status: 'Live' | 'In progress';
+  /** One word, like the App Store's category line. */
+  category: string;
   embed: boolean;
 };
 
@@ -38,6 +40,7 @@ export const products: Product[] = [
     name: 'pennivault',
     url: 'https://pennivault.xyz/',
     line: 'Monthly budgeting',
+    category: 'Finance',
     status: 'Live',
     embed: true,
   },
@@ -46,6 +49,7 @@ export const products: Product[] = [
     name: 'Dara X&O',
     url: 'https://daraxando.yveskwameh.com/',
     line: 'Tic tac toe, online',
+    category: 'Game',
     status: 'Live',
     embed: true,
   },

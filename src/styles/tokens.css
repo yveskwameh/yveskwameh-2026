@@ -117,6 +117,13 @@
   --shelf-tag-ink: #2b2620;
   --app-radius: 22.5%;
 
+  /* The Browser window's home pages. Mixed from the accent rather than fixed colours, so
+     they follow the theme the way the rest of the chrome does. */
+  --br-wash:
+    radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, var(--os-accent) 12%, transparent), transparent 60%),
+    radial-gradient(90% 70% at 100% 10%, color-mix(in srgb, #7a5cff 10%, transparent), transparent 60%);
+  --br-arc-side: linear-gradient(170deg, color-mix(in srgb, var(--os-accent) 22%, var(--os-surface)), color-mix(in srgb, #7a5cff 16%, var(--os-surface)));
+
   /* Radius: rounded windows, square pixels */
   --r-window: 10px;
   --r-inner: 6px;
