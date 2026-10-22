@@ -49,8 +49,9 @@ const find = (p: typeof products[number]) => `${p.name} ${p.line} ${p.category}`
     <div class="br__home">
       <label class="br__search">
         <Icon name="search" size={14} />
-        <span class="sr-only">Search the apps</span>
-        <input type="search" id="br-search" placeholder="Search apps Yves built" autocomplete="off" />
+        {/* The placeholder is the only visible text. aria-label carries the same words for a
+            screen reader, which does not reliably read a placeholder as a name. */}
+        <input type="search" id="br-search" placeholder="Search apps Yves built" aria-label="Search apps Yves built" autocomplete="off" />
       </label>
 
       <ul class="tiles" aria-label="Shortcuts">
