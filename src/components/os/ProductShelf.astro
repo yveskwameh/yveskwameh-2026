@@ -49,11 +49,15 @@ for (let i = 0; i < products.length; i += PER_ROW) rows.push(products.slice(i, i
 </section>
 
 <style>
-  /* Pinned to the wall top right, clear of the icon columns on the left and above the pile
-     of prints. z-index 1 like the prints: over the wallpaper, under the scrim and windows. */
+  /* Pinned to the wall top centre, between the icon columns on the left and the prints on
+     the right. It used to sit top right, but Images in the dock lays the prints out over
+     that corner, from 50px down and 316px in from the right edge (Prints.astro), and they
+     covered it. Centred, it clears both at 1024 wide and up: about 384px of shelf leaves
+     the prints 4px clear at 1024 and more from there. z-index 1 like the prints: over the
+     wallpaper, under the scrim and windows. */
   .shelf {
     --board-h: 20px; --app: 64px; --slot: 104px; --tag-gap: 54px;
-    position: absolute; top: 28px; right: 56px; z-index: 1;
+    position: absolute; top: 28px; left: 50%; transform: translateX(-50%); z-index: 1;
     display: grid; justify-items: center; gap: var(--space-2);
     font-family: var(--font-chrome);
   }
@@ -139,7 +143,7 @@ for (let i = 0; i < products.length; i += PER_ROW) rows.push(products.slice(i, i
 
   @media (max-width: 640px) {
     /* One row of the phone grid, full width, after the icons. */
-    .shelf { position: static; grid-column: 1 / -1; margin-top: var(--space-3); }
+    .shelf { position: static; transform: none; grid-column: 1 / -1; margin-top: var(--space-3); }
     .shelf__items { min-width: 0; }
   }
 </style>
