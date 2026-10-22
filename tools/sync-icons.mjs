@@ -18,6 +18,8 @@ const ICONS = [
   // apps
   'folder', 'file-text', 'notes', 'mail', 'music', 'play', 'pause', 'trash', 'user', 'briefcase',
   'image', 'search', 'reload', 'check',
+  // the Browser window, for the apps on the shelf
+  'home',
   // brands available in the free set
   'figma', 'github', 'linkedin', 'twitter-bird', 'instagram',
   // lock screen + menu actions + games

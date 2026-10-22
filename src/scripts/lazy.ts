@@ -31,6 +31,7 @@ const APPS: Record<string, () => Promise<App>> = {
   projects: () => import('./work'),
   game: () => import('./game'),
   services: () => import('./services'),
+  browser: () => import('./browser'),
   /* Not a window. The Images icon in the dock is the stack the prints live in, and
      openWindow launches this when it finds no window called images. */
   images: () => import('./prints'),

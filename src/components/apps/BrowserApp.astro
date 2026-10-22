@@ -1,0 +1,136 @@
+---
+/**
+ * The Browser window: the apps from the shelf, running inside the desktop.
+ *
+ * All of this is build-time HTML, per rule 3: the toolbar, the bookmark bar, the start
+ * page and the fallback. The one thing that is not is the app itself, which is a live
+ * third-party page in an <iframe>. That is a named exception to rule 3, recorded in
+ * CLAUDE.md, and it follows rule 2's discipline: scripts/browser.ts creates the frame
+ * only when an app is picked, so nothing from an app is fetched until somebody asks.
+ *
+ * Every control that leads somewhere is a real link to the real site, so it still works
+ * before browser.ts has loaded and with scripts off. browser.ts takes the click over and
+ * loads it here instead.
+ */
+import Icon from '../os/Icon.astro';
+import { products, productIcon } from '../../data/products';
+---
+<div class="br" id="br" data-state="home">
+  <div class="br__bar">
+    <button class="br__btn" type="button" data-br="home" title="All apps" aria-label="All apps"><Icon name="home" size={14} /></button>
+    <button class="br__btn" type="button" data-br="reload" title="Reload" aria-label="Reload"><Icon name="reload" size={14} /></button>
+    <div class="br__address" aria-live="polite">
+      <Icon name="lock" size={12} />
+      <span class="br__url" id="br-url">Apps Yves built</span>
+    </div>
+    <a class="br__btn br__out" id="br-out" href={products[0]?.url} target="_blank" rel="noopener" title="Open in a new tab" aria-label="Open in a new tab"><Icon name="external-link" size={14} /></a>
+  </div>
+
+  <nav class="br__marks" aria-label="Apps">
+    {products.map((p) => (
+      <a class="br__mark" href={p.url} target="_blank" rel="noopener" data-go={p.id}>
+        <img src={productIcon(p.id)} alt="" width="16" height="16" loading="lazy" decoding="async" draggable="false" />
+        {p.name}
+      </a>
+    ))}
+  </nav>
+
+  <div class="br__view">
+    <div class="br__home">
+      <h3 class="br__h">Apps Yves built</h3>
+      <p class="br__sub">Each one runs here. Open it in a new tab to install it.</p>
+      <ul class="br__grid">
+        {products.map((p) => (
+          <li>
+            <a class="br__card" href={p.url} target="_blank" rel="noopener" data-go={p.id}>
+              <img src={productIcon(p.id)} alt="" width="56" height="56" loading="lazy" decoding="async" draggable="false" />
+              <b>{p.name}</b>
+              <span>{p.line}</span>
+              <span class="br__status">{p.status}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    {/* The frame lands in here. One at a time: switching apps replaces it. */}
+    <div class="br__frame" id="br-frame"></div>
+
+    {/* For an app with embed: false in data/products.ts. */}
+    <div class="br__out-panel">
+      <img id="br-out-icon" src="" alt="" width="56" height="56" decoding="async" hidden />
+      <p><b id="br-out-name"></b> opens in its own tab.</p>
+      <a class="br__go" id="br-out-go" href="#" target="_blank" rel="noopener">Open it</a>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Edge to edge, the way Work does it: a browser's toolbar meets the window frame. */
+  :global(#win-browser .window__body) { padding: 0; overflow: hidden; }
+  .br { display: grid; grid-template-rows: auto auto 1fr; height: 100%; min-height: 0; background: var(--os-surface); }
+
+  .br__bar {
+    display: flex; align-items: center; gap: 4px; padding: 6px 8px;
+    border-bottom: 1px solid var(--os-hairline); background: var(--os-chrome);
+  }
+  .br__btn {
+    all: unset; display: grid; place-items: center; width: 26px; height: 26px; flex: none;
+    border-radius: var(--r-inner); color: var(--os-muted); cursor: var(--cur-hand);
+  }
+  .br__btn:hover { background: var(--os-hover); color: var(--os-ink); }
+  .br__btn:focus-visible { outline: 2px solid var(--os-accent); }
+  .br__address {
+    flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px;
+    border-radius: var(--r-pill); background: var(--os-card); border: 1px solid var(--os-hairline);
+    font: 11px var(--font-chrome); color: var(--os-muted);
+  }
+  .br__url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--os-ink); }
+  .br[data-state='home'] .br__address :global(.glyph) { display: none; }
+  .br[data-state='home'] .br__out { visibility: hidden; }
+
+  .br__marks {
+    display: flex; gap: 2px; padding: 4px 8px; overflow-x: auto;
+    border-bottom: 1px solid var(--os-hairline); background: var(--os-chrome);
+  }
+  .br__mark {
+    display: flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: var(--r-inner);
+    font: 11px var(--font-chrome); color: var(--os-ink); text-decoration: none; white-space: nowrap;
+    cursor: var(--cur-hand);
+  }
+  .br__mark img { border-radius: var(--app-radius); }
+  .br__mark:hover { background: var(--os-hover); }
+  .br__mark[aria-current='page'] { background: var(--os-press); }
+
+  .br__view { position: relative; min-height: 0; overflow: hidden; }
+  .br__home, .br__frame, .br__out-panel { position: absolute; inset: 0; }
+  .br__frame, .br__out-panel { display: none; }
+  .br[data-state='app'] .br__home, .br[data-state='out'] .br__home { display: none; }
+  .br[data-state='app'] .br__frame { display: block; }
+  .br[data-state='out'] .br__out-panel { display: grid; }
+
+  .br__home { overflow: auto; padding: var(--space-5) var(--space-4); }
+  .br__h { margin: 0; font: 700 16px var(--font-chrome); color: var(--os-ink); }
+  .br__sub { margin: 6px 0 var(--space-4); font: 12px var(--font-body); color: var(--os-muted); }
+  .br__grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-3); }
+  .br__card {
+    display: grid; justify-items: start; gap: 4px; padding: var(--space-3); height: 100%; box-sizing: border-box;
+    border-radius: var(--r-window); background: var(--os-card); border: 1px solid var(--os-hairline);
+    text-decoration: none; color: var(--os-ink); font: 12px var(--font-body); cursor: var(--cur-hand);
+    transition: box-shadow var(--t-fast), transform var(--t-fast);
+  }
+  .br__card:hover { box-shadow: var(--os-shadow-sm); transform: translateY(-1px); }
+  .br__card img { border-radius: var(--app-radius); margin-bottom: 6px; }
+  .br__card span { color: var(--os-muted); font-size: 11px; }
+  .br__card .br__status { margin-top: 4px; font-size: 10px; color: var(--os-accent); }
+
+  .br__frame :global(iframe) { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+
+  .br__out-panel { place-content: center; justify-items: center; gap: var(--space-2); text-align: center; font: 12px var(--font-body); color: var(--os-ink); }
+  .br__out-panel img { border-radius: var(--app-radius); }
+  .br__out-panel p { margin: 0; }
+  .br__go {
+    padding: 6px 14px; border-radius: var(--r-pill); background: var(--os-accent); color: var(--os-on-accent);
+    text-decoration: none; font: 12px var(--font-chrome);
+  }
+</style>
