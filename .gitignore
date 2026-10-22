@@ -32,3 +32,7 @@ pnpm-debug.log*
 # means the local username and folder layout. A shared .claude/settings.json is
 # worth committing if one ever exists; this one is not.
 .claude/settings.local.json
+
+# Claude Code worktrees are separate checkouts of this repo. Committing one records a
+# submodule with no URL, and Cloudflare's clone fails on it.
+.claude/worktrees/
