@@ -12,22 +12,20 @@
  * before browser.ts has loaded and with scripts off. browser.ts takes the click over and
  * loads it here instead.
  *
- * The home page comes in three looks, after the three browsers people know, chosen by
- * data-home on .br:
- *   safari  Favourites as big icon tiles over a soft wash, then the apps as a grouped list
- *   chrome  a wordmark, a search that filters, and round shortcut tiles under it
- *   arc     a tinted sidebar with the apps pinned as squares, and a space of cards beside it
+ * The home page is after Chrome's new tab page, which Yves picked from three: a search
+ * that filters the apps as you type, round shortcut tiles under it, then the apps as cards.
+ * The card is after the App Store's list row: icon, name, what it is, category and a
+ * status pill, and an Open button on the right.
  *
- * The app card is the same in all three, after the App Store's list row: icon, name, what
- * it is, category and status, and an Open button on the right.
+ * The window keeps a laptop screen's shape, 16:10, rather than stretching to the width of
+ * the desktop. A wide short window made every site look letterboxed.
  */
 import Icon from '../os/Icon.astro';
 import { products, productIcon } from '../../data/products';
 
-interface Props { home?: 'safari' | 'chrome' | 'arc' }
-const { home = 'safari' } = Astro.props;
+const find = (p: typeof products[number]) => `${p.name} ${p.line} ${p.category}`.toLowerCase();
 ---
-<div class="br" id="br" data-state="home" data-home={home}>
+<div class="br" id="br" data-state="home">
   <div class="br__bar">
     <button class="br__btn" type="button" data-br="home" title="Home" aria-label="Home"><Icon name="home" size={14} /></button>
     <button class="br__btn" type="button" data-br="reload" title="Reload" aria-label="Reload"><Icon name="reload" size={14} /></button>
@@ -49,69 +47,43 @@ const { home = 'safari' } = Astro.props;
 
   <div class="br__view">
     <div class="br__home">
+      <label class="br__search">
+        <Icon name="search" size={14} />
+        <span class="sr-only">Search the apps</span>
+        <input type="search" id="br-search" placeholder="Search apps Yves built" autocomplete="off" />
+      </label>
 
-      {/* ---- Arc: the sidebar. Only shown in the arc look. ---- */}
-      <aside class="arc-side" aria-label="Pinned apps">
-        <div class="arc-side__favs">
-          {products.map((p) => (
-            <a class="arc-side__fav" href={p.url} target="_blank" rel="noopener" data-go={p.id} title={p.name}>
-              <img src={productIcon(p.id)} alt={p.name} width="28" height="28" loading="lazy" decoding="async" draggable="false" />
-            </a>
-          ))}
-        </div>
-        <p class="arc-side__label">Pinned</p>
+      <ul class="tiles" aria-label="Shortcuts">
         {products.map((p) => (
-          <a class="arc-side__tab" href={p.url} target="_blank" rel="noopener" data-go={p.id}>
-            <img src={productIcon(p.id)} alt="" width="16" height="16" loading="lazy" decoding="async" draggable="false" />
-            {p.name}
-          </a>
+          <li data-find={find(p)}>
+            <a class="tile" href={p.url} target="_blank" rel="noopener" data-go={p.id}>
+              <span class="tile__art"><img src={productIcon(p.id)} alt="" width="32" height="32" loading="lazy" decoding="async" draggable="false" /></span>
+              <span class="tile__name">{p.name}</span>
+            </a>
+          </li>
         ))}
-      </aside>
+      </ul>
 
-      <div class="br__page">
-        {/* ---- Chrome: the wordmark and the search. ---- */}
-        <div class="ch-hero">
-          <p class="ch-hero__mark" aria-hidden="true">Yves</p>
-          <label class="ch-search">
-            <Icon name="search" size={14} />
-            <span class="sr-only">Search the apps</span>
-            <input type="search" id="br-search" placeholder="Search apps Yves built" autocomplete="off" />
-          </label>
-        </div>
-
-        {/* ---- Safari and Chrome: the apps as tiles. Safari squares, Chrome circles. ---- */}
-        <section class="tiles" aria-labelledby="tiles-h">
-          <h3 class="br__h" id="tiles-h">Favourites</h3>
-          <ul class="tiles__grid">
-            {products.map((p) => (
-              <li data-find={`${p.name} ${p.line} ${p.category}`.toLowerCase()}>
-                <a class="tile" href={p.url} target="_blank" rel="noopener" data-go={p.id}>
-                  <span class="tile__art"><img src={productIcon(p.id)} alt="" width="56" height="56" loading="lazy" decoding="async" draggable="false" /></span>
-                  <span class="tile__name">{p.name}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* ---- Every look: the cards. ---- */}
-        <section class="cards" aria-labelledby="cards-h">
-          <h3 class="br__h" id="cards-h">Apps Yves built</h3>
-          <ul class="cards__list">
-            {products.map((p) => (
-              <li class="card" data-find={`${p.name} ${p.line} ${p.category}`.toLowerCase()}>
-                <img class="card__icon" src={productIcon(p.id)} alt="" width="52" height="52" loading="lazy" decoding="async" draggable="false" />
-                <div class="card__text">
-                  <b class="card__name">{p.name}</b>
-                  <span class="card__line">{p.line}</span>
-                  <span class="card__meta">{p.category} · <span class:list={['card__status', { 'is-live': p.status === 'Live' }]}>{p.status}</span></span>
-                </div>
-                <a class="card__open" href={p.url} target="_blank" rel="noopener" data-go={p.id} aria-label={`Open ${p.name}`}>Open</a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
+      <section class="cards" aria-labelledby="cards-h">
+        <h3 class="cards__h" id="cards-h">Apps Yves built</h3>
+        <ul class="cards__list">
+          {products.map((p) => (
+            <li class="card" data-find={find(p)}>
+              <img class="card__icon" src={productIcon(p.id)} alt="" width="52" height="52" loading="lazy" decoding="async" draggable="false" />
+              <div class="card__text">
+                <b class="card__name">{p.name}</b>
+                <span class="card__line">{p.line}</span>
+                <span class="card__meta">
+                  {p.category}
+                  <span class:list={['card__status', { 'is-live': p.status === 'Live' }]}>{p.status}</span>
+                </span>
+              </div>
+              <a class="card__open" href={p.url} target="_blank" rel="noopener" data-go={p.id} aria-label={`Open ${p.name}`}>Open</a>
+            </li>
+          ))}
+        </ul>
+        <p class="cards__none" id="br-none" hidden>No app matches that.</p>
+      </section>
     </div>
 
     {/* The frame lands in here. One at a time: switching apps replaces it. */}
@@ -126,24 +98,18 @@ const { home = 'safari' } = Astro.props;
   </div>
 </div>
 
-{/* Preview only. Never rendered in a production build, so it costs the live site nothing.
-    It flips data-home so the three home pages can be compared in the real window. */}
-{import.meta.env.DEV && (
-  <div class="home-pick" role="group" aria-label="Browser home (preview only)">
-    <span>Home</span>
-    {['safari', 'chrome', 'arc'].map((v) => <button type="button" data-pick={v} aria-pressed={String(v === home)}>{v}</button>)}
-    <script is:inline>
-      document.querySelector('.home-pick').addEventListener('click', (e) => {
-        const v = e.target.closest('[data-pick]')?.dataset.pick;
-        if (!v) return;
-        document.getElementById('br').dataset.home = v;
-        document.querySelectorAll('.home-pick [data-pick]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pick === v)));
-      });
-    </script>
-  </div>
-)}
-
 <style>
+  /* 16:10, the shape of a laptop screen, as large as the desktop allows and no wider than
+     1280, the width browser.ts lays sites out at. Height follows from width, and width is
+     also held back by the height available, so the window never comes out wide and short.
+     Desktop only: a phone never opens this window. The green light's zoom still wins,
+     because its rule in Window.astro is !important. */
+  @media (min-width: 641px) {
+    :global(#win-browser) {
+      --bw: min(1280px, calc(100vw - 32px), calc((100dvh - var(--menubar-h) - var(--window-top) - var(--window-bottom)) * 1.6));
+      width: var(--bw); height: calc(var(--bw) / 1.6);
+    }
+  }
   /* Edge to edge, the way Work does it: a browser's toolbar meets the window frame. */
   :global(#win-browser .window__body) { padding: 0; overflow: hidden; }
   .br { display: grid; grid-template-rows: auto auto 1fr; height: 100%; min-height: 0; background: var(--os-surface); }
@@ -187,6 +153,8 @@ const { home = 'safari' } = Astro.props;
   .br[data-state='app'] .br__home, .br[data-state='out'] .br__home { display: none; }
   .br[data-state='app'] .br__frame { display: block; }
   .br[data-state='out'] .br__out-panel { display: grid; }
+  /* The search hides what does not match, and .card's own display would otherwise win. */
+  .br [hidden] { display: none !important; }
 
   /* The frame is laid out at a desktop width and scaled down to fit, by browser.ts, so a
      site gets its desktop layout even in a window narrower than a laptop screen. */
@@ -198,83 +166,47 @@ const { home = 'safari' } = Astro.props;
   .br__out-panel p { margin: 0; }
   .br__go { padding: 6px 14px; border-radius: var(--r-pill); background: var(--os-accent); color: var(--os-on-accent); text-decoration: none; font: 12px var(--font-chrome); }
 
-  /* ---- home, shared ---- */
-  .br__home { display: flex; overflow: hidden; }
-  .br__page { flex: 1; min-width: 0; overflow: auto; padding: var(--space-5) var(--space-4); }
-  .br__page > * { max-width: 760px; margin-inline: auto; }
-  .br__h { margin: 0 0 var(--space-3); font: 700 13px var(--font-chrome); color: var(--os-ink); }
+  /* ---- home: Chrome's new tab page ---- */
+  .br__home {
+    overflow: auto; padding: 12vh var(--space-4) var(--space-5);
+    display: flex; flex-direction: column; align-items: center; gap: var(--space-4);
+  }
+  .br__search {
+    display: flex; align-items: center; gap: 8px; width: min(100%, 560px); height: 44px; padding: 0 18px; box-sizing: border-box; flex: none;
+    border-radius: var(--r-pill); background: var(--os-card); border: 1px solid var(--os-hairline); box-shadow: var(--os-shadow-sm); color: var(--os-muted);
+  }
+  .br__search:focus-within { border-color: var(--os-accent); }
+  .br__search input { all: unset; flex: 1; font: 12px var(--font-body); color: var(--os-ink); }
 
-  /* Tiles: Safari's Favourites. Big squircle icons on a light plate, name under. */
-  .tiles { margin-bottom: var(--space-5); }
-  .tiles__grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, 96px); gap: var(--space-3); }
-  .tile { display: grid; justify-items: center; gap: 8px; padding: 10px 4px; border-radius: var(--r-window); text-decoration: none; color: var(--os-ink); cursor: var(--cur-hand); }
+  /* Round shortcut tiles, the way Chrome draws them under its search. */
+  .tiles { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); }
+  .tile { display: grid; justify-items: center; gap: 8px; width: 104px; padding: 12px 4px; border-radius: var(--r-window); text-decoration: none; color: var(--os-ink); cursor: var(--cur-hand); }
   .tile:hover { background: var(--os-hover); }
-  .tile__art { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 18px; background: var(--os-card); box-shadow: var(--os-shadow-sm); }
-  .tile__art img { width: 56px; height: 56px; border-radius: var(--app-radius); }
+  .tile__art { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--os-recess); }
+  .tile__art img { border-radius: var(--app-radius); }
   .tile__name { font: 11px var(--font-chrome); text-align: center; }
 
   /* Cards: the App Store list row. Grouped on one plate, rows split by a hairline that
      starts after the icon, the way an inset grouped list does it. */
+  .cards { width: min(100%, 560px); }
+  .cards__h { margin: 0 0 var(--space-2); font: 700 12px var(--font-chrome); color: var(--os-muted); }
   .cards__list { list-style: none; margin: 0; padding: 0 var(--space-3); border-radius: var(--r-window); background: var(--os-card); border: 1px solid var(--os-hairline); }
   .card { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: var(--space-3); padding: 14px 0; position: relative; }
   .card + .card::before { content: ''; position: absolute; top: 0; left: calc(52px + var(--space-3)); right: 0; border-top: 1px solid var(--os-hairline); }
   .card__icon { border-radius: var(--app-radius); box-shadow: 0 0 0 1px var(--os-hairline); }
-  .card__text { display: grid; gap: 2px; min-width: 0; font: 11px var(--font-body); color: var(--os-muted); }
+  .card__text { display: grid; gap: 3px; min-width: 0; font: 11px var(--font-body); color: var(--os-muted); }
   .card__name { font: 700 13px var(--font-chrome); color: var(--os-ink); }
-  .card__meta { font-size: 10px; }
-  .card__status.is-live { color: var(--os-accent); }
+  .card__meta { display: flex; align-items: center; gap: 6px; font-size: 10px; }
+  /* Status as a pill. Live is tinted with the accent, anything else stays neutral. */
+  .card__status {
+    padding: 1px 8px; border-radius: var(--r-pill); font: 700 9px var(--font-chrome); letter-spacing: .03em;
+    background: var(--os-recess); color: var(--os-muted);
+  }
+  .card__status.is-live { background: color-mix(in srgb, var(--os-accent) 14%, transparent); color: var(--os-accent); }
   .card__open {
     padding: 5px 16px; border-radius: var(--r-pill); background: var(--os-recess); color: var(--os-accent);
     font: 700 11px var(--font-chrome); text-decoration: none; text-transform: uppercase; letter-spacing: .04em; cursor: var(--cur-hand);
   }
   .card__open:hover { background: var(--os-accent); color: var(--os-on-accent); }
-
-  .ch-hero, .arc-side { display: none; }
-
-  /* ---- safari: a soft wash behind everything, the way the start page sits on a tint ---- */
-  .br[data-home='safari'] .br__page { background: var(--br-wash); }
-
-  /* ---- chrome: wordmark, search, round shortcuts, cards below as the "cards" module ---- */
-  .br[data-home='chrome'] .ch-hero { display: grid; justify-items: center; gap: var(--space-4); margin: var(--space-4) auto var(--space-5); }
-  .ch-hero__mark { margin: 0; font: 700 44px var(--font-chrome); letter-spacing: -.02em; color: var(--os-ink); }
-  .ch-search {
-    display: flex; align-items: center; gap: 8px; width: min(100%, 520px); height: 40px; padding: 0 16px; box-sizing: border-box;
-    border-radius: var(--r-pill); background: var(--os-card); border: 1px solid var(--os-hairline); box-shadow: var(--os-shadow-sm); color: var(--os-muted);
-  }
-  .ch-search input { all: unset; flex: 1; font: 12px var(--font-body); color: var(--os-ink); }
-  .br[data-home='chrome'] .tiles .br__h { display: none; }
-  .br[data-home='chrome'] .tiles__grid { justify-content: center; grid-template-columns: repeat(auto-fill, 104px); }
-  .br[data-home='chrome'] .tile__art { width: 56px; height: 56px; border-radius: 50%; background: var(--os-recess); box-shadow: none; }
-  .br[data-home='chrome'] .tile__art img { width: 32px; height: 32px; }
-  /* The search hides what does not match, and .card's own display would otherwise win. */
-  .br [hidden] { display: none !important; }
-
-  /* ---- arc: tinted sidebar with pinned squares and tabs, a space of cards beside it ---- */
-  .br[data-home='arc'] .arc-side {
-    display: flex; flex-direction: column; gap: 4px; width: 220px; flex: none; padding: var(--space-3) 10px; box-sizing: border-box;
-    background: var(--br-arc-side); border-right: 1px solid var(--os-hairline); overflow: auto;
-  }
-  .arc-side__favs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: var(--space-3); }
-  .arc-side__fav { display: grid; place-items: center; aspect-ratio: 1; border-radius: var(--r-window); background: rgba(255,255,255,.55); cursor: var(--cur-hand); }
-  .arc-side__fav:hover { background: rgba(255,255,255,.8); }
-  .arc-side__fav img { border-radius: var(--app-radius); }
-  .arc-side__label { margin: 0 6px 2px; font: 10px var(--font-chrome); color: var(--os-muted); }
-  .arc-side__tab { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--r-inner); font: 11px var(--font-chrome); color: var(--os-ink); text-decoration: none; cursor: var(--cur-hand); }
-  .arc-side__tab:hover { background: rgba(255,255,255,.5); }
-  .arc-side__tab img { border-radius: var(--app-radius); }
-  .br[data-home='arc'] .tiles { display: none; }
-  .br[data-home='arc'] .br__page { background: var(--os-card); }
-  /* Arc's space is cards on a canvas, so the grouped list opens out into separate cards. */
-  .br[data-home='arc'] .cards__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-3); padding: 0; background: none; border: 0; }
-  .br[data-home='arc'] .card { padding: var(--space-3); border-radius: var(--r-window); background: var(--os-surface); border: 1px solid var(--os-hairline); }
-  .br[data-home='arc'] .card + .card::before { display: none; }
-
-  .home-pick {
-    position: fixed; left: 50%; bottom: 120px; transform: translateX(-50%); z-index: 950;
-    display: flex; align-items: center; gap: 4px; padding: 4px 6px;
-    background: rgba(0,0,0,.72); color: #fff; border-radius: 999px; font: 11px var(--font-chrome);
-  }
-  .home-pick span { padding: 0 6px; opacity: .7; }
-  .home-pick button { all: unset; padding: 4px 10px; border-radius: 999px; cursor: pointer; }
-  .home-pick button[aria-pressed='true'] { background: #fff; color: #000; }
+  .cards__none { margin: var(--space-3) 0 0; font: 12px var(--font-body); color: var(--os-muted); text-align: center; }
 </style>

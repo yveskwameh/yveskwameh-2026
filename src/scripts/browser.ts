@@ -48,11 +48,20 @@ export function init() {
   }
   new ResizeObserver(fit).observe(host);
 
-  // The search on the Chrome home filters the tiles and cards as you type.
+  // The search on the home page filters the shortcut tiles and the cards as you type, by
+  // name, what the app is, and its category. When nothing matches it says so.
   const search = document.getElementById('br-search') as HTMLInputElement | null;
+  const none = document.getElementById('br-none');
+  const list = br.querySelector<HTMLElement>('.cards__list');
   search?.addEventListener('input', () => {
     const q = search.value.trim().toLowerCase();
-    br.querySelectorAll<HTMLElement>('[data-find]').forEach((el) => { el.hidden = !!q && !el.dataset.find!.includes(q); });
+    let shown = 0;
+    br.querySelectorAll<HTMLElement>('.card[data-find], .tiles [data-find]').forEach((el) => {
+      el.hidden = !!q && !el.dataset.find!.includes(q);
+      if (!el.hidden && el.classList.contains('card')) shown++;
+    });
+    if (none) none.hidden = shown > 0;
+    if (list) list.hidden = shown === 0;
   });
 
   function home() {
